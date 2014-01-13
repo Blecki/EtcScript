@@ -28,6 +28,15 @@ namespace NinbotTests
 			Assert.False(wasError);
 		}
 
+		public static void CompileShouldError(String script)
+		{
+			Console.WriteLine("Test script: " + script);
+			bool wasError = false;
+			var declaration = Ninbot.Compile.CompileDeclaration(script,
+				(s) => { Console.WriteLine(s); wasError = true; return Ninbot.ErrorStrategy.Continue; });
+			Assert.True(wasError);
+		}
+
         public static Object RunSimpleTest(String script)
         {
 			Console.WriteLine("Test script: " + script);

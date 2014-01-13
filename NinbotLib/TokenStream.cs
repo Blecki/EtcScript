@@ -65,6 +65,27 @@ namespace Ninbot
 			this.operators = operators;
 		}
 
+		private String ParseNumber()
+		{
+			var number = "";
+			bool foundDot = false;
+			var c = source.Next();
+			while ((isDigit(c) || c == '.') && !source.AtEnd())
+			{
+				if (c == '.')
+				{
+					if (foundDot) return number;
+					foundDot = true;
+				}
+
+				number += (char)c;
+				advance_source();
+				if (!source.AtEnd()) c = source.Next();
+			}
+
+			return number;
+		}
+
 		private Token? ParseNextToken()
 		{
 			var c = source.Next();
@@ -101,26 +122,6 @@ namespace Ninbot
 				return Token.Create(TokenType.String, literal, tokenStart);
 			}
 
-			if (isDigit(c))
-			{
-				var number = "";
-				bool foundDot = false;
-				while ((isDigit(c) || c == '.') && !source.AtEnd())
-				{
-					if (c == '.')
-					{
-						if (foundDot) return Token.Create(TokenType.Number, number, tokenStart);
-						foundDot = true;
-					}
-
-					number += (char)c;
-					advance_source();
-					if (!source.AtEnd()) c = source.Next();
-				}
-
-				return Token.Create(TokenType.Number, number, tokenStart);
-			}
-
 			if (isValidIdentifierStart(c))
 			{
 
@@ -134,10 +135,23 @@ namespace Ninbot
 				return Token.Create(TokenType.Identifier, identifier, tokenStart);
 			}
 
+			var parsedMinus = false;
+			if (c == '-')
+			{
+				parsedMinus = true;
+				advance_source();
+				var number = ParseNumber();
+				if (number.Length != 0) return Token.Create(TokenType.Number, "-" + number, tokenStart);
+			}
+			else if (isDigit(c))
+				return Token.Create(TokenType.Number, ParseNumber(), tokenStart);
+
 			var opSoFar = new String((char)c, 1);
 			while (true)
 			{
-				advance_source();
+				if (parsedMinus) parsedMinus = false; //If we read a -, but not a number token, source is already pointing at
+				else advance_source();					//the next character
+
 				var tempOp = opSoFar + (source.AtEnd() ? "" : new String((char)source.Next(), 1));
 
 				var possibleMatches = operators.operatorStrings.Count((s) => { return s.StartsWith(tempOp); });

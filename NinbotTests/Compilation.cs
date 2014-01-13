@@ -27,6 +27,19 @@ namespace NinbotTests
 		let x = 5; return x");
 		}
 
+		[Test]
+		public void negative_number()
+		{
+			TestHelper.CompileTestAssertNoErrors(@"activity foo
+	let x = -5");
+			TestHelper.CompileTestAssertNoErrors(@"activity foo
+	let x = 5 - 4");
+			TestHelper.CompileTestAssertNoErrors(@"activity foo
+	let x = 5 * -4");
+			TestHelper.CompileShouldError(@"activity foo
+	let x = 5-4");
+		}
+
         
     }
 
