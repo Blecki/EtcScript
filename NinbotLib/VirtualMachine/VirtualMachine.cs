@@ -28,6 +28,11 @@ namespace Ninbot.VirtualMachine
             //When an error represents faulty input code, an exception is thrown in MISP.
 
             if (context.ExecutionState != ExecutionState.Running) return;
+
+			while (context.CurrentInstruction.IsValid 
+				&& context.CurrentInstruction.Code[context.CurrentInstruction.InstructionPointer] is Annotation)
+				++context.CurrentInstruction.InstructionPointer;
+
 			if (!context.CurrentInstruction.IsValid)
 			{
 				context.ExecutionState = ExecutionState.Finished;
@@ -47,6 +52,14 @@ namespace Ninbot.VirtualMachine
                 {
                     case InstructionSet.YIELD:
                         return;
+					case InstructionSet.SWAP_TOP:
+						{
+							var A = GetOperand(Operand.POP, context);
+							var B = GetOperand(Operand.POP, context);
+							SetOperand(Operand.PUSH, A, context);
+							SetOperand(Operand.PUSH, B, context);
+						}
+						break;
 
                     #region MOVE
                     case InstructionSet.MOVE:
@@ -187,6 +200,7 @@ namespace Ninbot.VirtualMachine
                     #endregion
 
                     #region Lambdas
+
                     case InstructionSet.INVOKE:
                         {
                             var arguments = GetOperand(ins.FirstOperand, context) as List<Object>;
@@ -207,6 +221,8 @@ namespace Ninbot.VirtualMachine
                             var function = arguments[0];
                             if (function is InvokeableFunction)
                             {
+								//SetOperand(Operand.PUSH, instructionStart, context); //Push return point.
+
                                 try
                                 {
                                     var InvokationResult = (function as InvokeableFunction).Invoke(context, arguments);
@@ -233,6 +249,7 @@ namespace Ninbot.VirtualMachine
                             }
                         }
                         break;
+
                     case InstructionSet.LAMBDA:
                         {
 							//var arguments = GetOperand(ins.FirstOperand, context) as List<String>;
@@ -284,8 +301,11 @@ namespace Ninbot.VirtualMachine
 
                     case InstructionSet.LENGTH:
                         {
-                            var v = (GetOperand(ins.FirstOperand, context) as List<Object>).Count;
-                            SetOperand(ins.SecondOperand, v, context);
+							var v = GetOperand(ins.FirstOperand, context);
+							if (v is List<Object>)
+								SetOperand(ins.SecondOperand, (v as List<Object>).Count, context);
+							else
+								SetOperand(ins.SecondOperand, 1, context);
                         }
                         break;
 
@@ -345,6 +365,22 @@ namespace Ninbot.VirtualMachine
                             SetOperand(ins.ThirdOperand, result, context);
                         }
                         break;
+					case InstructionSet.GREATER:
+						{
+							dynamic v0 = GetOperand(ins.FirstOperand, context);
+							dynamic v1 = GetOperand(ins.SecondOperand, context);
+							var result = v0 > v1;
+							SetOperand(ins.ThirdOperand, result, context);
+						}
+						break;
+					case InstructionSet.LESS_EQUAL:
+						{
+							dynamic v0 = GetOperand(ins.FirstOperand, context);
+							dynamic v1 = GetOperand(ins.SecondOperand, context);
+							var result = v0 <= v1;
+							SetOperand(ins.ThirdOperand, result, context);
+						}
+						break;
                     case InstructionSet.GREATER_EQUAL:
                         {
                             dynamic v0 = GetOperand(ins.FirstOperand, context);
@@ -380,6 +416,15 @@ namespace Ninbot.VirtualMachine
                             SetOperand(ins.ThirdOperand, result, context);
                         }
                         break;
+
+					case InstructionSet.NOT_EQUAL:
+						{
+							dynamic a = GetOperand(ins.FirstOperand, context);
+							dynamic b = GetOperand(ins.SecondOperand, context);
+							var result = (a != b);
+							SetOperand(ins.ThirdOperand, result, context);
+						}
+						break;
 
                     #endregion
 
@@ -432,10 +477,55 @@ namespace Ninbot.VirtualMachine
                         {
                             dynamic first = GetOperand(ins.FirstOperand, context);
                             dynamic second = GetOperand(ins.SecondOperand, context);
-                            var result = first / second;
+                            var result = second / first;
                             SetOperand(ins.ThirdOperand, result, context);
                         }
                         break;
+
+					case InstructionSet.MODULUS:
+						{
+							dynamic first = GetOperand(ins.FirstOperand, context);
+							dynamic second = GetOperand(ins.SecondOperand, context);
+							var result = second % first;
+							SetOperand(ins.ThirdOperand, result, context);
+						}
+						break;
+
+					case InstructionSet.AND:
+						{
+							dynamic first = GetOperand(ins.FirstOperand, context);
+							dynamic second = GetOperand(ins.SecondOperand, context);
+							var result = first & second;
+							SetOperand(ins.ThirdOperand, result, context);
+						}
+						break;
+
+					case InstructionSet.OR:
+						{
+							dynamic first = GetOperand(ins.FirstOperand, context);
+							dynamic second = GetOperand(ins.SecondOperand, context);
+							var result = first | second;
+							SetOperand(ins.ThirdOperand, result, context);
+						}
+						break;
+
+					case InstructionSet.LOR:
+						{
+							dynamic first = GetOperand(ins.FirstOperand, context);
+							dynamic second = GetOperand(ins.SecondOperand, context);
+							var result = first || second;
+							SetOperand(ins.ThirdOperand, result, context);
+						}
+						break;
+
+					case InstructionSet.LAND:
+						{
+							dynamic first = GetOperand(ins.FirstOperand, context);
+							dynamic second = GetOperand(ins.SecondOperand, context);
+							var result = first && second;
+							SetOperand(ins.ThirdOperand, result, context);
+						}
+						break;
 
                     #endregion
 
@@ -454,6 +544,8 @@ namespace Ninbot.VirtualMachine
 
         public static void Throw(Object errorObject, ExecutionContext context)
         {
+			context.ErrorObject = errorObject;
+
             while (true)
             {
                 if (context.Stack.Count == 0)
@@ -483,7 +575,6 @@ namespace Ninbot.VirtualMachine
                 case Operand.PEEK: context.Stack.Pop(); context.Stack.Push(value); break;
                 case Operand.POP: throw new InvalidOperationException("Can't set to pop");
                 case Operand.PUSH: context.Stack.Push(value); break;
-				case Operand.R: context.R = value; break;
             }
         }
 
@@ -496,7 +587,6 @@ namespace Ninbot.VirtualMachine
                 case Operand.PEEK: return context.Stack.Peek();
                 case Operand.POP: return context.Stack.Pop();
                 case Operand.PUSH: throw new InvalidOperationException("Can't fetch from push");
-				case Operand.R: return context.R; 
                 default: throw new InvalidProgramException();
             }
         }
@@ -548,8 +638,9 @@ namespace Ninbot.VirtualMachine
                 System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
                 new System.Reflection.MemberFilter((minfo, _obj) => { return minfo.Name == memberName; }),
                 memberName);
-            //if (methods.Length != 0)
-            //    return MemberLookupResult.Success(new OverloadedReflectionFunction(obj, memberName));
+            
+			if (methods.Length != 0)
+                return MemberLookupResult.Success(new OverloadedReflectionFunction(obj, memberName));
 
             return MemberLookupResult.Failure;
         }

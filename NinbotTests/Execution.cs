@@ -15,6 +15,31 @@ namespace NinbotTests
 			TestHelper.RunSimpleTest("Activity foo");
         }
 
+		[Test]
+		public void parenthical_becomes_invokation()
+		{
+			TestHelper.RunSimpleTest(@"Activity foo
+	bar [token.foo]
+");
+			TestHelper.RunSimpleTest(@"Activity foo
+	bar token.foo
+");
+		}
+
+		[Test]
+		public void simple_return()
+		{
+			TestHelper.RunSimpleTest(@"Activity foo
+	return");
+		}
+
+		[Test]
+		public void return_value()
+		{
+			TestHelper.RunSimpleTest(@"Activity foo
+	return 4 + 5", 9);
+		}
+
     }
 
 }

@@ -12,7 +12,6 @@ namespace Ninbot.VirtualMachine
 		PUSH = 2,
 		POP = 3,
 		PEEK = 4,
-		R = 5
 	}
 
 	public struct Instruction

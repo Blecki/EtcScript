@@ -82,6 +82,9 @@ namespace Ninbot
 			if (c == '\t') { advance_source(); return Token.Create(TokenType.Tab, "\\t", tokenStart); }
 			if (c == '(') { advance_source(); return Token.Create(TokenType.OpenParen, "(", tokenStart); }
 			if (c == ')') { advance_source(); return Token.Create(TokenType.CloseParen, ")", tokenStart); }
+			if (c == '[') { advance_source(); return Token.Create(TokenType.OpenBracket, "[", tokenStart); }
+			if (c == ']') { advance_source(); return Token.Create(TokenType.CloseBracket, "]", tokenStart); }
+			if (c == '.') { advance_source(); return Token.Create(TokenType.Dot, ".", tokenStart); }
 			if (c == '\"')
 			{
 				var literal = "";
@@ -100,11 +103,18 @@ namespace Ninbot
 			if (isDigit(c))
 			{
 				var number = "";
-				while (isDigit(c) && !source.AtEnd())
+				bool foundDot = false;
+				while ((isDigit(c) || c == '.') && !source.AtEnd())
 				{
+					if (c == '.')
+					{
+						if (foundDot) return Token.Create(TokenType.Number, number, tokenStart);
+						foundDot = true;
+					}
+
 					number += (char)c;
 					advance_source();
-					c = source.Next();
+					if (!source.AtEnd()) c = source.Next();
 				}
 
 				return Token.Create(TokenType.Number, number, tokenStart);

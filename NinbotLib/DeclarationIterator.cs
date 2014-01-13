@@ -5,24 +5,34 @@ using System.Text;
 
 namespace Ninbot
 {
+	public enum ErrorStrategy
+	{
+		Continue,
+		Abort
+	}
+
 	internal class DeclarationIterator : Iterator<Declaration>
 	{
 		Iterator<Block> state;
 		Declaration next;
 		OperatorSettings operators;
+		public Func<String, ErrorStrategy> OnError;
 
-		internal static DeclarationIterator Create(Iterator<Block> BlockIterator, OperatorSettings operators)
+		internal static DeclarationIterator Create(
+			Iterator<Block> BlockIterator,
+			OperatorSettings operators,
+			Func<String, ErrorStrategy> OnError)
 		{
-			return new DeclarationIterator(BlockIterator, operators);
+			var r = new DeclarationIterator
+			{
+				state = BlockIterator,
+				operators = operators,
+				OnError = OnError
+			};
+			r.Advance();
+			return r;
 		}
-
-		public DeclarationIterator(Iterator<Block> state, OperatorSettings operators)
-		{
-			this.state = state;
-			this.operators = operators;
-			Advance();
-		}
-
+		
 		public Declaration Next()
 		{
 			return next;
@@ -45,7 +55,15 @@ namespace Ninbot
 					catch (CompileError e)
 					{
 						wasError = true;
-						Console.WriteLine("Error: " + e.Message);
+						if (OnError != null)
+						{
+							var strategy = OnError(e.Message);
+							if (strategy == ErrorStrategy.Abort)
+							{
+								next = null;
+								return;
+							}
+						}
 					}
 					state.Advance();
 				}

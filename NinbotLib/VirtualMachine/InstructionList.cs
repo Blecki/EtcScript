@@ -53,7 +53,15 @@ namespace Ninbot.VirtualMachine
                     continue;
                 }
 
-                if (instruction is String)
+				if (instruction is Instruction)
+				{
+					var parsedInstruction = (instruction as Instruction?).Value;
+					this.Add(parsedInstruction);
+					if (parsedInstruction.FirstOperand == Operand.NEXT) ++literalsExpected;
+					if (parsedInstruction.SecondOperand == Operand.NEXT) ++literalsExpected;
+					if (parsedInstruction.ThirdOperand == Operand.NEXT) ++literalsExpected;
+				}
+                else if (instruction is String)
                 {
                     var parsedInstruction = Instruction.Parse(instruction.ToString());
                     this.Add(parsedInstruction);

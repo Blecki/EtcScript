@@ -37,17 +37,20 @@ namespace Ninbot.VirtualMachine
 
 	public class ExecutionContext
 	{
-		internal ScriptObject Frame = null;
+		public ScriptObject Frame { get; internal set; }
 		internal Stack<Object> Stack = new Stack<Object>();
-		public ExecutionState ExecutionState { get; internal set; }
+		public ExecutionState ExecutionState { get; set; }
 		public CodeContext CurrentInstruction;
-		public Object R { get; internal set; }
+		public Object Tag;
 
-		public Object Peek { get { return Stack.Peek(); } }
+		public Object ErrorObject;
+
+		public Object Peek { get { return Stack.Count > 0 ? Stack.Peek() : null; } }
 
 		public void Reset(ScriptObject GlobalScope, CodeContext ExecutionPoint)
 		{
 			Stack.Clear();
+			Stack.Push(new CodeContext(new InstructionList(), 0)); //Fake return point
 			Frame = new ScriptObject("@parent", GlobalScope);
 			ExecutionState = ExecutionState.Running;
 			CurrentInstruction = ExecutionPoint;

@@ -21,7 +21,7 @@ namespace Ninbot.VirtualMachine
         CONTINUE,       // SOURCE       UNUSED          UNUSED      --Moves execution to the point in SOURCE, without advancement.
         CLEANUP,        // SOURCE       UNUSED          UNUSED      --Remove SOURCE items from top of stack.
         SWAP_TOP,       // UNUSED       UNUSED          UNUSED      --Swap the two top object on stack.
-        
+
         EMPTY_LIST,     // DESTINATION  UNUSED          UNUSED      --Create an empty list and store in DESTINATION.
         APPEND_RANGE,   // LIST-A       LIST-B          DESTINATION --Append A to B, store in DESTINATION.
         APPEND,         // VALUE        LIST            DESTINATION --Append VALUE to LIST, store in DESTINATION.
@@ -38,11 +38,14 @@ namespace Ninbot.VirtualMachine
         DECREMENT,
         INCREMENT,
         LESS,
+		GREATER,
+		LESS_EQUAL,
         GREATER_EQUAL,
         IF_TRUE,
         IF_FALSE,
         SKIP,
         EQUAL,
+		NOT_EQUAL,
 
         THROW,
         CATCH,
@@ -51,6 +54,12 @@ namespace Ninbot.VirtualMachine
         SUBTRACT,
         MULTIPLY,
         DIVIDE,
+		AND,
+		OR,
+		MODULUS,
+
+		LOR,
+		LAND,
 
         DEBUG,
     }

@@ -32,19 +32,108 @@ namespace Ninbot
 			if (lValue.Type == ExpressionBlockTypes.Token && lValue.Token.Value.Type == TokenType.Identifier)
 			{
 				EmitExpressionTree(ParseExpression(state, operators, true), operators, into);
-				into.AddInstruction("SET_VARIABLE NEXT POP", lValue.Token.Value.Value);
+				into.AddInstruction("SET_VARIABLE POP NEXT", lValue.Token.Value.Value);
 			}
-			else if (lValue.Type == ExpressionBlockTypes.BinaryOperation && lValue.Token.Value.Value == ".")
+			else if (lValue.Type == ExpressionBlockTypes.MemberAccess)
 			{
-				if (lValue.SubExpressions[1].Type != ExpressionBlockTypes.Token ||
-					lValue.SubExpressions[1].Token.Value.Type != TokenType.Identifier)
-					throw new CompileError("Expected a member name", lValue.SubExpressions[1].Token.Value);
 				EmitExpressionTree(lValue.SubExpressions[0], operators, into);
 				EmitExpressionTree(ParseExpression(state, operators, true), operators, into);
-				into.AddInstruction("SET_MEMBER POP NEXT POP", lValue.SubExpressions[1].Token.Value.Value);
+				into.AddInstruction("SET_MEMBER POP NEXT POP", lValue.Token.Value.Value);
 			}
 			else
 				throw new CompileError("Expected an lvalue", lValueLine.Tokens[0]);
+		}
+
+		private static void BuildForeachStatement(
+			Iterator<Token> state,
+			OperatorSettings operators,
+			VirtualMachine.InstructionList body,
+			VirtualMachine.InstructionList into)
+		{
+			var start = state.Next();
+			state.Advance();
+
+			if (state.AtEnd() || state.Next().Type != TokenType.Identifier) 
+				throw new CompileError("Expected identifier after foreach", start);
+
+			var valueName = state.Next().Value;
+
+			state.Advance();
+
+			if (state.AtEnd() || state.Next().Type != TokenType.Identifier)
+				throw new CompileError("Expected in or from keyword", start);
+
+			if (state.Next().Value == "in")
+			{
+				state.Advance();
+				//Go ahead and emit the expression that provides the list
+				EmitExpressionTree(ParseExpression(state, operators, true), operators, into);
+				into.AddInstruction(
+					"SET_VARIABLE PEEK NEXT", "__list@" + valueName, //Store the list of items in scope
+					"LENGTH POP PUSH",
+					"SET_VARIABLE POP NEXT", "__total@" + valueName, //Total elements in list
+					"SET_VARIABLE NEXT NEXT", 0, "__counter@" + valueName,
+					"BRANCH PUSH NEXT",       //LOOP BRANCH
+					new VirtualMachine.InstructionList(
+						"LOOKUP NEXT PUSH", "__total@" + valueName,
+						"LOOKUP NEXT PUSH", "__counter@" + valueName,
+						"GREATER_EQUAL POP POP PUSH",
+						"IF_TRUE POP",  //If counter is 0, stop looping.
+						"BRANCH PUSH NEXT",
+						new VirtualMachine.InstructionList(
+							"MOVE POP NONE",    //Remove inner most MARK from stack
+							"BREAK POP"),       //Break to LOOP BRANCH
+						"LOOKUP NEXT PUSH", "__list@" + valueName,
+						"LOOKUP NEXT PUSH", "__counter@" + valueName,
+						"INDEX POP POP PUSH",
+						"SET_VARIABLE POP NEXT", valueName,
+						body,
+						"LOOKUP NEXT PUSH", "__counter@" + valueName, //Increment the counter
+						"INCREMENT POP PUSH",
+						"SET_VARIABLE POP NEXT", "__counter@" + valueName,
+						"CONTINUE POP")
+						);
+			}
+			else if (state.Next().Value == "from")
+			{
+				state.Advance();
+				if (state.AtEnd() || state.Next().Type != TokenType.Number)
+					throw new CompileError("Expected low value", start);
+				var low = Int32.Parse(state.Next().Value);
+				state.Advance();
+				if (state.AtEnd() || state.Next().Value != "to")
+					throw new CompileError("Expected to", start);
+				state.Advance();
+				if (state.AtEnd() || state.Next().Type != TokenType.Number)
+					throw new CompileError("Expected high value", start);
+				var high = Int32.Parse(state.Next().Value);
+				state.Advance();
+
+				into.AddInstruction(
+					"SET_VARIABLE NEXT NEXT", high, "__total@" + valueName, //Total elements in list
+					"SET_VARIABLE NEXT NEXT", low, "__counter@" + valueName,
+					"BRANCH PUSH NEXT",       //LOOP BRANCH
+					new VirtualMachine.InstructionList(
+						"LOOKUP NEXT PUSH", "__total@" + valueName,
+						"LOOKUP NEXT PUSH", "__counter@" + valueName,
+						"GREATER POP POP PUSH",
+						"IF_TRUE POP",  //If counter is >= total, stop looping.
+						"BRANCH PUSH NEXT",
+						new VirtualMachine.InstructionList(
+							"MOVE POP NONE",    //Remove inner most MARK from stack
+							"BREAK POP"),       //Break to LOOP BRANCH
+						"LOOKUP NEXT PUSH", "__counter@" + valueName,
+						"SET_VARIABLE POP NEXT", valueName,
+						body,
+						"LOOKUP NEXT PUSH", "__counter@" + valueName, //Increment the counter
+						"INCREMENT POP PUSH",
+						"SET_VARIABLE POP NEXT", "__counter@" + valueName,
+						"CONTINUE POP")
+						);
+			}
+			else
+				throw new CompileError("Unknown range type '" + state.Next().Value + "'", state.Next());
+			
 		}
 
 		private static void BuildStatement(
@@ -70,10 +159,35 @@ namespace Ninbot
 					BuildLetStatement(lineState, operators, into);
 					state.Advance();
 				}
+				else if (lineState.Next().Value == "foreach")
+				{
+					state.Advance();
+					if (state.AtEnd() || !(state.Next() is Block))
+						throw new CompileError("Expected block after foreach", construct);
+					var body = new VirtualMachine.InstructionList();
+					BuildBlock(state.Next() as Block, operators, body);
+					body = new VirtualMachine.InPlace(body[0] as VirtualMachine.InstructionList);
+					BuildForeachStatement(lineState, operators, body, into);
+					state.Advance();
+				}
+				else if (lineState.Next().Value == "return")
+				{
+					lineState.Advance();
+					if (!lineState.AtEnd())
+					{
+						EmitExpressionTree(ParseExpression(lineState, operators, true), operators, into);
+						into.AddInstruction("SWAP_TOP", "BREAK POP");
+					}
+					else
+						into.AddInstruction("BREAK POP");
+					state.Advance();
+				}
 				else
 				{
 					//If it's not any special statement, it must be a function call.
-					EmitExpressionTree(ParseExpression(lineState, operators, true), operators, into);
+					var expression = ParseExpression(lineState, operators, true);
+					if (expression.Type == ExpressionBlockTypes.Unresolved) expression.Type = ExpressionBlockTypes.FunctionCall;
+					EmitExpressionTree(expression, operators, into);
 					into.AddInstruction("MOVE POP NONE"); //Cleanup stack
 					state.Advance();
 				}
@@ -82,9 +196,11 @@ namespace Ninbot
 
 		private enum ExpressionBlockTypes
 		{
+			Unresolved,
 			Token,
 			FunctionCall,
 			BinaryOperation,
+			MemberAccess,
 		}
 
 		private struct ExpressionBlock
@@ -102,6 +218,17 @@ namespace Ninbot
 					SubExpressions = new List<ExpressionBlock>()
 				};
 			}
+
+			public Token? FirstValidToken()
+			{
+				if (Token.HasValue) return Token;
+				else foreach (var child in SubExpressions)
+					{
+						var t = child.FirstValidToken();
+						if (t.HasValue) return t;
+					}
+				return null;
+			}
 		}
 
 		private static ExpressionBlock ParseBinaryOperations(
@@ -110,11 +237,11 @@ namespace Ninbot
 			int currentPrecedence
 			)
 		{
-			if (input.Type != ExpressionBlockTypes.FunctionCall) return input;
+			if (input.Type != ExpressionBlockTypes.Unresolved) return input;
 			if (!operators.precedence.ContainsKey(currentPrecedence)) return input;
 
 			var operatorTokens = operators.precedence[currentPrecedence];
-			var rhs = ExpressionBlock.Create(ExpressionBlockTypes.FunctionCall, null);
+			var rhs = ExpressionBlock.Create(ExpressionBlockTypes.Unresolved, null);
 			var foundOperator = false;
 
 			var i = input.SubExpressions.Count - 1;
@@ -139,7 +266,7 @@ namespace Ninbot
 
 			var operatorToken = input.SubExpressions[i].Token.Value;
 
-			var lhs = ExpressionBlock.Create(ExpressionBlockTypes.FunctionCall, null);
+			var lhs = ExpressionBlock.Create(ExpressionBlockTypes.Unresolved, null);
 			for (int x = 0; x < i ; ++x)
 				lhs.SubExpressions.Add(input.SubExpressions[x]);
 
@@ -158,29 +285,69 @@ namespace Ninbot
 			else
 				r.SubExpressions.Add(ParseBinaryOperations(rhs, operators, currentPrecedence + 1));
 
+
 			return r;
 		}
 
 		private static ExpressionBlock ParseExpression(
 			Iterator<Token> state, 
 			OperatorSettings operators, 
-			bool root = false)
+			bool root = false,
+			TokenType openedWith = TokenType.EndOfFile)
 		{
-			var r = ExpressionBlock.Create(ExpressionBlockTypes.FunctionCall, null);
+			var r = ExpressionBlock.Create(ExpressionBlockTypes.Unresolved, null);
 			Token? lastToken = null;
 
 			while (!state.AtEnd())
 			{
 				lastToken = state.Next();
-				if (state.Next().Type == TokenType.OpenParen)
+				if (state.Next().Type == TokenType.Dot)
 				{
+					if (r.SubExpressions.Count == 0)
+						throw new CompileError("Can't access member of nothing", state.Next());
 					state.Advance();
-					r.SubExpressions.Add(ParseExpression(state, operators));
+					if (state.AtEnd() || state.Next().Type != TokenType.Identifier)
+						throw new CompileError("Expected identifier", state.AtEnd() ? lastToken.Value : state.Next());
+					var newExpression = ExpressionBlock.Create(ExpressionBlockTypes.MemberAccess, state.Next());
+					newExpression.SubExpressions.Add(r.SubExpressions[r.SubExpressions.Count - 1]);
+					r.SubExpressions[r.SubExpressions.Count - 1] = newExpression;
+					state.Advance();
 				}
-				else if (state.Next().Type == TokenType.CloseParen)
+				else if (state.Next().Type == TokenType.OpenParen)
 				{
 					state.Advance();
-					return ParseBinaryOperations(r, operators, 0);
+					var containedExpression = ParseExpression(state, operators, false, TokenType.OpenParen);
+					r.SubExpressions.Add(containedExpression);
+				}
+				else if (state.Next().Type == TokenType.OpenBracket)
+				{
+					state.Advance();
+					var containedExpression = ParseExpression(state, operators, false, TokenType.OpenBracket);
+					if (containedExpression.Type == ExpressionBlockTypes.Unresolved)
+					{
+						containedExpression.Type = ExpressionBlockTypes.FunctionCall;
+						r.SubExpressions.Add(containedExpression);
+					}
+					else
+					{
+						var wrap = ExpressionBlock.Create(ExpressionBlockTypes.FunctionCall, null);
+						wrap.SubExpressions.Add(containedExpression);
+						r.SubExpressions.Add(wrap);
+					}
+				}
+				else if (state.Next().Type == TokenType.CloseParen || state.Next().Type == TokenType.CloseBracket)
+				{
+					if (openedWith == TokenType.OpenParen && state.Next().Type != TokenType.CloseParen)
+						throw new CompileError("Mismatched parenthethis", state.Next());
+					else if (openedWith == TokenType.OpenBracket && state.Next().Type != TokenType.CloseBracket)
+						throw new CompileError("Mismatched brackets", state.Next());
+					else if (openedWith == TokenType.EndOfFile)
+						throw new CompileError("Unexpected close paren or bracket", state.Next());
+
+					state.Advance();
+					var finalResult = ParseBinaryOperations(r, operators, 0);
+					if (finalResult.SubExpressions.Count == 1) return finalResult.SubExpressions[0];
+					return finalResult;
 				}
 				else
 				{
@@ -200,17 +367,27 @@ namespace Ninbot
 			OperatorSettings operators,
 			VirtualMachine.InstructionList into)
 		{
-			if (expressionBlock.Type == ExpressionBlockTypes.Token)
+			if (expressionBlock.Type == ExpressionBlockTypes.Unresolved)
+			{
+				throw new CompileError("Multiple segments without an intervening operator. Did you mean to invoke?",
+					expressionBlock.FirstValidToken() ?? new Token());
+			}
+			else if (expressionBlock.Type == ExpressionBlockTypes.Token)
 			{
 				var internalToken = expressionBlock.Token.Value;
 				if (internalToken.Type == TokenType.Identifier)
-					into.AddInstruction("LOOKUP NEXT", internalToken.Value);
+					into.AddInstruction("LOOKUP NEXT PUSH", internalToken.Value);
 				else if (internalToken.Type == TokenType.String)
 					into.AddInstruction("MOVE NEXT PUSH", internalToken.Value);
 				else if (internalToken.Type == TokenType.Number)
 					into.AddInstruction("MOVE NEXT PUSH", Convert.ToSingle(internalToken.Value));
 				else
 					throw new CompileError("Unable to translate token type", internalToken);
+			}
+			else if (expressionBlock.Type == ExpressionBlockTypes.MemberAccess)
+			{
+				EmitExpressionTree(expressionBlock.SubExpressions[0], operators, into);
+				into.AddInstruction("LOOKUP_MEMBER NEXT POP PUSH", expressionBlock.Token.Value.Value);
 			}
 			else if (expressionBlock.Type == ExpressionBlockTypes.BinaryOperation)
 			{
@@ -231,7 +408,7 @@ namespace Ninbot
 					into.AddInstruction("APPEND POP PEEK PEEK");
 				}
 				into.AddInstruction("INVOKE POP");
-				into.AddInstruction("MOVE R PUSH"); 
+				//into.AddInstruction("MOVE R PUSH"); 
 			}
 			else
 				throw new CompileError("Unknown expression block type", null);
@@ -264,8 +441,8 @@ namespace Ninbot
 				r.Type = headerState.Next().Value;
 				headerState.Advance();
 
-				if (headerState.Next().Type != TokenType.Identifier)
-					throw new CompileError("Expected identifier", headerState.Next());
+				if (headerState.AtEnd() || headerState.Next().Type != TokenType.Identifier)
+					throw new CompileError("Expected identifier", headerState.AtEnd() ? header.Tokens[0] : headerState.Next());
 				r.Name = headerState.Next().Value;
 				headerState.Advance();
 
@@ -278,18 +455,21 @@ namespace Ninbot
 					headerState.Advance();
 				}
 
-				r.Instructions = new VirtualMachine.InstructionList();
+				var bodyInstructions = new VirtualMachine.InstructionList();
 				if (block.Children.Count == 2)
-				{
-					BuildBlock(block.Children[1] as Block, operators, r.Instructions);
-					r.Instructions = r.Instructions[0] as VirtualMachine.InstructionList;
-				}
+					BuildBlock(block.Children[1] as Block, operators, bodyInstructions);
+				else
+					bodyInstructions.Add(new VirtualMachine.InstructionList());
 
+				r.Instructions = new VirtualMachine.InstructionList(
+					new VirtualMachine.InPlace(bodyInstructions[0] as VirtualMachine.InstructionList),
+					"BREAK POP");
+			
 				return r;
 			}
 			catch (CompileError ce)
 			{
-				throw;
+				throw ce;
 			}
 			catch (Exception e)
 			{
@@ -297,9 +477,13 @@ namespace Ninbot
 			}
 		}
 
-        public static List<Declaration> Build(Iterator<Token> Stream, OperatorSettings operators)
+        public static List<Declaration> Build(
+			Iterator<Token> Stream, 
+			OperatorSettings operators,
+			Func<String,ErrorStrategy> OnError)
         {
-			var nodeIterator = DeclarationIterator.Create(BlockIterator.Create(LineIterator.Create(Stream)), operators);
+			var nodeIterator = DeclarationIterator.Create(
+				BlockIterator.Create(LineIterator.Create(Stream)), operators, OnError);
 			var r = new List<Declaration>();
 			while (!nodeIterator.AtEnd())
 			{

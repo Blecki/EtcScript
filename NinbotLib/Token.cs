@@ -24,6 +24,9 @@ namespace Ninbot
         Operator,
         OpenParen,
         CloseParen,
+		OpenBracket,
+		CloseBracket,
+		Dot,
 
         String,
         Number,
