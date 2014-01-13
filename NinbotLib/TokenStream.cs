@@ -85,6 +85,7 @@ namespace Ninbot
 			if (c == '[') { advance_source(); return Token.Create(TokenType.OpenBracket, "[", tokenStart); }
 			if (c == ']') { advance_source(); return Token.Create(TokenType.CloseBracket, "]", tokenStart); }
 			if (c == '.') { advance_source(); return Token.Create(TokenType.Dot, ".", tokenStart); }
+			if (c == ';') { advance_source(); return Token.Create(TokenType.Semicolon, ";", tokenStart); }
 			if (c == '\"')
 			{
 				var literal = "";

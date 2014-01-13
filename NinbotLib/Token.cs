@@ -27,6 +27,7 @@ namespace Ninbot
 		OpenBracket,
 		CloseBracket,
 		Dot,
+		Semicolon,
 
         String,
         Number,

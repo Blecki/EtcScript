@@ -149,7 +149,11 @@ namespace Ninbot
 			}
 			else
 			{
+				var annotation = "";
+				for (int i = 0; i < (construct as Line).IndentionLevel; ++i)
+					annotation += " →  ";
 				into.Add(VirtualMachine.Annotation.Create(
+					annotation +
 					String.Join(" ", (construct as Line).Tokens.Select((t) => { return t.Value; }))));
 				var lineState = (construct as Line).GetIterator();
 				if (lineState.Next().Type != TokenType.Identifier) throw new CompileError("Expected identifier", state.Next());

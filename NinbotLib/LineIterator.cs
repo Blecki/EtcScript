@@ -10,6 +10,7 @@ namespace Ninbot
 		public Iterator<Token> stream;
 		private Line next;
 		private int foundEnd = 2;
+		private int rememberedIndention = 0;
 
 		private LineIterator() { }
 
@@ -30,7 +31,7 @@ namespace Ninbot
 			next = null;
 
 			if (stream.AtEnd()) return;
-			next = new Line(0);
+			next = new Line(rememberedIndention);
 
 			while (!stream.AtEnd())
 			{
@@ -38,6 +39,13 @@ namespace Ninbot
 				if (token.Type == TokenType.NewLine)
 				{
 					if (next.Tokens.Count == 0) next.IndentionLevel = 0; //Collapse blank lines
+					rememberedIndention = 0;
+					stream.Advance();
+					break;
+				}
+				else if (token.Type == TokenType.Semicolon)
+				{
+					rememberedIndention = next.IndentionLevel;
 					stream.Advance();
 					break;
 				}
