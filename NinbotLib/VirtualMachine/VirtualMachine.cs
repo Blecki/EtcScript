@@ -259,6 +259,18 @@ namespace Ninbot.VirtualMachine
                         }
                         break;
                     
+					case InstructionSet.MARK_STACK:
+						SetOperand(ins.FirstOperand, context.Stack.Count, context);
+						break;
+
+					case InstructionSet.RESTORE_STACK:
+						{
+							var goal = GetOperand(ins.FirstOperand, context) as int?;
+							if (goal.HasValue)
+								while (context.Stack.Count > goal.Value) context.Stack.Pop();
+						}
+						break;
+
                     #endregion
 
                     #region Lists
@@ -575,6 +587,7 @@ namespace Ninbot.VirtualMachine
                 case Operand.PEEK: context.Stack.Pop(); context.Stack.Push(value); break;
                 case Operand.POP: throw new InvalidOperationException("Can't set to pop");
                 case Operand.PUSH: context.Stack.Push(value); break;
+				case Operand.R: context.R = value; break;
             }
         }
 
@@ -587,6 +600,7 @@ namespace Ninbot.VirtualMachine
                 case Operand.PEEK: return context.Stack.Peek();
                 case Operand.POP: return context.Stack.Pop();
                 case Operand.PUSH: throw new InvalidOperationException("Can't fetch from push");
+				case Operand.R: return context.R;
                 default: throw new InvalidProgramException();
             }
         }

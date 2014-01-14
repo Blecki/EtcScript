@@ -31,17 +31,29 @@ namespace Ninbot
 			var lValue = ParseExpression(lValueLine.GetIterator(), operators, true);
 			if (lValue.Type == ExpressionBlockTypes.Token && lValue.Token.Value.Type == TokenType.Identifier)
 			{
-				EmitExpressionTree(ParseExpression(state, operators, true), operators, into);
-				into.AddInstruction("SET_VARIABLE POP NEXT", lValue.Token.Value.Value);
+				EmitExpressionTree(ParseExpression(state, operators, true), operators, into, "R");
+				into.AddInstruction("SET_VARIABLE R NEXT", lValue.Token.Value.Value);
 			}
 			else if (lValue.Type == ExpressionBlockTypes.MemberAccess)
 			{
-				EmitExpressionTree(lValue.SubExpressions[0], operators, into);
-				EmitExpressionTree(ParseExpression(state, operators, true), operators, into);
-				into.AddInstruction("SET_MEMBER POP NEXT POP", lValue.Token.Value.Value);
+				EmitExpressionTree(lValue.SubExpressions[0], operators, into, "PUSH");
+				EmitExpressionTree(ParseExpression(state, operators, true), operators, into, "R");
+				into.AddInstruction("SET_MEMBER R NEXT POP", lValue.Token.Value.Value);
 			}
 			else
 				throw new CompileError("Expected an lvalue", lValueLine.Tokens[0]);
+		}
+
+		private static void BuildIfHeader(
+			Iterator<Token> state,
+			OperatorSettings operators,
+			VirtualMachine.InstructionList into)
+		{
+			state.Advance();  //Skip 'if'
+
+			EmitExpressionTree(ParseExpression(state, operators, true), operators, into, "R");
+			into.AddInstruction("IF_FALSE R",
+				"SKIP NEXT", 2); //Should be followed immediately by then and else branches.
 		}
 
 		private static void BuildForeachStatement(
@@ -67,30 +79,27 @@ namespace Ninbot
 			{
 				state.Advance();
 				//Go ahead and emit the expression that provides the list
-				EmitExpressionTree(ParseExpression(state, operators, true), operators, into);
+				EmitExpressionTree(ParseExpression(state, operators, true), operators, into, "R");
 				into.AddInstruction(
-					"SET_VARIABLE PEEK NEXT", "__list@" + valueName, //Store the list of items in scope
-					"LENGTH POP PUSH",
-					"SET_VARIABLE POP NEXT", "__total@" + valueName, //Total elements in list
+					"SET_VARIABLE R NEXT", "__list@" + valueName, //Store the list of items in scope
+					"LENGTH R R",
+					"SET_VARIABLE R NEXT", "__total@" + valueName, //Total elements in list
 					"SET_VARIABLE NEXT NEXT", 0, "__counter@" + valueName,
 					"BRANCH PUSH NEXT",       //LOOP BRANCH
 					new VirtualMachine.InstructionList(
-						"LOOKUP NEXT PUSH", "__total@" + valueName,
+						"LOOKUP NEXT R", "__total@" + valueName,
 						"LOOKUP NEXT PUSH", "__counter@" + valueName,
-						"GREATER_EQUAL POP POP PUSH",
-						"IF_TRUE POP",  //If counter is 0, stop looping.
-						"BRANCH PUSH NEXT",
-						new VirtualMachine.InstructionList(
-							"MOVE POP NONE",    //Remove inner most MARK from stack
-							"BREAK POP"),       //Break to LOOP BRANCH
-						"LOOKUP NEXT PUSH", "__list@" + valueName,
+						"GREATER_EQUAL POP R R",
+						"IF_TRUE R",  //If counter is 0, stop looping.
+						"BREAK POP",
+						"LOOKUP NEXT R", "__list@" + valueName,
 						"LOOKUP NEXT PUSH", "__counter@" + valueName,
-						"INDEX POP POP PUSH",
-						"SET_VARIABLE POP NEXT", valueName,
+						"INDEX POP R R",
+						"SET_VARIABLE R NEXT", valueName,
 						body,
-						"LOOKUP NEXT PUSH", "__counter@" + valueName, //Increment the counter
-						"INCREMENT POP PUSH",
-						"SET_VARIABLE POP NEXT", "__counter@" + valueName,
+						"LOOKUP NEXT R", "__counter@" + valueName, //Increment the counter
+						"INCREMENT R R",
+						"SET_VARIABLE R NEXT", "__counter@" + valueName,
 						"CONTINUE POP")
 						);
 			}
@@ -114,20 +123,17 @@ namespace Ninbot
 					"SET_VARIABLE NEXT NEXT", low, "__counter@" + valueName,
 					"BRANCH PUSH NEXT",       //LOOP BRANCH
 					new VirtualMachine.InstructionList(
-						"LOOKUP NEXT PUSH", "__total@" + valueName,
+						"LOOKUP NEXT R", "__total@" + valueName,
 						"LOOKUP NEXT PUSH", "__counter@" + valueName,
-						"GREATER POP POP PUSH",
-						"IF_TRUE POP",  //If counter is >= total, stop looping.
-						"BRANCH PUSH NEXT",
-						new VirtualMachine.InstructionList(
-							"MOVE POP NONE",    //Remove inner most MARK from stack
-							"BREAK POP"),       //Break to LOOP BRANCH
-						"LOOKUP NEXT PUSH", "__counter@" + valueName,
-						"SET_VARIABLE POP NEXT", valueName,
+						"GREATER POP R R",
+						"IF_TRUE R",  //If counter is >= total, stop looping.
+						"BREAK POP",
+						"LOOKUP NEXT R", "__counter@" + valueName,
+						"SET_VARIABLE R NEXT", valueName,
 						body,
-						"LOOKUP NEXT PUSH", "__counter@" + valueName, //Increment the counter
-						"INCREMENT POP PUSH",
-						"SET_VARIABLE POP NEXT", "__counter@" + valueName,
+						"LOOKUP NEXT R", "__counter@" + valueName, //Increment the counter
+						"INCREMENT R R",
+						"SET_VARIABLE R NEXT", "__counter@" + valueName,
 						"CONTINUE POP")
 						);
 			}
@@ -139,7 +145,8 @@ namespace Ninbot
 		private static void BuildStatement(
 			Iterator<Construct> state, 
 			OperatorSettings operators,
-			VirtualMachine.InstructionList into)
+			VirtualMachine.InstructionList into,
+			bool allowElseBeforeIf = false)
 		{
 			var construct = state.Next();
 			if (construct is Block)
@@ -174,16 +181,66 @@ namespace Ninbot
 					BuildForeachStatement(lineState, operators, body, into);
 					state.Advance();
 				}
+				else if (lineState.Next().Value == "if" || lineState.Next().Value == "else")
+				{
+					if (lineState.Next().Value == "else")
+					{
+						if (allowElseBeforeIf) state.Advance();
+						else throw new CompileError("Else not allowed here", lineState.Next());
+					}
+
+					BuildIfHeader(lineState, operators, into);
+					state.Advance();
+					if (state.AtEnd() || !(state.Next() is Block))
+						into.AddInstruction("MOVE PEEK PEEK"); //No block?
+					else
+					{
+						into.AddInstruction("BRANCH PUSH NEXT");
+						var thenBlock = new VirtualMachine.InstructionList();
+						BuildBlock(state.Next() as Block, operators, thenBlock);
+						(thenBlock[0] as VirtualMachine.InstructionList).AddInstruction("BREAK POP");
+						into.Add(thenBlock[0]);
+						into.AddInstruction("SKIP NEXT", 1); //Skip else branch
+						state.Advance();
+					}
+
+					if (state.AtEnd() || !(state.Next() is Line) || (state.Next() as Line).Tokens[0].Value != "else")
+						into.AddInstruction("MOVE PEEK PEEK"); //No else block
+					else
+					{
+						into.AddInstruction("BRANCH PUSH NEXT");
+
+						construct = state.Next();
+						lineState = (construct as Line).GetIterator();
+						lineState.Advance(); //Assume begins with 'else'.
+
+						var elseBlock = new VirtualMachine.InstructionList();
+						if (!lineState.AtEnd() && lineState.Next().Value == "if") //else if!
+							BuildStatement(state, operators, elseBlock, true);
+						else
+						{
+							state.Advance();
+							if (state.AtEnd() || !(state.Next() is Block))
+							{ }
+							else
+							{
+								var temp = new VirtualMachine.InstructionList();
+								BuildBlock(state.Next() as Block, operators, temp);
+								elseBlock.AddRange(temp[0] as VirtualMachine.InstructionList);
+							}
+						}
+
+						elseBlock.AddInstruction("BREAK POP");
+						into.Add(elseBlock);
+						state.Advance();
+					}
+				}
 				else if (lineState.Next().Value == "return")
 				{
 					lineState.Advance();
 					if (!lineState.AtEnd())
-					{
-						EmitExpressionTree(ParseExpression(lineState, operators, true), operators, into);
-						into.AddInstruction("SWAP_TOP", "BREAK POP");
-					}
-					else
-						into.AddInstruction("BREAK POP");
+						EmitExpressionTree(ParseExpression(lineState, operators, true), operators, into, "R");
+					into.AddInstruction("LOOKUP NEXT PUSH", "@stack-size", "RESTORE_STACK POP", "BREAK POP");
 					state.Advance();
 				}
 				else
@@ -191,8 +248,7 @@ namespace Ninbot
 					//If it's not any special statement, it must be a function call.
 					var expression = ParseExpression(lineState, operators, true);
 					if (expression.Type == ExpressionBlockTypes.Unresolved) expression.Type = ExpressionBlockTypes.FunctionCall;
-					EmitExpressionTree(expression, operators, into);
-					into.AddInstruction("MOVE POP NONE"); //Cleanup stack
+					EmitExpressionTree(expression, operators, into, "R");
 					state.Advance();
 				}
 			}
@@ -369,7 +425,8 @@ namespace Ninbot
 		private static void EmitExpressionTree(
 			ExpressionBlock expressionBlock,
 			OperatorSettings operators,
-			VirtualMachine.InstructionList into)
+			VirtualMachine.InstructionList into,
+			String destinationOperand)
 		{
 			if (expressionBlock.Type == ExpressionBlockTypes.Unresolved)
 			{
@@ -380,26 +437,26 @@ namespace Ninbot
 			{
 				var internalToken = expressionBlock.Token.Value;
 				if (internalToken.Type == TokenType.Identifier)
-					into.AddInstruction("LOOKUP NEXT PUSH", internalToken.Value);
+					into.AddInstruction("LOOKUP NEXT " + destinationOperand, internalToken.Value);
 				else if (internalToken.Type == TokenType.String)
-					into.AddInstruction("MOVE NEXT PUSH", internalToken.Value);
+					into.AddInstruction("MOVE NEXT " + destinationOperand, internalToken.Value);
 				else if (internalToken.Type == TokenType.Number)
-					into.AddInstruction("MOVE NEXT PUSH", Convert.ToSingle(internalToken.Value));
+					into.AddInstruction("MOVE NEXT " + destinationOperand, Convert.ToSingle(internalToken.Value));
 				else
 					throw new CompileError("Unable to translate token type", internalToken);
 			}
 			else if (expressionBlock.Type == ExpressionBlockTypes.MemberAccess)
 			{
-				EmitExpressionTree(expressionBlock.SubExpressions[0], operators, into);
-				into.AddInstruction("LOOKUP_MEMBER NEXT POP PUSH", expressionBlock.Token.Value.Value);
+				EmitExpressionTree(expressionBlock.SubExpressions[0], operators, into, "PUSH");
+				into.AddInstruction("LOOKUP_MEMBER NEXT POP " + destinationOperand, expressionBlock.Token.Value.Value);
 			}
 			else if (expressionBlock.Type == ExpressionBlockTypes.BinaryOperation)
 			{
 				foreach (var subExpression in expressionBlock.SubExpressions)
-					EmitExpressionTree(subExpression, operators, into);
+					EmitExpressionTree(subExpression, operators, into, "PUSH");
 				var @operator = operators.FindOperator(expressionBlock.Token.Value.Value);
 				if (@operator.HasValue)
-					into.AddInstruction(@operator.Value.instruction.ToString() + " POP POP PUSH");
+					into.AddInstruction(@operator.Value.instruction.ToString() + " POP POP " + destinationOperand);
 				else
 					throw new CompileError("Undefined operator", expressionBlock.Token.Value);
 			}
@@ -408,11 +465,12 @@ namespace Ninbot
 				into.AddInstruction("EMPTY_LIST PUSH");
 				foreach (var subExpression in expressionBlock.SubExpressions)
 				{
-					EmitExpressionTree(subExpression, operators, into);
-					into.AddInstruction("APPEND POP PEEK PEEK");
+					EmitExpressionTree(subExpression, operators, into, "R");
+					into.AddInstruction("APPEND R PEEK PEEK");
 				}
 				into.AddInstruction("INVOKE POP");
-				//into.AddInstruction("MOVE R PUSH"); 
+				if (destinationOperand != "R")
+					into.AddInstruction("MOVE R " + destinationOperand); 
 			}
 			else
 				throw new CompileError("Unknown expression block type", null);
@@ -466,7 +524,11 @@ namespace Ninbot
 					bodyInstructions.Add(new VirtualMachine.InstructionList());
 
 				r.Instructions = new VirtualMachine.InstructionList(
+					"MARK_STACK R",
+					"SET_VARIABLE R NEXT", "@stack-size",
 					new VirtualMachine.InPlace(bodyInstructions[0] as VirtualMachine.InstructionList),
+					//"LOOKUP NEXT R", "@stack-size", //If we made it back here, stack is clean.
+					//"RESTORE_STACK R",
 					"BREAK POP");
 			
 				return r;

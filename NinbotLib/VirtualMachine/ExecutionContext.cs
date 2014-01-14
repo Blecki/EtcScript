@@ -39,6 +39,7 @@ namespace Ninbot.VirtualMachine
 	{
 		public ScriptObject Frame { get; internal set; }
 		internal Stack<Object> Stack = new Stack<Object>();
+		public Object R;
 		public ExecutionState ExecutionState { get; set; }
 		public CodeContext CurrentInstruction;
 		public Object Tag;
@@ -51,6 +52,7 @@ namespace Ninbot.VirtualMachine
 		{
 			Stack.Clear();
 			Stack.Push(new CodeContext(new InstructionList(), 0)); //Fake return point
+			R = null;
 			Frame = new ScriptObject("@parent", GlobalScope);
 			ExecutionState = ExecutionState.Running;
 			CurrentInstruction = ExecutionPoint;

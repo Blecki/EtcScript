@@ -14,22 +14,18 @@ namespace Ninbot
 		private OperatorSettings operators;
 		private String delimeters = "!$%^&*()-=+|/<> \t\r\n\".";
 
-		private void advance_source(int distance = 1)
+		private void advance_source()
 		{
-			while (distance > 0)
+			if (source.AtEnd()) return;
+
+			var r = source.Next();
+			source.Advance();
+			location.Character += 1;
+
+			if (r == '\r' || r == '\n')
 			{
-				if (source.AtEnd()) return;
-
-				var r = source.Next();
-				source.Advance();
-				location.Character += 1;
-
-				if (r == '\r' || r == '\n')
-				{
-					location.Line += 1;
-					location.Character = 0;
-				}
-				--distance;
+				location.Line += 1;
+				location.Character = 0;
 			}
 		}
 
@@ -92,10 +88,14 @@ namespace Ninbot
 			while ((c == ' ' || c == '\r') && !source.AtEnd())
 			{
 				advance_source();
-				c = source.Next();
+				if (!source.AtEnd()) c = source.Next();
 			}
 
+			if (c == '#')
+				while (!source.AtEnd() && source.Next() != '\n') advance_source();
+
 			if (source.AtEnd()) return null;
+			else c = source.Next();
 
 			var tokenStart = location;
 

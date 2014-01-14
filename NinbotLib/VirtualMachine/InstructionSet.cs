@@ -16,6 +16,8 @@ namespace Ninbot.VirtualMachine
         RECORD,         // DESTINATION  UNUSED          UNUSED      --Create an empty record and store in DESTINATION.
 
         MARK,           // DESTINATION  UNUSED          UNUSED      --Places the current execution point in DESTINATION.
+		MARK_STACK,
+		RESTORE_STACK,
         BREAK,          // SOURCE       UNUSED          UNUSED      --Moves execution to the point in SOURCE, skipping 1 instruction.
         BRANCH,         // CODE         DESTINATION     UNUSED      --MARK; then move execution into embedded code CODE.
         CONTINUE,       // SOURCE       UNUSED          UNUSED      --Moves execution to the point in SOURCE, without advancement.

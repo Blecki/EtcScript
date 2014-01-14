@@ -33,7 +33,7 @@ namespace Ninbot.VirtualMachine
 
 			var result = method.Invoke(ThisObject, trimmedArguments.ToArray());
 
-			VirtualMachine.SetOperand(Operand.PUSH, result, context);
+			VirtualMachine.SetOperand(Operand.R, result, context);
 			return InvokationResult.Success;
 		}
 	}

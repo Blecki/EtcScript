@@ -49,9 +49,9 @@ namespace NinbotTests
 			if (context.ExecutionState == Ninbot.VirtualMachine.ExecutionState.Error)
 				Console.WriteLine("Error:" + context.ErrorObject.ToString());
 
-			if (context.Peek == null) Console.WriteLine("NULL");
-			else Console.WriteLine(context.Peek.ToString());
-			return context.Peek;
+			if (context.R == null) Console.WriteLine("NULL");
+			else Console.WriteLine(context.R.ToString());
+			return context.R;
         }
     }
 }

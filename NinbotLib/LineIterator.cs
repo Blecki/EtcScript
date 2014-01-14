@@ -51,7 +51,7 @@ namespace Ninbot
 				}
 				else if (token.Type == TokenType.Tab && next.Tokens.Count == 0)
 					next.IndentionLevel += 1;
-				else
+				else if (token.Type != TokenType.Tab)
 					next.Tokens.Add(token);
 
 				stream.Advance();

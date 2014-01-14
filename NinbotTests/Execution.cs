@@ -40,6 +40,18 @@ namespace NinbotTests
 	return 4 + 5", 9);
 		}
 
+		[Test]
+		public void _if()
+		{
+			Assert.AreEqual(5,
+				TestHelper.RunSimpleTest(@"Activity foo
+	let x = 4
+	if x == 4
+		return 5
+	else
+		return 9
+"));
+		}
     }
 
 }

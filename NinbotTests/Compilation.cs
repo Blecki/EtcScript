@@ -40,6 +40,13 @@ namespace NinbotTests
 	let x = 5-4");
 		}
 
+		[Test]
+		public void comments()
+		{
+			TestHelper.CompileTestAssertNoErrors(@"activity foo #comment comment comment
+	let x = 4 #comment comment comment");
+		}
+
         
     }
 

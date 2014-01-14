@@ -28,7 +28,7 @@ namespace Ninbot.VirtualMachine
             try
             {
                 var result = NativeImplementation.Invoke(context, arguments.GetRange(1, arguments.Count - 1));
-                VirtualMachine.SetOperand(Operand.PUSH, result, context);
+                VirtualMachine.SetOperand(Operand.R, result, context);
                 return InvokationResult.Success;
             }
             catch (Exception e)
