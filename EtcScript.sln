@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C# Express 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NinbotTests", "NinbotTests\NinbotTests.csproj", "{6CC49514-6923-4D0F-9276-F9DC81651F7D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtcScriptTests", "EtcScriptTests\EtcScriptTests.csproj", "{6CC49514-6923-4D0F-9276-F9DC81651F7D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NinbotLib", "NinbotLib\NinbotLib.csproj", "{EF2EBD45-4D8C-4E62-AAB7-57940E9EDAA6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtcScriptLib", "EtcScriptLib\EtcScriptLib.csproj", "{EF2EBD45-4D8C-4E62-AAB7-57940E9EDAA6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NinbotDebug", "NinbotDebug\NinbotDebug.csproj", "{58B7839F-8F7F-4390-BA0C-7573D31072C5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtcScriptDebug", "EtcScriptDebug\EtcScriptDebug.csproj", "{58B7839F-8F7F-4390-BA0C-7573D31072C5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

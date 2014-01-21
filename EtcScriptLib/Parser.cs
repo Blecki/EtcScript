@@ -185,7 +185,7 @@ namespace Ninbot
 				{
 					if (lineState.Next().Value == "else")
 					{
-						if (allowElseBeforeIf) state.Advance();
+						if (allowElseBeforeIf) lineState.Advance();
 						else throw new CompileError("Else not allowed here", lineState.Next());
 					}
 

@@ -55,6 +55,7 @@
     <Compile Include="Token.cs" />
     <Compile Include="TokenStream.cs" />
     <Compile Include="VirtualMachine\AutoBind.cs" />
+    <Compile Include="VirtualMachine\LambdaFunction.cs" />
     <Compile Include="VirtualMachine\Debug.cs" />
     <Compile Include="VirtualMachine\ErrorHandler.cs" />
     <Compile Include="VirtualMachine\ExecutionContext.cs" />

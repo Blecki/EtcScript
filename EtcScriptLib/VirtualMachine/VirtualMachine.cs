@@ -252,10 +252,10 @@ namespace Ninbot.VirtualMachine
 
                     case InstructionSet.LAMBDA:
                         {
-							//var arguments = GetOperand(ins.FirstOperand, context) as List<String>;
-							//var code = GetOperand(ins.SecondOperand, context) as InstructionList;
-							//var lambda = LambdaFunction.CreateLambda(context.Scope.CaptureScope(), arguments, code);
-							//SetOperand(ins.ThirdOperand, lambda, context);
+							var arguments = GetOperand(ins.FirstOperand, context) as List<String>;
+							var code = GetOperand(ins.SecondOperand, context) as InstructionList;
+							var lambda = LambdaFunction.CreateLambda("", code, context.Frame, arguments);
+							SetOperand(ins.ThirdOperand, lambda, context);
                         }
                         break;
                     
@@ -268,6 +268,13 @@ namespace Ninbot.VirtualMachine
 							var goal = GetOperand(ins.FirstOperand, context) as int?;
 							if (goal.HasValue)
 								while (context.Stack.Count > goal.Value) context.Stack.Pop();
+						}
+						break;
+
+					case InstructionSet.SET_FRAME:
+						{
+							var frame = GetOperand(ins.FirstOperand, context) as ScriptObject;
+							context.Frame = frame;
 						}
 						break;
 

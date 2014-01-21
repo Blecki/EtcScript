@@ -9,7 +9,7 @@ namespace NinbotDebug
 	{
 		static void Main(string[] args)
 		{
-			(new NinbotTests.ErrorsReported()).errors_reported();
+			(new NinbotTests.Execution())._else_if();
 		}
 	}
 }

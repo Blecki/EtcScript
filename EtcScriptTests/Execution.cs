@@ -52,6 +52,21 @@ namespace NinbotTests
 		return 9
 "));
 		}
+
+		[Test]
+		public void _else_if()
+		{
+			Assert.AreEqual(9,
+				TestHelper.RunSimpleTest(@"Activity foo
+	let x = 7
+	if x == 4
+		return 5
+	else if x == 7
+		return 9
+	else
+		return 10
+"));
+		}
     }
 
 }

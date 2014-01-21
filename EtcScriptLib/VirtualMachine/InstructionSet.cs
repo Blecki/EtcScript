@@ -34,6 +34,7 @@ namespace Ninbot.VirtualMachine
 
         INVOKE,
         LAMBDA,
+		SET_FRAME,		// SOURCE									Replace the current frame with SOURCE.
 
         SET_VARIABLE,
 
