@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace NinbotDebug
+namespace EtcScriptDebug
 {
 	class Program
 	{
 		static void Main(string[] args)
 		{
-			(new NinbotTests.Execution())._else_if();
+			(new EtcScriptTests.Execution())._else_if();
 		}
 	}
 }

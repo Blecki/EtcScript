@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Ninbot
+namespace EtcScriptLib
 {
 	internal class BlockIterator : Iterator<Block>
 	{

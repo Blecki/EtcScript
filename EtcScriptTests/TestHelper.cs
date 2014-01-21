@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 
-namespace NinbotTests
+namespace EtcScriptTests
 {
     public class TestHelper
     {
@@ -23,8 +23,8 @@ namespace NinbotTests
 		{
 			Console.WriteLine("Test script: " + script);
 			bool wasError = false;
-			var declaration = Ninbot.Compile.CompileDeclaration(script,
-				(s) => { Console.WriteLine(s); wasError = true; return Ninbot.ErrorStrategy.Continue; });
+			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
+				(s) => { Console.WriteLine(s); wasError = true; return EtcScriptLib.ErrorStrategy.Continue; });
 			Assert.False(wasError);
 		}
 
@@ -32,8 +32,8 @@ namespace NinbotTests
 		{
 			Console.WriteLine("Test script: " + script);
 			bool wasError = false;
-			var declaration = Ninbot.Compile.CompileDeclaration(script,
-				(s) => { Console.WriteLine(s); wasError = true; return Ninbot.ErrorStrategy.Continue; });
+			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
+				(s) => { Console.WriteLine(s); wasError = true; return EtcScriptLib.ErrorStrategy.Continue; });
 			Assert.True(wasError);
 		}
 
@@ -41,12 +41,12 @@ namespace NinbotTests
         {
 			Console.WriteLine("Test script: " + script);
 
-			var declaration = Ninbot.Compile.CompileDeclaration(script,
-				(s) => { Console.WriteLine(s); return Ninbot.ErrorStrategy.Continue; });
-			var context = new Ninbot.VirtualMachine.ExecutionContext(new Ninbot.VirtualMachine.ScriptObject(),
-				new Ninbot.VirtualMachine.CodeContext(declaration.Instructions, 0));
-			Ninbot.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
-			if (context.ExecutionState == Ninbot.VirtualMachine.ExecutionState.Error)
+			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
+				(s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Continue; });
+			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(new EtcScriptLib.VirtualMachine.ScriptObject(),
+				new EtcScriptLib.VirtualMachine.CodeContext(declaration.Instructions, 0));
+			EtcScriptLib.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
+			if (context.ExecutionState == EtcScriptLib.VirtualMachine.ExecutionState.Error)
 				Console.WriteLine("Error:" + context.ErrorObject.ToString());
 
 			if (context.R == null) Console.WriteLine("NULL");

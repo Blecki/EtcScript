@@ -8,8 +8,8 @@
     <ProjectGuid>{58B7839F-8F7F-4390-BA0C-7573D31072C5}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NinbotDebug</RootNamespace>
-    <AssemblyName>NinbotDebug</AssemblyName>
+    <RootNamespace>EtcScriptDebug</RootNamespace>
+    <AssemblyName>EtcScriptDebug</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -47,11 +47,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NinbotLib\NinbotLib.csproj">
+    <ProjectReference Include="..\EtcScriptLib\EtcScriptLib.csproj">
       <Project>{EF2EBD45-4D8C-4E62-AAB7-57940E9EDAA6}</Project>
       <Name>NinbotLib</Name>
     </ProjectReference>
-    <ProjectReference Include="..\NinbotTests\NinbotTests.csproj">
+    <ProjectReference Include="..\EtcScriptTests\EtcScriptTests.csproj">
       <Project>{6CC49514-6923-4D0F-9276-F9DC81651F7D}</Project>
       <Name>NinbotTests</Name>
     </ProjectReference>

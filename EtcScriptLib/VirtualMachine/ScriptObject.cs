@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Ninbot.VirtualMachine
+namespace EtcScriptLib.VirtualMachine
 {
     public class ScriptObject
     {

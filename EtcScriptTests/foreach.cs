@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 
-namespace NinbotTests
+namespace EtcScriptTests
 {
     [TestFixture]
     public class Foreach
@@ -14,12 +14,12 @@ namespace NinbotTests
         {
 			int total_calls = 0;
 
-			var environment = new Ninbot.VirtualMachine.ScriptObject();
-			environment.SetProperty("foo", new Ninbot.VirtualMachine.NativeFunction((c, args) =>
+			var environment = new EtcScriptLib.VirtualMachine.ScriptObject();
+			environment.SetProperty("foo", new EtcScriptLib.VirtualMachine.NativeFunction((c, args) =>
 				{
 					return new List<Object>(new Object[] { 1, 2, 3 });
 				}));
-			environment.SetProperty("bar", new Ninbot.VirtualMachine.NativeFunction((c, args) =>
+			environment.SetProperty("bar", new EtcScriptLib.VirtualMachine.NativeFunction((c, args) =>
 				{
 					total_calls += 1;
 					return null;
@@ -32,12 +32,12 @@ namespace NinbotTests
 			
 			Console.WriteLine("Test script: " + script);
 
-			var declaration = Ninbot.Compile.CompileDeclaration(script,
-				 (s) => { Console.WriteLine(s); return Ninbot.ErrorStrategy.Continue; });
-			var context = new Ninbot.VirtualMachine.ExecutionContext(environment,
-				new Ninbot.VirtualMachine.CodeContext(declaration.Instructions, 0));
-			Ninbot.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
-			if (context.ExecutionState == Ninbot.VirtualMachine.ExecutionState.Error)
+			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
+				 (s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Continue; });
+			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(environment,
+				new EtcScriptLib.VirtualMachine.CodeContext(declaration.Instructions, 0));
+			EtcScriptLib.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
+			if (context.ExecutionState == EtcScriptLib.VirtualMachine.ExecutionState.Error)
 				Console.WriteLine("Error:" + context.ErrorObject.ToString());
 
 			if (context.Peek == null) Console.WriteLine("NULL");
@@ -52,8 +52,8 @@ namespace NinbotTests
 		{
 			int total_calls = 0;
 
-			var environment = new Ninbot.VirtualMachine.ScriptObject();
-			environment.SetProperty("bar", new Ninbot.VirtualMachine.NativeFunction((c, args) =>
+			var environment = new EtcScriptLib.VirtualMachine.ScriptObject();
+			environment.SetProperty("bar", new EtcScriptLib.VirtualMachine.NativeFunction((c, args) =>
 			{
 				Assert.AreEqual(total_calls, args[0]);
 				total_calls += 1;
@@ -67,12 +67,12 @@ namespace NinbotTests
 
 			Console.WriteLine("Test script: " + script);
 
-			var declaration = Ninbot.Compile.CompileDeclaration(script,
-				 (s) => { Console.WriteLine(s); return Ninbot.ErrorStrategy.Continue; });
-			var context = new Ninbot.VirtualMachine.ExecutionContext(environment,
-				new Ninbot.VirtualMachine.CodeContext(declaration.Instructions, 0));
-			Ninbot.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
-			if (context.ExecutionState == Ninbot.VirtualMachine.ExecutionState.Error)
+			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
+				 (s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Continue; });
+			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(environment,
+				new EtcScriptLib.VirtualMachine.CodeContext(declaration.Instructions, 0));
+			EtcScriptLib.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
+			if (context.ExecutionState == EtcScriptLib.VirtualMachine.ExecutionState.Error)
 				Console.WriteLine("Error:" + context.ErrorObject.ToString());
 
 			if (context.Peek == null) Console.WriteLine("NULL");

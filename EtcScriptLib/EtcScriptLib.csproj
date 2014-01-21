@@ -8,8 +8,8 @@
     <ProjectGuid>{EF2EBD45-4D8C-4E62-AAB7-57940E9EDAA6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NinbotLib</RootNamespace>
-    <AssemblyName>NinbotLib</AssemblyName>
+    <RootNamespace>EtcScriptLib</RootNamespace>
+    <AssemblyName>EtcScriptLib</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

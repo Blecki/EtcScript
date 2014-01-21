@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 
-namespace NinbotTests
+namespace EtcScriptTests
 {
     [TestFixture]
     public class Execution

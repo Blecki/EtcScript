@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 
-namespace NinbotTests
+namespace EtcScriptTests
 {
     [TestFixture]
     public class ErrorsReported
@@ -14,11 +14,11 @@ namespace NinbotTests
 			bool errorCaught = false;
 
 			Console.WriteLine("Script: " + script);
-			Ninbot.Compile.Build(script, (s) =>
+			EtcScriptLib.Compile.Build(script, (s) =>
 			{
 				Console.WriteLine("Error: " + s);
 				errorCaught = true;
-				return Ninbot.ErrorStrategy.Abort;
+				return EtcScriptLib.ErrorStrategy.Abort;
 			});
 
 			if (!errorCaught)
