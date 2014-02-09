@@ -17,6 +17,7 @@ namespace EtcScriptLib
 
 		private static Token FindFirstPhysicalToken(Construct at)
 		{
+			if (at == null) return new Token();
 			if (at is Block)
 				return FindFirstPhysicalToken((at as Block).Children[0]);
 			else

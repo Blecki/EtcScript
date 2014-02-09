@@ -11,5 +11,6 @@ namespace EtcScriptLib
 		public String Name;
 		public List<String> Arguments;
 		public VirtualMachine.InstructionList Instructions;
+		public Ast.Node Body;
 	}
 }

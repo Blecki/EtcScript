@@ -23,6 +23,9 @@ namespace EtcScriptLib.VirtualMachine
         CONTINUE,       // SOURCE       UNUSED          UNUSED      --Moves execution to the point in SOURCE, without advancement.
         CLEANUP,        // SOURCE       UNUSED          UNUSED      --Remove SOURCE items from top of stack.
         SWAP_TOP,       // UNUSED       UNUSED          UNUSED      --Swap the two top object on stack.
+		JUMP,			// SOURCE									--Jump to an absolute address in the current instruction stream
+		JUMP_RELATIVE,	// SOURCE									--Add source to the current instruction pointer
+		JUMP_MARK,		// SOURCE		DESTINATION					--MARK to DESTINATION, and then JUMP to source
 
         EMPTY_LIST,     // DESTINATION  UNUSED          UNUSED      --Create an empty list and store in DESTINATION.
         APPEND_RANGE,   // LIST-A       LIST-B          DESTINATION --Append A to B, store in DESTINATION.

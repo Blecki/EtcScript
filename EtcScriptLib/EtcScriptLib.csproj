@@ -41,10 +41,24 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AstNode.cs" />
+    <Compile Include="AST\Block.cs" />
+    <Compile Include="AST\BinaryOperation.cs" />
+    <Compile Include="AST\BlockStatement.cs" />
+    <Compile Include="AST\MemberAccess.cs" />
+    <Compile Include="AST\Token.cs" />
+    <Compile Include="AST\ForeachFrom.cs" />
+    <Compile Include="AST\ForeachIn.cs" />
+    <Compile Include="AST\Let.cs" />
+    <Compile Include="AST\FunctionCall.cs" />
+    <Compile Include="AST\Return.cs" />
+    <Compile Include="AST\If.cs" />
+    <Compile Include="AST\Statement.cs" />
+    <Compile Include="AST\Node.cs" />
     <Compile Include="BlockIterator.cs" />
     <Compile Include="Compile.cs" />
     <Compile Include="CompileError.cs" />
     <Compile Include="Construct.cs" />
+    <Compile Include="ParseToAst.cs" />
     <Compile Include="Declaration.cs" />
     <Compile Include="DeclarationIterator.cs" />
     <Compile Include="Iterator.cs" />

@@ -197,6 +197,26 @@ namespace EtcScriptLib.VirtualMachine
                         }
                         break;
 
+					case InstructionSet.JUMP:
+						{
+							var destination = GetOperand(ins.FirstOperand, context) as int?;
+							if (destination.HasValue) context.CurrentInstruction.InstructionPointer = destination.Value;
+						}
+						break;
+					case InstructionSet.JUMP_RELATIVE:
+						{
+								var destination = GetOperand(ins.FirstOperand, context) as int?;
+							if (destination.HasValue) context.CurrentInstruction.InstructionPointer += destination.Value;
+						}
+						break;
+					case InstructionSet.JUMP_MARK:
+						{
+							var destination = GetOperand(ins.FirstOperand, context) as int?;
+							SetOperand(ins.SecondOperand, context.CurrentInstruction, context);
+							if (destination.HasValue) context.CurrentInstruction.InstructionPointer = destination.Value;
+						}
+						break;
+
                     #endregion
 
                     #region Lambdas

@@ -35,7 +35,12 @@ namespace EtcScriptLib.VirtualMachine
     {
         private int SourceLine = 0;
 
-        public void AddInstruction(params Object[] instructions)
+		public void AddInstruction(InstructionSet Opcode, Operand First, Operand Second, Operand Third)
+		{
+			Add(new Instruction(Opcode, First, Second, Third));
+		}
+
+        public void AddInstructions(params Object[] instructions)
         {
             int literalsExpected = 0;
             foreach (var instruction in instructions)
@@ -80,7 +85,7 @@ namespace EtcScriptLib.VirtualMachine
 
         public InstructionList(params Object[] instructions)
         {
-            AddInstruction(instructions);
+            AddInstructions(instructions);
         }
     }
 }

@@ -32,13 +32,13 @@ namespace EtcScriptLib
 			if (lValue.Type == ExpressionBlockTypes.Token && lValue.Token.Value.Type == TokenType.Identifier)
 			{
 				EmitExpressionTree(ParseExpression(state, operators, true), operators, into, "R");
-				into.AddInstruction("SET_VARIABLE R NEXT", lValue.Token.Value.Value);
+				into.AddInstructions("SET_VARIABLE R NEXT", lValue.Token.Value.Value);
 			}
 			else if (lValue.Type == ExpressionBlockTypes.MemberAccess)
 			{
 				EmitExpressionTree(lValue.SubExpressions[0], operators, into, "PUSH");
 				EmitExpressionTree(ParseExpression(state, operators, true), operators, into, "R");
-				into.AddInstruction("SET_MEMBER R NEXT POP", lValue.Token.Value.Value);
+				into.AddInstructions("SET_MEMBER R NEXT POP", lValue.Token.Value.Value);
 			}
 			else
 				throw new CompileError("Expected an lvalue", lValueLine.Tokens[0]);
@@ -52,7 +52,7 @@ namespace EtcScriptLib
 			state.Advance();  //Skip 'if'
 
 			EmitExpressionTree(ParseExpression(state, operators, true), operators, into, "R");
-			into.AddInstruction("IF_FALSE R",
+			into.AddInstructions("IF_FALSE R",
 				"SKIP NEXT", 2); //Should be followed immediately by then and else branches.
 		}
 
@@ -80,7 +80,7 @@ namespace EtcScriptLib
 				state.Advance();
 				//Go ahead and emit the expression that provides the list
 				EmitExpressionTree(ParseExpression(state, operators, true), operators, into, "R");
-				into.AddInstruction(
+				into.AddInstructions(
 					"SET_VARIABLE R NEXT", "__list@" + valueName, //Store the list of items in scope
 					"LENGTH R R",
 					"SET_VARIABLE R NEXT", "__total@" + valueName, //Total elements in list
@@ -118,7 +118,7 @@ namespace EtcScriptLib
 				var high = Int32.Parse(state.Next().Value);
 				state.Advance();
 
-				into.AddInstruction(
+				into.AddInstructions(
 					"SET_VARIABLE NEXT NEXT", high, "__total@" + valueName, //Total elements in list
 					"SET_VARIABLE NEXT NEXT", low, "__counter@" + valueName,
 					"BRANCH PUSH NEXT",       //LOOP BRANCH
@@ -192,23 +192,23 @@ namespace EtcScriptLib
 					BuildIfHeader(lineState, operators, into);
 					state.Advance();
 					if (state.AtEnd() || !(state.Next() is Block))
-						into.AddInstruction("MOVE PEEK PEEK"); //No block?
+						into.AddInstructions("MOVE PEEK PEEK"); //No block?
 					else
 					{
-						into.AddInstruction("BRANCH PUSH NEXT");
+						into.AddInstructions("BRANCH PUSH NEXT");
 						var thenBlock = new VirtualMachine.InstructionList();
 						BuildBlock(state.Next() as Block, operators, thenBlock);
-						(thenBlock[0] as VirtualMachine.InstructionList).AddInstruction("BREAK POP");
+						(thenBlock[0] as VirtualMachine.InstructionList).AddInstructions("BREAK POP");
 						into.Add(thenBlock[0]);
-						into.AddInstruction("SKIP NEXT", 1); //Skip else branch
+						into.AddInstructions("SKIP NEXT", 1); //Skip else branch
 						state.Advance();
 					}
 
 					if (state.AtEnd() || !(state.Next() is Line) || (state.Next() as Line).Tokens[0].Value != "else")
-						into.AddInstruction("MOVE PEEK PEEK"); //No else block
+						into.AddInstructions("MOVE PEEK PEEK"); //No else block
 					else
 					{
-						into.AddInstruction("BRANCH PUSH NEXT");
+						into.AddInstructions("BRANCH PUSH NEXT");
 
 						construct = state.Next();
 						lineState = (construct as Line).GetIterator();
@@ -230,7 +230,7 @@ namespace EtcScriptLib
 							}
 						}
 
-						elseBlock.AddInstruction("BREAK POP");
+						elseBlock.AddInstructions("BREAK POP");
 						into.Add(elseBlock);
 						state.Advance();
 					}
@@ -240,7 +240,7 @@ namespace EtcScriptLib
 					lineState.Advance();
 					if (!lineState.AtEnd())
 						EmitExpressionTree(ParseExpression(lineState, operators, true), operators, into, "R");
-					into.AddInstruction("LOOKUP NEXT PUSH", "@stack-size", "RESTORE_STACK POP", "BREAK POP");
+					into.AddInstructions("LOOKUP NEXT PUSH", "@stack-size", "RESTORE_STACK POP", "BREAK POP");
 					state.Advance();
 				}
 				else
@@ -437,18 +437,18 @@ namespace EtcScriptLib
 			{
 				var internalToken = expressionBlock.Token.Value;
 				if (internalToken.Type == TokenType.Identifier)
-					into.AddInstruction("LOOKUP NEXT " + destinationOperand, internalToken.Value);
+					into.AddInstructions("LOOKUP NEXT " + destinationOperand, internalToken.Value);
 				else if (internalToken.Type == TokenType.String)
-					into.AddInstruction("MOVE NEXT " + destinationOperand, internalToken.Value);
+					into.AddInstructions("MOVE NEXT " + destinationOperand, internalToken.Value);
 				else if (internalToken.Type == TokenType.Number)
-					into.AddInstruction("MOVE NEXT " + destinationOperand, Convert.ToSingle(internalToken.Value));
+					into.AddInstructions("MOVE NEXT " + destinationOperand, Convert.ToSingle(internalToken.Value));
 				else
 					throw new CompileError("Unable to translate token type", internalToken);
 			}
 			else if (expressionBlock.Type == ExpressionBlockTypes.MemberAccess)
 			{
 				EmitExpressionTree(expressionBlock.SubExpressions[0], operators, into, "PUSH");
-				into.AddInstruction("LOOKUP_MEMBER NEXT POP " + destinationOperand, expressionBlock.Token.Value.Value);
+				into.AddInstructions("LOOKUP_MEMBER NEXT POP " + destinationOperand, expressionBlock.Token.Value.Value);
 			}
 			else if (expressionBlock.Type == ExpressionBlockTypes.BinaryOperation)
 			{
@@ -456,21 +456,21 @@ namespace EtcScriptLib
 					EmitExpressionTree(subExpression, operators, into, "PUSH");
 				var @operator = operators.FindOperator(expressionBlock.Token.Value.Value);
 				if (@operator.HasValue)
-					into.AddInstruction(@operator.Value.instruction.ToString() + " POP POP " + destinationOperand);
+					into.AddInstructions(@operator.Value.instruction.ToString() + " POP POP " + destinationOperand);
 				else
 					throw new CompileError("Undefined operator", expressionBlock.Token.Value);
 			}
 			else if (expressionBlock.Type == ExpressionBlockTypes.FunctionCall)
 			{
-				into.AddInstruction("EMPTY_LIST PUSH");
+				into.AddInstructions("EMPTY_LIST PUSH");
 				foreach (var subExpression in expressionBlock.SubExpressions)
 				{
 					EmitExpressionTree(subExpression, operators, into, "R");
-					into.AddInstruction("APPEND R PEEK PEEK");
+					into.AddInstructions("APPEND R PEEK PEEK");
 				}
-				into.AddInstruction("INVOKE POP");
+				into.AddInstructions("INVOKE POP");
 				if (destinationOperand != "R")
-					into.AddInstruction("MOVE R " + destinationOperand); 
+					into.AddInstructions("MOVE R " + destinationOperand); 
 			}
 			else
 				throw new CompileError("Unknown expression block type", null);

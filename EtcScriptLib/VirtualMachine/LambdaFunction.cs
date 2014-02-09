@@ -30,7 +30,7 @@ namespace EtcScriptLib.VirtualMachine
 			var r = new LambdaFunction();
 			r.Name = Name;
 			r.Body = new InstructionList();
-			r.Body.AddInstruction(
+			r.Body.AddInstructions(
 				"BRANCH NEXT",
 				Body,
 				"SET_FRAME POP",

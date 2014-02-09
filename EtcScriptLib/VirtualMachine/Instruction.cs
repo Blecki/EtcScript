@@ -22,6 +22,14 @@ namespace EtcScriptLib.VirtualMachine
         public Operand SecondOperand;
         public Operand ThirdOperand;
 
+		public Instruction(InstructionSet Opcode, Operand FirstOperand, Operand SecondOperand, Operand ThirdOperand)
+		{
+			this.Opcode = Opcode;
+			this.FirstOperand = FirstOperand;
+			this.SecondOperand = SecondOperand;
+			this.ThirdOperand = ThirdOperand;
+		}
+
         public static Instruction? TryParse(String parseFrom)
         {
             try

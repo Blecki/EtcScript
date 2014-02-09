@@ -17,6 +17,7 @@ namespace EtcScriptLib
 		Declaration next;
 		OperatorSettings operators;
 		public Func<String, ErrorStrategy> OnError;
+		public bool ParseToAst = false;
 
 		internal static DeclarationIterator Create(
 			Iterator<Block> BlockIterator,
@@ -50,7 +51,8 @@ namespace EtcScriptLib
 				{
 					try
 					{
-						next = Parser.BuildDeclaration(state.Next(), operators);
+						next = (!ParseToAst ? Parser.BuildDeclaration(state.Next(), operators) :
+							EtcScriptLib.ParseToAst.BuildDeclaration(state.Next(), operators));
 					}
 					catch (CompileError e)
 					{
