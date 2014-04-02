@@ -26,16 +26,15 @@ namespace EtcScriptTests
 				}));
 
 			var script = @"activity foo
-	foreach x in [foo]
-		bar x
+	foreach x in :[foo]
+		:[bar x]
 ";
 			
 			Console.WriteLine("Test script: " + script);
 
 			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
 				 (s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Continue; });
-			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(environment,
-				new EtcScriptLib.VirtualMachine.CodeContext(declaration.Instructions, 0));
+			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(environment, declaration.GetEntryPoint());
 			EtcScriptLib.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
 			if (context.ExecutionState == EtcScriptLib.VirtualMachine.ExecutionState.Error)
 				Console.WriteLine("Error:" + context.ErrorObject.ToString());
@@ -61,16 +60,15 @@ namespace EtcScriptTests
 			}));
 
 			var script = @"activity foo
-	foreach x from 0 to 5 exclusive
-		bar x
+	foreach x from 0 to 5
+		:[bar x]
 ";
 
 			Console.WriteLine("Test script: " + script);
 
 			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
 				 (s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Continue; });
-			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(environment,
-				new EtcScriptLib.VirtualMachine.CodeContext(declaration.Instructions, 0));
+			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(environment, declaration.GetEntryPoint());
 			EtcScriptLib.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
 			if (context.ExecutionState == EtcScriptLib.VirtualMachine.ExecutionState.Error)
 				Console.WriteLine("Error:" + context.ErrorObject.ToString());
@@ -81,6 +79,41 @@ namespace EtcScriptTests
 			Assert.AreEqual(6, total_calls);
 		}
 
+
+		[Test]
+		public void while_loop()
+		{
+			int total_calls = 0;
+
+			var environment = new EtcScriptLib.VirtualMachine.ScriptObject();
+			environment.SetProperty("bar", new EtcScriptLib.VirtualMachine.NativeFunction((c, args) =>
+			{
+				Assert.AreEqual(total_calls, args[0]);
+				total_calls += 1;
+				return null;
+			}));
+
+			var script = @"activity foo
+	let x = 0
+	while (x < 5)
+		:[bar x]
+		let x = x + 1
+";
+
+			Console.WriteLine("Test script: " + script);
+
+			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
+				 (s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Continue; });
+			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(environment, declaration.GetEntryPoint());
+			EtcScriptLib.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
+			if (context.ExecutionState == EtcScriptLib.VirtualMachine.ExecutionState.Error)
+				Console.WriteLine("Error:" + context.ErrorObject.ToString());
+
+			if (context.Peek == null) Console.WriteLine("NULL");
+			else Console.WriteLine(context.Peek.ToString());
+
+			Assert.AreEqual(5, total_calls);
+		}
 		
     }
 

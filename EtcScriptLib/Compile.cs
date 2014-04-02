@@ -9,8 +9,8 @@ namespace EtcScriptLib
     {
         private static void EmitDeclarations(Declaration node)
         {
-            Console.WriteLine(node.Type.ToString() + ": " + node.Name);
-			VirtualMachine.Debug.DumpOpcode(node.Instructions, Console.Out, 1);
+            Console.WriteLine(node.UsageSpecifier.ToString() + ": ");
+			VirtualMachine.Debug.DumpOpcode(node.Body.Instructions, Console.Out, 1);
         }
 
 		public class StringIterator : Iterator<int>
@@ -40,28 +40,38 @@ namespace EtcScriptLib
 		}
 
 		public static Declaration CompileDeclaration(String data, Func<String, ErrorStrategy> OnError)
-        {
+		{
 			var operatorSettings = GetDefaultOperators();
 
 			var tokenStream = new TokenStream(new StringIterator(data), operatorSettings);
-            var ast = Parser.Build(tokenStream, operatorSettings, OnError);
+			var ast = Parse.Build(tokenStream, operatorSettings, OnError);
 			if (ast != null) foreach (var d in ast)
 				{
-					EmitDeclarations(d);
+					//d.EmitInstructions();
+					//d.Body.Body.Debug(0);
+					//EmitDeclarations(d);
 					return d;
 				}
 			return null;
-        }
-
-		public static List<Declaration> Build(String script, Func<String, ErrorStrategy> OnError)
-		{
-			var ops = GetDefaultOperators();
-			return Parser.Build(new TokenStream(new StringIterator(script), ops), ops, OnError);
 		}
 
-		public static OperatorSettings GetDefaultOperators()
+		public static void EmitDebugDump(Declaration declaration)
 		{
-			var operatorSettings = new OperatorSettings();
+			declaration.Body.Body.Debug(0);
+			EmitDeclarations(declaration);
+		}
+
+		public static List<Declaration> Build(
+			String script, 
+			ParseContext context, 
+			Func<String, ErrorStrategy> OnError)
+		{
+		    return Parse.Build(new TokenStream(new StringIterator(script), context), context, OnError);
+		}
+
+		public static ParseContext GetDefaultOperators()
+		{
+			var operatorSettings = new ParseContext();
 
 			operatorSettings.AddOperator(1, "|", VirtualMachine.InstructionSet.OR);
 			operatorSettings.AddOperator(0, "||", VirtualMachine.InstructionSet.LOR);
@@ -78,6 +88,47 @@ namespace EtcScriptLib
 			operatorSettings.AddOperator(2, "*", VirtualMachine.InstructionSet.MULTIPLY);
 			operatorSettings.AddOperator(2, "/", VirtualMachine.InstructionSet.DIVIDE);
 			operatorSettings.AddOperator(2, "%", VirtualMachine.InstructionSet.MODULUS);
+
+			operatorSettings.AddControl(Control.Create(
+				Declaration.Parse("foreach (x) in (list)"),
+				ControlBlockType.RequiredBlock,
+				(parameters, body) =>
+				{
+					if (parameters[0] is Ast.Identifier)
+					{
+						return new Ast.ForeachIn(parameters[0].Source,
+							(parameters[0] as Ast.Identifier).Name.Value,
+							parameters[1],
+							body);
+					}
+					else
+						throw new CompileError("Expected identifier", parameters[0].Source);
+				}));
+
+			operatorSettings.AddControl(Control.Create(
+					Declaration.Parse("foreach (x) from (low) to (high)"),
+					ControlBlockType.RequiredBlock,
+					(parameters, body) =>
+					{
+						if (parameters[0] is Ast.Identifier)
+						{
+							return new Ast.ForeachFrom(parameters[0].Source,
+								(parameters[0] as Ast.Identifier).Name.Value,
+								parameters[1],
+								parameters[2],
+								body);
+						}
+						else
+							throw new CompileError("Expected identifier", parameters[0].Source);
+					}));
+
+			operatorSettings.AddControl(Control.Create(
+					Declaration.Parse("while (x)"),
+					ControlBlockType.RequiredBlock,
+					(parameters, body) =>
+					{
+						return new Ast.While(parameters[0].Source, parameters[0], body);
+					}));
 
 			return operatorSettings;
 		}

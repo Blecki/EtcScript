@@ -44,7 +44,7 @@ namespace EtcScriptTests
 			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
 				(s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Continue; });
 			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(new EtcScriptLib.VirtualMachine.ScriptObject(),
-				new EtcScriptLib.VirtualMachine.CodeContext(declaration.Instructions, 0));
+				declaration.GetEntryPoint());
 			EtcScriptLib.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
 			if (context.ExecutionState == EtcScriptLib.VirtualMachine.ExecutionState.Error)
 				Console.WriteLine("Error:" + context.ErrorObject.ToString());
@@ -53,5 +53,31 @@ namespace EtcScriptTests
 			else Console.WriteLine(context.R.ToString());
 			return context.R;
         }
+
+		public static EtcScriptLib.Environment BuildEnvironment(String script)
+		{
+			Console.WriteLine("Test script: " + script);
+			var environment = EtcScriptLib.Environment.CreateStandardEnvironment();
+			var declarations = environment.Build(script, (s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Abort; });
+			foreach (var declaration in declarations)
+				environment.GlobalScope.SetProperty(declaration.UsageSpecifier, declaration.MakeInvokableFunction());
+			return environment;
+		}
+
+		public static Object CallEnvironmentFunction(String script, String function)
+		{
+			var scope = BuildEnvironment(script);
+			var func = scope.GlobalScope.GetOwnProperty(function) as EtcScriptLib.VirtualMachine.InvokeableFunction;
+			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(scope.GlobalScope,
+				new EtcScriptLib.VirtualMachine.CodeContext(new EtcScriptLib.VirtualMachine.InstructionList(), 0));
+			func.Invoke(context, new List<object>());
+			EtcScriptLib.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
+			if (context.ExecutionState == EtcScriptLib.VirtualMachine.ExecutionState.Error)
+				Console.WriteLine("Error:" + context.ErrorObject.ToString());
+
+			if (context.R == null) Console.WriteLine("NULL");
+			else Console.WriteLine(context.R.ToString());
+			return context.R;
+		}
     }
 }

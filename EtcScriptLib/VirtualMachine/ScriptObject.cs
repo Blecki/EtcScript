@@ -17,6 +17,12 @@ namespace EtcScriptLib.VirtualMachine
                 properties.Add(property.Key, property.Value);
         }
 
+		public ScriptObject(Dictionary<String, Object> CloneFrom)
+		{
+			foreach (var property in CloneFrom)
+				properties.Add(property.Key, property.Value);
+		}
+
         public ScriptObject(params Object[] args)
         {
             if (args.Length % 2 != 0) throw new InvalidProgramException("Generic Script Object must be initialized with pairs");

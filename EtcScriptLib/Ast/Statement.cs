@@ -7,5 +7,11 @@ namespace EtcScriptLib.Ast
 {
 	public class Statement : Node
 	{
+		public Statement(Token Source) : base(Source) { }
+
+		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

@@ -7,6 +7,10 @@ namespace EtcScriptLib
 {
 	internal class Construct
 	{
+		public virtual Token FindFirstToken()
+		{
+			throw new NotImplementedException();
+		}
 	}
 
 	internal class Line : Construct
@@ -29,12 +33,23 @@ namespace EtcScriptLib
 		{
 			return new TokenIterator { source = this, tokens = Tokens };
 		}
+
+		public override Token FindFirstToken()
+		{
+			if (IsEmptyLine()) throw new InvalidProgramException();
+			return Tokens[0];
+		}
 	}
 
 	internal class Block : Construct
 	{
 		public List<Construct> Children = new List<Construct>();
 		public Iterator<Construct> GetIterator() { return Children.GetIterator(); }
+		public override Token FindFirstToken()
+		{
+			if (Children.Count == 0) throw new InvalidProgramException();
+			return Children[0].FindFirstToken();
+		}
 	}
 
 	internal class TokenIterator : Iterator<Token>

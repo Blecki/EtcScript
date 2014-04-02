@@ -16,17 +16,6 @@ namespace EtcScriptTests
         }
 
 		[Test]
-		public void parenthical_becomes_invokation()
-		{
-			TestHelper.RunSimpleTest(@"Activity foo
-	bar [token.foo]
-");
-			TestHelper.RunSimpleTest(@"Activity foo
-	bar token.foo
-");
-		}
-
-		[Test]
 		public void simple_return()
 		{
 			TestHelper.RunSimpleTest(@"Activity foo

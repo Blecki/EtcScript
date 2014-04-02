@@ -26,8 +26,13 @@ namespace EtcScriptLib
         CloseParen,
 		OpenBracket,
 		CloseBracket,
+		OpenBrace,
+		CloseBrace,
 		Dot,
 		Semicolon,
+		QuestionMark,
+		Colon,
+		At,
 
         String,
         Number,

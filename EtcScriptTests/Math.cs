@@ -34,6 +34,12 @@ namespace EtcScriptTests
 			TestHelper.QuickTest("return 4 * 0.25", 1);
 		}
 
+		[Test]
+		public void precedence()
+		{
+			TestHelper.QuickTest("return 4 * 2 + 3", 11);
+			TestHelper.QuickTest("return 1 + 2 * 3 + 4", 11);
+		}
     }
 
 }

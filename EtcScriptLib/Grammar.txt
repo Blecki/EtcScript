@@ -1,0 +1,52 @@
+﻿
+EtcScript Grammar
+
+Script				:= Declaration*
+Declaration			:= DeclarationHeader + Block?
+DeclarationHeader	:= UsageSpecifier + (DeclarationTerm)*
+UsageSpecifier		:= "function" | "macro" | (user-defined usage specifier)
+DeclarationTerm		:= Identifier | String | ( "(" + Identifier + ")" + RepititionMarker? )
+Identifier			:= [a-z, A-Z, any non-operator symbol][any non-delimeter symbol]*
+RepitionMarker		:= "?" | "*" | "+"
+Block				:= Statement+
+Statement			:= Let | If | Invokation | DynamicInvokation | BracketInvokation | Control
+Let					:= "let" + (Identifier | MemberAccess) + "=" + Expression
+MemberAccess		:= Term + "." + Identifier
+Expression			:= Term | BinaryOperation
+Term				:= Parenthetical | Identifier | Number | String | MemberAccess | BracketInvokation | DynamicInvokation
+Parenthetical		:= "(" + Expression + ")"
+BinaryOperation		:= Term + Operator + Term
+Invokation			:= Term+
+BracketInvokation	:= "[" + Invokation + "]"
+DynamicInvokation	:= ":" + BracketInvokation
+Control				:= Invokation + Block
+Operator			:= Any of operators specified in operator table
+String				:= Quote-deliminated string
+
+Delimeter symbols	:= []{}()\s\t\r\n.
+
+Default operator table
+0	||
+0	&&
+0	==
+0	!=
+0	<
+0	>
+0	<=
+0	>=
+
+1	+
+1	-
+1	&
+1	|
+
+2	*
+2	/
+2	%
+
+Default Controls
+
+foreach (x) in (list)
+foreach (x) from (min) to (max)
+while (x)
+

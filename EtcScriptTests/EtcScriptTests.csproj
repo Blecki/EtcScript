@@ -42,6 +42,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compilation.cs" />
+    <Compile Include="PatternMatching.cs" />
+    <Compile Include="Macros.cs" />
+    <Compile Include="Euler001.cs" />
     <Compile Include="Math.cs" />
     <Compile Include="ErrorReport.cs" />
     <Compile Include="foreach.cs" />

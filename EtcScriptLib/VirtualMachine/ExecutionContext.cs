@@ -25,6 +25,8 @@ namespace EtcScriptLib.VirtualMachine
 			while (IsValid && Code[InstructionPointer] is Annotation) 
 				InstructionPointer++;  
 		}
+
+		public static CodeContext Empty { get { return new CodeContext(new InstructionList(), 0); } }
     }
 
     public enum ExecutionState

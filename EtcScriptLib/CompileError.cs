@@ -7,12 +7,16 @@ namespace EtcScriptLib
 {
 	public class CompileError : Exception
 	{
-		internal CompileError(String message, Token at) :
+		public CompileError(String message, Token at) :
 			base(message + " " + at.ToString())
 		{ }
 
 		internal CompileError(String message, Construct at) :
 			base(message + " " + FindFirstPhysicalToken(at).ToString())
+		{ }
+
+		public CompileError(String message, Iterator<Token> at) :
+			base(message + " " + (at.AtEnd() ? "NULL" : at.Next().ToString()))
 		{ }
 
 		private static Token FindFirstPhysicalToken(Construct at)

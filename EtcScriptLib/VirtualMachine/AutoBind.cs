@@ -25,6 +25,7 @@ namespace EtcScriptLib.VirtualMachine
 
         public static int IntArgument(Object obj)
         {
+			if (obj == null) return 0;
             return Convert.ToInt32(obj);
         }
 

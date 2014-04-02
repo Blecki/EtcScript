@@ -14,7 +14,7 @@ namespace EtcScriptTests
 			bool errorCaught = false;
 
 			Console.WriteLine("Script: " + script);
-			EtcScriptLib.Compile.Build(script, (s) =>
+			EtcScriptLib.Compile.Build(script, EtcScriptLib.Compile.GetDefaultOperators(), (s) =>
 			{
 				Console.WriteLine("Error: " + s);
 				errorCaught = true;
@@ -31,9 +31,8 @@ namespace EtcScriptTests
         [Test]
         public void errors_reported()
         {
-			throws_error("activity");
 			throws_error(@"activity foo
-	let bar = one two three");
+	let bar = (one two three)");
 			throws_error(@"activity foo
 	let bar = one.(three.four)");
         }

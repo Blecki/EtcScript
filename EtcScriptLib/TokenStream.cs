@@ -11,8 +11,8 @@ namespace EtcScriptLib
 		private CodeLocation location;
 		private Token? next_token;
 
-		private OperatorSettings operators;
-		private String delimeters = "!$%^&*()-=+|/<> \t\r\n\".";
+		private ParseContext operators;
+		private String delimeters = "()[]{} \t\r\n.;:";
 
 		private void advance_source()
 		{
@@ -44,21 +44,16 @@ namespace EtcScriptLib
 			return c >= '0' && c <= '9';
 		}
 
-		private bool isValidIdentifierBody(int c)
-		{
-			return c == '_' || isAlpha(c) || isDigit(c);
-		}
-
 		private bool isValidIdentifierStart(int c)
 		{
 			return c == '_' || isAlpha(c);
 		}
 
-		public TokenStream(Iterator<int> Source, OperatorSettings operators)
+		public TokenStream(Iterator<int> Source, ParseContext operators)
 		{
 			this.source = Source;
-			next_token = ParseNextToken();
 			this.operators = operators;
+			next_token = ParseNextToken();
 		}
 
 		private String ParseNumber()
@@ -85,28 +80,33 @@ namespace EtcScriptLib
 		private Token? ParseNextToken()
 		{
 			var c = source.Next();
-			while ((c == ' ' || c == '\r') && !source.AtEnd())
+			while ((c == ' ' || c == '\r' || c == '\n' || c == '\t' || c == '#') && !source.AtEnd())
 			{
+				if (c == '#') while (!source.AtEnd() && source.Next() != '\n') advance_source();
 				advance_source();
 				if (!source.AtEnd()) c = source.Next();
 			}
 
-			if (c == '#')
-				while (!source.AtEnd() && source.Next() != '\n') advance_source();
+			
 
 			if (source.AtEnd()) return null;
 			else c = source.Next();
 
 			var tokenStart = location;
 
-			if (c == '\n') { advance_source(); return Token.Create(TokenType.NewLine, "\\n", tokenStart); }
-			if (c == '\t') { advance_source(); return Token.Create(TokenType.Tab, "\\t", tokenStart); }
+			//if (c == '\n') { advance_source(); return Token.Create(TokenType.NewLine, "\\n", tokenStart); }
+			//if (c == '\t') { advance_source(); return Token.Create(TokenType.Tab, "\\t", tokenStart); }
 			if (c == '(') { advance_source(); return Token.Create(TokenType.OpenParen, "(", tokenStart); }
 			if (c == ')') { advance_source(); return Token.Create(TokenType.CloseParen, ")", tokenStart); }
 			if (c == '[') { advance_source(); return Token.Create(TokenType.OpenBracket, "[", tokenStart); }
 			if (c == ']') { advance_source(); return Token.Create(TokenType.CloseBracket, "]", tokenStart); }
+			if (c == '{') { advance_source(); return Token.Create(TokenType.OpenBrace, "{", tokenStart); }
+			if (c == '}') { advance_source(); return Token.Create(TokenType.CloseBrace, "}", tokenStart); }
 			if (c == '.') { advance_source(); return Token.Create(TokenType.Dot, ".", tokenStart); }
 			if (c == ';') { advance_source(); return Token.Create(TokenType.Semicolon, ";", tokenStart); }
+			if (c == '?') { advance_source(); return Token.Create(TokenType.QuestionMark, "?", tokenStart); }
+			if (c == ':') { advance_source(); return Token.Create(TokenType.Colon, ":", tokenStart); }
+			if (c == '@') { advance_source(); return Token.Create(TokenType.At, "@", tokenStart); }
 			if (c == '\"')
 			{
 				var literal = "";
@@ -126,7 +126,7 @@ namespace EtcScriptLib
 			{
 
 				var identifier = "";
-				while (isValidIdentifierBody(c) && !source.AtEnd())
+				while (!isDelimeter(c) && !source.AtEnd())
 				{
 					identifier += (char)c;
 					advance_source();
@@ -176,7 +176,8 @@ namespace EtcScriptLib
 
 		public Token Next()
 		{
-			return next_token.Value;
+			if (next_token.HasValue) return next_token.Value;
+			throw new CompileError("Unexpected end of token stream", this);
 		}
 
 		public void Advance()

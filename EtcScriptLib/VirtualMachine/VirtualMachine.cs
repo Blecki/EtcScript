@@ -11,6 +11,12 @@ namespace EtcScriptLib.VirtualMachine
 			: base(msg)
 		{
 		}
+
+		public RuntimeError(ExecutionContext context, string msg, Instruction at)
+			: base(msg)
+		{
+
+		}
 	}
 
     public class VirtualMachine
@@ -39,12 +45,17 @@ namespace EtcScriptLib.VirtualMachine
 				return;
 			}
 
+			//Console.Write(context.CurrentInstruction.InstructionPointer + " ");
+
 			var instructionStart = context.CurrentInstruction;
 			var nextInstruction = context.CurrentInstruction.Instruction;
 			context.CurrentInstruction.Increment();
             if (!nextInstruction.HasValue) 
                 throw new InvalidOperationException("Encountered non-code in instruction stream");
             var ins = nextInstruction.Value;
+
+			//Console.WriteLine("I: " + ins.ToString() + " S: " +
+			//	String.Join("  ", context.Stack.Select(o => o.ToString())));
 
             try
             {
@@ -174,6 +185,8 @@ namespace EtcScriptLib.VirtualMachine
                     case InstructionSet.BREAK:
                         {
                             var breakContext = GetOperand(ins.FirstOperand, context);
+							if (!(breakContext is CodeContext)) 
+								throw new InvalidOperationException("Expected to find a code context on the stack. Instead found " + breakContext.ToString());
                             context.CurrentInstruction = (breakContext as CodeContext?).Value;
                             Skip(context); //Skip the instruction stored by BRANCH
                         }
@@ -260,12 +273,13 @@ namespace EtcScriptLib.VirtualMachine
                             }
                             else
                             {
-                                if (arguments.Count > 1)
-                                    Throw(new RuntimeError(
-                                        "If the first argument in a node isn't an invokeable function, there can't " +
-                                        "be any further arguments.", nextInstruction.Value), context);
-                                else
-                                    SetOperand(Operand.PUSH, arguments[0], context);
+								//if (arguments.Count > 1)
+								//    Throw(new RuntimeError(
+								//        "If the first argument in a node isn't an invokeable function, there can't " +
+								//        "be any further arguments.", nextInstruction.Value), context);
+								//else
+								//    SetOperand(Operand.PUSH, arguments[0], context);
+								Throw(new RuntimeError("Attempted to invoke what isn't a function", ins), context);
                             }
                         }
                         break;
@@ -386,14 +400,14 @@ namespace EtcScriptLib.VirtualMachine
                     #region Loop control
                     case InstructionSet.DECREMENT:
                         {
-                            var v = GetOperand(ins.FirstOperand, context) as int?;
-                            SetOperand(ins.SecondOperand, v.Value - 1, context);
+							var v = Convert.ToInt32(GetOperand(ins.FirstOperand, context));
+                            SetOperand(ins.SecondOperand, v - 1, context);
                         }
                         break;
                     case InstructionSet.INCREMENT:
                         {
-                            var v = GetOperand(ins.FirstOperand, context) as int?;
-                            SetOperand(ins.SecondOperand, v.Value + 1, context);
+								var v = Convert.ToInt32(GetOperand(ins.FirstOperand, context));
+								SetOperand(ins.SecondOperand, v + 1, context);
                         }
                         break;
                     case InstructionSet.LESS:
@@ -500,7 +514,7 @@ namespace EtcScriptLib.VirtualMachine
                         {
                             dynamic first = GetOperand(ins.FirstOperand, context);
                             dynamic second = GetOperand(ins.SecondOperand, context);
-                            var result = second - first;
+                            var result = first - second;
                             SetOperand(ins.ThirdOperand, result, context);
                         }
                         break;
@@ -516,7 +530,7 @@ namespace EtcScriptLib.VirtualMachine
                         {
                             dynamic first = GetOperand(ins.FirstOperand, context);
                             dynamic second = GetOperand(ins.SecondOperand, context);
-                            var result = second / first;
+                            var result = first / second;
                             SetOperand(ins.ThirdOperand, result, context);
                         }
                         break;
@@ -525,7 +539,7 @@ namespace EtcScriptLib.VirtualMachine
 						{
 							dynamic first = GetOperand(ins.FirstOperand, context);
 							dynamic second = GetOperand(ins.SecondOperand, context);
-							var result = second % first;
+							var result = first % second;
 							SetOperand(ins.ThirdOperand, result, context);
 						}
 						break;
@@ -577,7 +591,11 @@ namespace EtcScriptLib.VirtualMachine
             }
             catch (Exception e)
             {
-                Throw(new RuntimeError(e.Message + " " + ins.ToString(), ins), context);
+                Throw(new RuntimeError(e.Message + "\nBEFORE: " +
+					context.CurrentInstruction.InstructionPointer + 
+					"\nINSTRUCTION: [" + ins.ToString() + "]\nSTACK TRACE:\n" +
+					String.Join("\n", context.Stack.Select((o)=> { return o == null ? "NULL" : o.ToString(); }))
+				, ins), context);
             }
         }
 

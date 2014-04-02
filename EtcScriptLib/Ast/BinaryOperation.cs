@@ -11,11 +11,35 @@ namespace EtcScriptLib.Ast
 		public Node RHS;
 		public VirtualMachine.InstructionSet Instruction;
 
-		public override void Emit(VirtualMachine.InstructionList into)
+		public BinaryOperator(Token Source, VirtualMachine.InstructionSet Instruction,
+			Node LHS, Node RHS) : base(Source) 
 		{
-			LHS.Emit(into);
-			RHS.Emit(into);
-			into.AddInstruction(Instruction, VirtualMachine.Operand.POP, VirtualMachine.Operand.POP, VirtualMachine.Operand.PUSH);
+			this.Instruction = Instruction;
+			this.LHS = LHS;
+			this.RHS = RHS;
+		}
+
+		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
+		{
+			RHS.Emit(into, OperationDestination.Stack);
+			LHS.Emit(into, OperationDestination.Stack);
+			into.AddInstruction(Instruction, VirtualMachine.Operand.POP, VirtualMachine.Operand.POP, 
+				Node.WriteOperand(Destination));
+		}
+
+		public override Node Transform(ParseScope Scope)
+		{
+			LHS = LHS.Transform(Scope);
+			RHS = RHS.Transform(Scope);
+			return this;
+		}
+
+		public override void Debug(int depth)
+		{
+			Console.Write(new String(' ', depth * 3));
+			Console.WriteLine("Binary Op - " + Instruction);
+			LHS.Debug(depth + 1);
+			RHS.Debug(depth + 1);
 		}
 	}
 }
