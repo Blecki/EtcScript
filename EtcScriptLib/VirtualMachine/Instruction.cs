@@ -13,6 +13,7 @@ namespace EtcScriptLib.VirtualMachine
 		POP = 3,
 		PEEK = 4,
 		R = 5,
+		STRING = 6,
 	}
 
 	public struct Instruction
@@ -63,10 +64,10 @@ namespace EtcScriptLib.VirtualMachine
 
         public override string ToString()
         {
-            return fittab(Opcode.ToString(), 12) + "\t" 
-				+ fittab(FirstOperand.ToString(), 4) + "\t" 
-				+ fittab(SecondOperand.ToString(), 4) + "\t" 
-				+ fittab(ThirdOperand.ToString(), 4);
+            return fittab(Opcode.ToString(), 24) + "\t" 
+				+ fittab(FirstOperand.ToString(), 5) + "\t" 
+				+ fittab(SecondOperand.ToString(), 5) + "\t" 
+				+ fittab(ThirdOperand.ToString(), 5);
         }
     }
 }

@@ -35,10 +35,6 @@ namespace EtcScriptLib.VirtualMachine
 
             if (context.ExecutionState != ExecutionState.Running) return;
 
-			while (context.CurrentInstruction.IsValid 
-				&& context.CurrentInstruction.Code[context.CurrentInstruction.InstructionPointer] is Annotation)
-				++context.CurrentInstruction.InstructionPointer;
-
 			if (!context.CurrentInstruction.IsValid)
 			{
 				context.ExecutionState = ExecutionState.Finished;
@@ -96,6 +92,18 @@ namespace EtcScriptLib.VirtualMachine
                             SetOperand(ins.SecondOperand, value, context);
                         }
                         break;
+
+					case InstructionSet.DYN_LOOKUP:
+						{
+							var name = GetOperand(ins.FirstOperand, context).ToString();
+							Object value = null;
+							if (context.Frame.QueryProperty(name, out value))
+								SetOperand(Operand.R, true, context);
+							else
+								SetOperand(Operand.R, false, context);
+							SetOperand(ins.SecondOperand, value, context);
+						}
+						break;
 					#endregion
 
 					#region LOOKUP_MEMBER
@@ -138,13 +146,53 @@ namespace EtcScriptLib.VirtualMachine
                         }
                         break;
 
+					case InstructionSet.DYN_LOOKUP_MEMBER:
+						{
+							var memberName = GetOperand(ins.FirstOperand, context).ToString();
+							var obj = GetOperand(ins.SecondOperand, context);
+							Object value = null;
+
+							if (obj == null)
+							{
+								SetOperand(ins.ThirdOperand, null, context);
+								SetOperand(Operand.R, false, context);
+								break;
+							}
+
+							if (obj is ScriptObject) //Special handling of script objects.
+							{
+								var scriptObject = obj as ScriptObject;
+								if (!scriptObject.QueryProperty(memberName, out value))
+								{
+									SetOperand(ins.ThirdOperand, null, context);
+									SetOperand(Operand.R, false, context);
+									break;
+								}
+							}
+							else
+							{
+								var lookupResult = LookupMemberWithReflection(obj, memberName);
+								if (lookupResult.FoundMember == false)
+								{
+									SetOperand(ins.ThirdOperand, null, context);
+									SetOperand(Operand.R, false, context);
+									break;
+								}
+								else
+									value = lookupResult.Member;
+							}
+
+							SetOperand(Operand.R, true, context);
+							SetOperand(ins.ThirdOperand, value, context);
+						}
+						break;
+
                     case InstructionSet.SET_MEMBER:
                         {
                             var value = GetOperand(ins.FirstOperand, context);
                             var memberName = GetOperand(ins.SecondOperand, context).ToString();
                             var obj = GetOperand(ins.ThirdOperand, context);
-
-
+							
                             if (obj == null)
                             {
                                 Throw(new RuntimeError("Could not set members of NULL.", nextInstruction.Value), context);
@@ -168,6 +216,36 @@ namespace EtcScriptLib.VirtualMachine
                             }
                         }
                         break;
+
+					case InstructionSet.DYN_SET_MEMBER:
+						{
+							var value = GetOperand(ins.FirstOperand, context);
+							var memberName = GetOperand(ins.SecondOperand, context).ToString();
+							var obj = GetOperand(ins.ThirdOperand, context);
+
+							if (obj == null)
+							{
+								SetOperand(Operand.R, false, context); 
+								break;
+							}
+
+							if (obj is ScriptObject) //Special handling of script objects.
+							{
+								var scriptObject = obj as ScriptObject;
+								scriptObject.SetProperty(memberName, value);
+								SetOperand(Operand.R, true, context);
+							}
+							else
+							{
+								var lookupResult = SetMemberWithReflection(obj, memberName, value);
+								if (lookupResult.FoundMember == false)
+								{
+									SetOperand(Operand.R, false, context); 
+									break;
+								}
+							}
+						}
+						break;
 
                     case InstructionSet.RECORD:
                         SetOperand(ins.FirstOperand, new ScriptObject(), context);
@@ -273,12 +351,6 @@ namespace EtcScriptLib.VirtualMachine
                             }
                             else
                             {
-								//if (arguments.Count > 1)
-								//    Throw(new RuntimeError(
-								//        "If the first argument in a node isn't an invokeable function, there can't " +
-								//        "be any further arguments.", nextInstruction.Value), context);
-								//else
-								//    SetOperand(Operand.PUSH, arguments[0], context);
 								Throw(new RuntimeError("Attempted to invoke what isn't a function", ins), context);
                             }
                         }
@@ -373,13 +445,6 @@ namespace EtcScriptLib.VirtualMachine
                     #endregion
 
                     #region Variables
-                    //case InstructionSet.PUSH_VARIABLE:
-                    //    {
-                    //        var v = GetOperand(ins.FirstOperand, context);
-                    //        var name = GetOperand(ins.SecondOperand, context).ToString();
-                    //        context.Scope.PushVariable(name, v);
-                    //    }
-                    //    break;
                     case InstructionSet.SET_VARIABLE:
                         {
                             var v = GetOperand(ins.FirstOperand, context);
@@ -387,14 +452,6 @@ namespace EtcScriptLib.VirtualMachine
                             context.Frame[name] = v;
                         }
                         break;
-                    //case InstructionSet.POP_VARIABLE:
-                    //    {
-                    //        var name = GetOperand(ins.FirstOperand, context).ToString();
-                    //        var v = context.Scope.GetVariable(name);
-                    //        context.Scope.PopVariable(name);
-                    //        SetOperand(ins.SecondOperand, v, context);
-                    //    }
-                    //    break;
                     #endregion
 
                     #region Loop control
@@ -633,6 +690,7 @@ namespace EtcScriptLib.VirtualMachine
                 case Operand.POP: throw new InvalidOperationException("Can't set to pop");
                 case Operand.PUSH: context.Stack.Push(value); break;
 				case Operand.R: context.R = value; break;
+				case Operand.STRING: throw new InvalidOperationException("Can't set to the string table");
             }
         }
 
@@ -646,6 +704,12 @@ namespace EtcScriptLib.VirtualMachine
                 case Operand.POP: return context.Stack.Pop();
                 case Operand.PUSH: throw new InvalidOperationException("Can't fetch from push");
 				case Operand.R: return context.R;
+				case Operand.STRING:
+					{
+						var tableIndex = context.CurrentInstruction.Code[context.CurrentInstruction.InstructionPointer++] as int?;
+						if (!tableIndex.HasValue) throw new InvalidOperationException("Index into string table was not integer");
+						return context.CurrentInstruction.Code.StringTable[tableIndex.Value];
+					}
                 default: throw new InvalidProgramException();
             }
         }

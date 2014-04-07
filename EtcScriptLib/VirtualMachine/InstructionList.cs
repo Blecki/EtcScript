@@ -5,39 +5,21 @@ using System.Text;
 
 namespace EtcScriptLib.VirtualMachine
 {
-	public class Annotation
-	{
-		public String text;
-		public static Annotation Create(String text)
-		{
-			return new Annotation { text = text };
-		}
-
-		public override string ToString()
-		{
-			return "[" + text + "]";
-		}
-	}
-
-    public class InPlace : InstructionList
+	public class InstructionList
     {
-        public InPlace(params Object[] instructions)
-            : base(instructions)
-        { }
+		public List<Object> Data = new List<Object>();
+		public List<String> StringTable = new List<string>();
 
-        public InPlace(InstructionList compiledInstructions)
-        {
-            this.AddRange(compiledInstructions);
-        }
-    }
-
-    public class InstructionList : List<Object>
-    {
-        private int SourceLine = 0;
+		public int Count { get { return Data.Count; } }
+		public Object this[int key]
+		{
+			get { return Data[key]; }
+			set { Data[key] = value; }
+		}
 
 		public void AddInstruction(InstructionSet Opcode, Operand First, Operand Second, Operand Third)
 		{
-			Add(new Instruction(Opcode, First, Second, Third));
+			Data.Add(new Instruction(Opcode, First, Second, Third));
 		}
 
         public void AddInstructions(params Object[] instructions)
@@ -45,47 +27,58 @@ namespace EtcScriptLib.VirtualMachine
             int literalsExpected = 0;
             foreach (var instruction in instructions)
             {
-				if (instruction is Annotation)
-				{
-					this.Add(instruction);
-					continue;
-				}
-
-                if (literalsExpected > 0)
+	            if (literalsExpected > 0)
                 {
                     --literalsExpected;
-                    this.Add(instruction);
+					Data.Add(instruction);
                     continue;
                 }
 
 				if (instruction is Instruction)
 				{
 					var parsedInstruction = (instruction as Instruction?).Value;
-					this.Add(parsedInstruction);
-					if (parsedInstruction.FirstOperand == Operand.NEXT) ++literalsExpected;
-					if (parsedInstruction.SecondOperand == Operand.NEXT) ++literalsExpected;
-					if (parsedInstruction.ThirdOperand == Operand.NEXT) ++literalsExpected;
+					Data.Add(parsedInstruction);
+					literalsExpected += CountLiteralOperands(parsedInstruction);
 				}
                 else if (instruction is String)
                 {
                     var parsedInstruction = Instruction.Parse(instruction.ToString());
-                    this.Add(parsedInstruction);
-                    if (parsedInstruction.FirstOperand == Operand.NEXT) ++literalsExpected;
-                    if (parsedInstruction.SecondOperand == Operand.NEXT) ++literalsExpected;
-                    if (parsedInstruction.ThirdOperand == Operand.NEXT) ++literalsExpected;
-                }
-                else if (instruction is InPlace)
-                {
-                    this.AddRange(instruction as InstructionList);
-                }
+					Data.Add(parsedInstruction);
+					literalsExpected += CountLiteralOperands(parsedInstruction);
+				}
                 else
                     throw new InvalidOperationException("Was not expecting a literal");
             }
         }
 
+		private int CountLiteralOperands(Instruction Instruction)
+		{
+			int literals = 0;
+			if (ExpectLiteral(Instruction.FirstOperand)) ++literals;
+			if (ExpectLiteral(Instruction.SecondOperand)) ++literals;
+			if (ExpectLiteral(Instruction.ThirdOperand)) ++literals;
+			return literals;
+		}
+
+		private bool ExpectLiteral(Operand Operand)
+		{
+			if (Operand == EtcScriptLib.VirtualMachine.Operand.NEXT) return true;
+			if (Operand == EtcScriptLib.VirtualMachine.Operand.STRING) return true;
+			return false;
+		}
+
         public InstructionList(params Object[] instructions)
         {
             AddInstructions(instructions);
         }
-    }
+
+		public int AddString(String str)
+		{
+			var r = StringTable.IndexOf(str);
+			if (r >= 0) return r;
+			r = StringTable.Count;
+			StringTable.Add(str);
+			return r;
+		}
+	}
 }

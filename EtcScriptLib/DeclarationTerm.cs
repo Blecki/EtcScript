@@ -37,5 +37,26 @@ namespace EtcScriptLib
 
 			return true;
 		}
+
+		public override string ToString()
+		{
+			if (Type == DeclarationTermType.Keyword)
+				return Name + RepitionMarker(RepititionType);
+			else
+				return "(" + Name + ")" + RepitionMarker(RepititionType);
+		}
+
+		private static string RepitionMarker(DeclarationTermRepititionType RepititionType)
+		{
+			switch (RepititionType)
+			{
+				case DeclarationTermRepititionType.NoneOrMany: return "*";
+				case DeclarationTermRepititionType.Once: return "";
+				case DeclarationTermRepititionType.OneOrMany: return "+";
+				case DeclarationTermRepititionType.Optional: return "?";
+				default: throw new InvalidProgramException();
+			}
+		}
+	
 	}
 }

@@ -9,8 +9,8 @@ namespace EtcScriptDebug
 	{
 		static void Main(string[] args)
 		{
-			var x = new EtcScriptTests.Compilation();
-			x.interpret_semicolon_as_newline_with_equal_tabs();
+			var x = new EtcScriptTests.Macros();
+			x.correct_macro_chosen();
 
 //            var script = @"perform temporary_state state
 //	foreach step in [path.QuantizePath 0.25]

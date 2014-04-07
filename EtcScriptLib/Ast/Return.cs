@@ -25,7 +25,7 @@ namespace EtcScriptLib.Ast
 			}
 
 			into.AddInstructions(
-				"LOOKUP NEXT PUSH", "@stack-size",
+				"LOOKUP STRING PUSH", into.AddString("@stack-size"),
 				"RESTORE_STACK POP",
 				"CONTINUE POP");
 		}

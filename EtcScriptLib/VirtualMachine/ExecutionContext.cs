@@ -22,8 +22,6 @@ namespace EtcScriptLib.VirtualMachine
 		public void Increment() 
 		{ 
 			InstructionPointer++;
-			while (IsValid && Code[InstructionPointer] is Annotation) 
-				InstructionPointer++;  
 		}
 
 		public static CodeContext Empty { get { return new CodeContext(new InstructionList(), 0); } }

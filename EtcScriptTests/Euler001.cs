@@ -26,13 +26,21 @@ namespace EtcScriptTests
 
 			var script = @"
 test _
-	let total = 0
+{
+	let total = 0;
 	foreach i from 1 to 999
-		if i % 3 == 0
-			let total = total + i
-		else if i % 5 == 0
-			let total = total + i
-	return total
+	{
+		if (i % 3 == 0)
+		{
+			let total = total + i;
+		}
+		else if (i % 5 == 0)
+		{
+			let total = total + i;
+		}
+	}
+	return total;
+}
 ";
 
 			var result = TestHelper.CallEnvironmentFunction(script, "test");

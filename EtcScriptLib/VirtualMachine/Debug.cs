@@ -52,6 +52,11 @@ namespace EtcScriptLib.VirtualMachine
 				iterator.Advance();
 				return iterator.Next().ToString();
 			}
+			else if (operand == Operand.STRING)
+			{
+				iterator.Advance();
+				return "STRING[" + iterator.Next().ToString() + "]";
+			}
 			else if (operand == Operand.NONE)
 				return "";
 			return operand.ToString();

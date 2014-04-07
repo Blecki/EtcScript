@@ -26,6 +26,10 @@ namespace EtcScriptLib
 			
 			var LHS = ParseTerm(Stream, Context);
 
+			if (LHS is Ast.MemberAccess)
+				if ((LHS as Ast.MemberAccess).DefaultValue != null)
+					throw new CompileError("Default value illegal on dynamic set", (LHS as Ast.MemberAccess).DefaultValue.Source);
+
 			if (Stream.Next().Type != TokenType.Operator || Stream.Next().Value != "=")
 				throw new CompileError("Expected '='", Stream);
 			Stream.Advance();
@@ -147,9 +151,12 @@ namespace EtcScriptLib
 
 		private static Ast.Node ParseOptionalDot(
 			Iterator<Token> Stream,
-			Ast.Node LHS)
+			Ast.Node LHS,
+			ParseContext Context)
 		{
-			while (Stream.Next().Type == TokenType.Dot)
+			if (Stream.AtEnd()) return LHS;
+
+			if (Stream.Next().Type == TokenType.Dot)
 			{
 				Stream.Advance();
 				if (Stream.Next().Type != TokenType.Identifier)
@@ -158,11 +165,33 @@ namespace EtcScriptLib
 				var MA = new Ast.MemberAccess(LHS.Source);
 				MA.Object = LHS;
 				MA.Name = RHS;
-				LHS = MA;
 				Stream.Advance();
-			}
 
-			return LHS;
+				return ParseOptionalDot(Stream, MA, Context);
+			}
+			else if (Stream.Next().Type == TokenType.QuestionMark)
+			{
+				Stream.Advance();
+				if (Stream.Next().Type != TokenType.Identifier)
+					throw new CompileError("? operator must be followed by identifier", Stream);
+				var RHS = Stream.Next().Value;
+				var MA = new Ast.MemberAccess(LHS.Source);
+				MA.Object = LHS;
+				MA.Name = RHS;
+				MA.IsDynamicAccess = true;
+				Stream.Advance();
+
+				if (!Stream.AtEnd() && Stream.Next().Type == TokenType.Colon)
+				{
+					Stream.Advance();
+					var defaultValue = ParseTerm(Stream, Context);
+					MA.DefaultValue = defaultValue;
+				}
+
+				return ParseOptionalDot(Stream, MA, Context);
+			}
+			else
+				return LHS;
 		}		
 
 		private static Ast.Node ParseTerm(
@@ -205,7 +234,7 @@ namespace EtcScriptLib
 			else
 				throw new CompileError("Illegal token in argument list", Stream.Next());
 
-			r = ParseOptionalDot(Stream, r);
+			r = ParseOptionalDot(Stream, r, Context);
 
 			return r;
 		}
@@ -215,6 +244,7 @@ namespace EtcScriptLib
 			ParseContext Context)
 		{
 			if (Stream.Next().Type != TokenType.OpenBracket) throw new CompileError("Expected [", Stream);
+			Stream.Advance();
 
 			 var parameters = new List<Ast.Node>();
 			 while (true)

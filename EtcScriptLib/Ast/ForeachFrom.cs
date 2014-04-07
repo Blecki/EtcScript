@@ -31,15 +31,15 @@ namespace EtcScriptLib.Ast
 		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
 		{
 			Max.Emit(into, OperationDestination.R);
-			into.AddInstructions("SET_VARIABLE R NEXT", "__total@" + VariableName);
+			into.AddInstructions("SET_VARIABLE R STRING", into.AddString("__total@" + VariableName));
 			Min.Emit(into, OperationDestination.R);
-			into.AddInstructions("SET_VARIABLE R NEXT", "__counter@" + VariableName);
+			into.AddInstructions("SET_VARIABLE R STRING", into.AddString("__counter@" + VariableName));
 
 			var LoopStart = into.Count;
 
 			into.AddInstructions(
-				"LOOKUP NEXT R", "__total@" + VariableName,
-				"LOOKUP NEXT PUSH", "__counter@" + VariableName,
+				"LOOKUP STRING R", into.AddString("__total@" + VariableName),
+				"LOOKUP STRING PUSH", into.AddString("__counter@" + VariableName),
 				"GREATER POP R R",
 				"IF_TRUE R",
 				"JUMP NEXT", 0);
@@ -47,15 +47,15 @@ namespace EtcScriptLib.Ast
 			var BreakPoint = into.Count - 1;
 
 			into.AddInstructions(
-				"LOOKUP NEXT R", "__counter@" + VariableName,
+				"LOOKUP STRING R", into.AddString("__counter@" + VariableName),
 				"SET_VARIABLE R NEXT", VariableName);
 
 			Body.Emit(into, OperationDestination.Discard);
 
 			into.AddInstructions(
-				"LOOKUP NEXT R", "__counter@" + VariableName,
+				"LOOKUP STRING R", into.AddString("__counter@" + VariableName),
 				"INCREMENT R R",
-				"SET_VARIABLE R NEXT", "__counter@" + VariableName,
+				"SET_VARIABLE R STRING", into.AddString("__counter@" + VariableName),
 				"JUMP NEXT", LoopStart);
 
 			into[BreakPoint] = into.Count;

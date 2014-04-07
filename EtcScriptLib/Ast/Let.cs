@@ -27,14 +27,17 @@ namespace EtcScriptLib.Ast
 		{
 			if (LHS is MemberAccess)
 			{
-				(LHS as MemberAccess).Object.Emit(into, OperationDestination.R);
-				Value.Emit(into, OperationDestination.Stack);
-				into.AddInstructions("SET_MEMBER POP NEXT R", (LHS as MemberAccess).Name);
+				(LHS as MemberAccess).Object.Emit(into, OperationDestination.Stack);
+				Value.Emit(into, OperationDestination.R);
+				if ((LHS as MemberAccess).IsDynamicAccess)
+					into.AddInstructions("DYN_SET_MEMBER R STRING POP", into.AddString((LHS as MemberAccess).Name));
+				else
+					into.AddInstructions("SET_MEMBER R STRING POP", into.AddString((LHS as MemberAccess).Name));
 			}
 			else if (LHS is Identifier)
 			{
 				Value.Emit(into, OperationDestination.R);
-				into.AddInstructions("SET_VARIABLE R NEXT", (LHS as Identifier).Name.Value);
+				into.AddInstructions("SET_VARIABLE R STRING", into.AddString((LHS as Identifier).Name.Value));
 			}
 			else
 				throw new InvalidProgramException();

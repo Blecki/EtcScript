@@ -21,7 +21,7 @@ namespace EtcScriptLib
 
 		public Declaration CompileString(String script)
 		{
-			var _script = "macro _@\n\t" + script;
+			var _script = "macro _@ { " + script + " }";
 			var stream = new TokenStream(new Compile.StringIterator(_script), Context);
 			var declaration = Parse.ParseDeclaration(stream, Context);
 			return declaration;

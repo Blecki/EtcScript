@@ -8,10 +8,13 @@ UsageSpecifier		:= "function" | "macro" | (user-defined usage specifier)
 DeclarationTerm		:= Identifier | String | ( "(" + Identifier + ")" + RepititionMarker? )
 Identifier			:= [a-z, A-Z, any non-operator symbol][any non-delimeter symbol]*
 RepitionMarker		:= "?" | "*" | "+"
-Block				:= Statement+
-Statement			:= Let | If | Invokation | DynamicInvokation | BracketInvokation | Control
-Let					:= "let" + (Identifier | MemberAccess) + "=" + Expression
-MemberAccess		:= Term + "." + Identifier
+Block				:= { + Statement+ + }
+Statement			:= Let | If | Invokation + ; | DynamicInvokation + ; | BracketInvokation + ; | Control
+Let					:= "let" + (Identifier | MemberAccess) + "=" + Expression + ;
+If					:= "if" + Expression + Block
+MemberAccess		:= Term + (StaticMember | DynamicMember)
+StaticMember		:= "." + Identifier
+DynamicMember		:= "?" + Identifier + (":" + Term)?
 Expression			:= Term | BinaryOperation
 Term				:= Parenthetical | Identifier | Number | String | MemberAccess | BracketInvokation | DynamicInvokation
 Parenthetical		:= "(" + Expression + ")"
@@ -19,11 +22,11 @@ BinaryOperation		:= Term + Operator + Term
 Invokation			:= Term+
 BracketInvokation	:= "[" + Invokation + "]"
 DynamicInvokation	:= ":" + BracketInvokation
-Control				:= Invokation + Block
+Control				:= Invokation + (Block | ;)
 Operator			:= Any of operators specified in operator table
 String				:= Quote-deliminated string
 
-Delimeter symbols	:= []{}()\s\t\r\n.
+Delimeter symbols	:= []{}()\s\t\r\n.:;
 
 Default operator table
 0	||

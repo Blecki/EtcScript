@@ -11,8 +11,13 @@ namespace EtcScriptLib.VirtualMachine
 
         MOVE,           // SOURCE       DESTINATION     UNUSED
         LOOKUP,         // NAME         DESTINATION     UNUSED
-        LOOKUP_MEMBER,  // NAME         OBJECT          DESTINATION
+		DYN_LOOKUP,		// NAME			DESTINATION		UNUSED
+        LOOKUP_MEMBER,  // NAME         OBJECT          DESTINATION	--Look for a member named 'name' on object. This is a hard
+																	//query: If there is no matching member, it is an error.
+		DYN_LOOKUP_MEMBER,	// NAME			OBJECT			DESTINATION	--Look for a member named 'name' on object. If found, R is 
+																	//set to true. If not, R is set to false.
         SET_MEMBER,     // VALUE        NAME            OBJECT
+		DYN_SET_MEMBER, // VALUE		NAME			OBJECT		--Like SET_MEMBER, except R indicates success. Does not produce errors.
         RECORD,         // DESTINATION  UNUSED          UNUSED      --Create an empty record and store in DESTINATION.
 
         MARK,           // DESTINATION  UNUSED          UNUSED      --Places the current execution point in DESTINATION.

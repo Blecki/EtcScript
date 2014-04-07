@@ -22,9 +22,9 @@ namespace EtcScriptLib.Ast
 		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
 		{
 			if (Name.Type == TokenType.Identifier)
-				into.AddInstructions("LOOKUP NEXT " + Node.WriteOperand(Destination), Name.Value);
+				into.AddInstructions("LOOKUP STRING " + Node.WriteOperand(Destination), into.AddString(Name.Value));
 			else if (Name.Type == TokenType.String)
-				into.AddInstructions("MOVE NEXT " + Node.WriteOperand(Destination), Name.Value);
+				into.AddInstructions("MOVE STRING " + Node.WriteOperand(Destination), into.AddString(Name.Value));
 			else if (Name.Type == TokenType.Number)
 				into.AddInstructions("MOVE NEXT " + Node.WriteOperand(Destination), Convert.ToSingle(Name.Value));
 		}

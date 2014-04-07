@@ -13,11 +13,13 @@ namespace EtcScriptTests
 		public void macros_callable()
 		{
 			var script = @"
-macro foo (a) (b) bar
-	return 6
+macro foo (a) (b) bar {
+	return 6;
+}
 
-test _
-	return [foo 1 2 bar]
+test _ {
+	return [foo 1 2 bar];
+}
 ";
 
 			var result = TestHelper.CallEnvironmentFunction(script, "test");
@@ -29,14 +31,17 @@ test _
 		public void correct_macro_chosen()
 		{
 			var script = @"
-macro foo (a) (b) bar
-	return a
+macro foo (a) (b) bar {
+	return a;
+}
 
-macro foo (a) bar (b)
-	return b
+macro foo (a) bar (b) {
+	return b;
+}
 
-test _
-	return [FOO 1 BAR 2]
+test _ {
+	return [FOO 1 BAR 2];
+}
 
 ";
 
@@ -49,13 +54,16 @@ test _
 		public void macros_call_self()
 		{
 			var script = @"
-macro fib (a)
-	if (a < 2)
-		return a
-	return [fib (a - 1)] + [fib (a - 2)]
+macro fib (a) {
+	if (a < 2) {
+		return a;
+	}
+	return [fib (a - 1)] + [fib (a - 2)];
+}
 
-test _
-	return [fib 6]
+test _ {
+	return [fib 6];
+}
 ";
 
 			var result = TestHelper.CallEnvironmentFunction(script, "test");

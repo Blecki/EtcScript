@@ -23,10 +23,10 @@ namespace EtcScriptLib
 			Body.Transform(DeclarationScope);
 
 			Instructions = new VirtualMachine.InstructionList();
-			Instructions.AddInstructions("MARK_STACK R", "SET_VARIABLE R NEXT", "@stack-size");
+			Instructions.AddInstructions("MARK_STACK R", "SET_VARIABLE R STRING", Instructions.AddString("@stack-size"));
 			Body.Emit(Instructions, Ast.OperationDestination.Discard);
 			Instructions.AddInstructions(
-				"LOOKUP NEXT PUSH", "@stack-size",
+				"LOOKUP STRING PUSH", Instructions.AddString("@stack-size"),
 				"RESTORE_STACK POP",
 				"CONTINUE POP");
 		}

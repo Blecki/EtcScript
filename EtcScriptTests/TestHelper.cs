@@ -15,8 +15,7 @@ namespace EtcScriptTests
 
 		public static void QuickTest(String script, Object expectedResult)
 		{
-			RunSimpleTest(@"activity foo
-	" + script, expectedResult);
+			RunSimpleTest(@"activity foo { " + script + " }", expectedResult);
 		}
 
 		public static void CompileTestAssertNoErrors(String script)
@@ -60,7 +59,10 @@ namespace EtcScriptTests
 			var environment = EtcScriptLib.Environment.CreateStandardEnvironment();
 			var declarations = environment.Build(script, (s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Abort; });
 			foreach (var declaration in declarations)
+			{
 				environment.GlobalScope.SetProperty(declaration.UsageSpecifier, declaration.MakeInvokableFunction());
+				EtcScriptLib.Compile.EmitDebugDump(declaration);
+			}
 			return environment;
 		}
 
@@ -70,6 +72,8 @@ namespace EtcScriptTests
 			var func = scope.GlobalScope.GetOwnProperty(function) as EtcScriptLib.VirtualMachine.InvokeableFunction;
 			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(scope.GlobalScope,
 				new EtcScriptLib.VirtualMachine.CodeContext(new EtcScriptLib.VirtualMachine.InstructionList(), 0));
+
+
 			func.Invoke(context, new List<object>());
 			EtcScriptLib.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
 			if (context.ExecutionState == EtcScriptLib.VirtualMachine.ExecutionState.Error)

@@ -25,9 +25,12 @@ namespace EtcScriptTests
 					return null;
 				}));
 
-			var script = @"activity foo
-	foreach x in :[foo]
-		:[bar x]
+			var script = @"
+activity foo {
+	foreach x in :[foo] {
+		:[bar x];
+	}
+}
 ";
 			
 			Console.WriteLine("Test script: " + script);
@@ -59,9 +62,12 @@ namespace EtcScriptTests
 				return null;
 			}));
 
-			var script = @"activity foo
-	foreach x from 0 to 5
-		:[bar x]
+			var script = @"
+activity foo {
+	foreach x from 0 to 5 {
+		:[bar x];
+	}
+}
 ";
 
 			Console.WriteLine("Test script: " + script);
@@ -93,11 +99,14 @@ namespace EtcScriptTests
 				return null;
 			}));
 
-			var script = @"activity foo
-	let x = 0
-	while (x < 5)
-		:[bar x]
-		let x = x + 1
+			var script = @"
+activity foo {
+	let x = 0;
+	while (x < 5) {
+		:[bar x];
+		let x = x + 1;
+	}
+}
 ";
 
 			Console.WriteLine("Test script: " + script);

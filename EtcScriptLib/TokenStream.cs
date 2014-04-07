@@ -12,7 +12,7 @@ namespace EtcScriptLib
 		private Token? next_token;
 
 		private ParseContext operators;
-		private String delimeters = "()[]{} \t\r\n.;:";
+		private String delimeters = "()[]{} \t\r\n.;:?";
 
 		private void advance_source()
 		{

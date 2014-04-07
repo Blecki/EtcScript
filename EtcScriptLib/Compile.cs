@@ -10,7 +10,7 @@ namespace EtcScriptLib
         private static void EmitDeclarations(Declaration node)
         {
             Console.WriteLine(node.UsageSpecifier.ToString() + ": ");
-			VirtualMachine.Debug.DumpOpcode(node.Body.Instructions, Console.Out, 1);
+			VirtualMachine.Debug.DumpOpcode(node.Body.Instructions.Data, Console.Out, 1);
         }
 
 		public class StringIterator : Iterator<int>
@@ -57,8 +57,17 @@ namespace EtcScriptLib
 
 		public static void EmitDebugDump(Declaration declaration)
 		{
+			Console.WriteLine(declaration.UsageSpecifier.ToString() + ": ");
+			Console.Write(" TERMS: ");
+			foreach (var term in declaration.Terms) Console.Write(term.ToString() + " ");
+			//Console.WriteLine();
+			Console.WriteLine("\n AST:");
 			declaration.Body.Body.Debug(0);
-			EmitDeclarations(declaration);
+			Console.WriteLine(" INSTRUCTIONS:");
+			VirtualMachine.Debug.DumpOpcode(declaration.Body.Instructions.Data, Console.Out, 1);
+			Console.WriteLine(" STRING TABLE:");
+			for (int i = 0; i < declaration.Body.Instructions.StringTable.Count; ++i)
+				Console.WriteLine(" " + i.ToString() + ": " + declaration.Body.Instructions.StringTable[i]);
 		}
 
 		public static List<Declaration> Build(
