@@ -37,7 +37,7 @@ namespace EtcScriptLib.Ast
 			else if (LHS is Identifier)
 			{
 				Value.Emit(into, OperationDestination.R);
-				into.AddInstructions("SET_VARIABLE R STRING", into.AddString((LHS as Identifier).Name.Value));
+				(LHS as Identifier).EmitAssignment(into);
 			}
 			else
 				throw new InvalidProgramException();

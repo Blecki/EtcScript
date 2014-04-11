@@ -9,18 +9,30 @@ namespace EtcScriptDebug
 	{
 		static void Main(string[] args)
 		{
-			var x = new EtcScriptTests.Macros();
-			x.correct_macro_chosen();
+			var traceFile = System.IO.File.Open("trace.txt", System.IO.FileMode.Create);
+			var writer = new System.IO.StreamWriter(traceFile);
+			EtcScriptLib.VirtualMachine.VirtualMachine.DetailedTracing = true;
+			EtcScriptLib.VirtualMachine.VirtualMachine.WriteTraceLine += (s) =>
+				{
+					writer.WriteLine(s);
+					writer.Flush();
+					traceFile.Flush();
+				};
 
-//            var script = @"perform temporary_state state
-//	foreach step in [path.QuantizePath 0.25]
-//		do nothing
-//";
-//            Console.WriteLine("Test script: " + script);
-//            var ops = EtcScriptLib.Compile.GetDefaultOperators();
-//            var declarations = EtcScriptLib.ParseToAst.Build(
-//                new EtcScriptLib.TokenStream(new EtcScriptLib.Compile.StringIterator(script), ops), ops,
-//                (s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Continue; });
+			try
+			{
+				var x = new EtcScriptTests.Macros();
+				x.macros_call_self();
+			}
+			catch (Exception e)
+			{
+				writer.WriteLine("ERROR: " + e.Message + e.StackTrace);
+			}
+
+			writer.Flush();
+			writer.Close();
+
+			traceFile.Close();
 
 		}
 	}

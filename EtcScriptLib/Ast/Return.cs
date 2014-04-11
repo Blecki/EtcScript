@@ -8,12 +8,14 @@ namespace EtcScriptLib.Ast
 	public class Return : Statement
 	{
 		public Node Value;
+		public ParseScope DeclarationScope;
 
 		public Return(Token Source) : base(Source) { }
 
 		public override Node Transform(ParseScope Scope)
 		{
 			if (Value != null) Value = Value.Transform(Scope);
+			DeclarationScope = Scope;
 			return this;
 		}
 
@@ -23,11 +25,13 @@ namespace EtcScriptLib.Ast
 			{
 				Value.Emit(into, OperationDestination.R);
 			}
+			else
+			{
+				into.AddInstructions("MOVE NEXT R", 0);
+			}
 
-			into.AddInstructions(
-				"LOOKUP STRING PUSH", into.AddString("@stack-size"),
-				"RESTORE_STACK POP",
-				"CONTINUE POP");
+			into.AddInstructions("JUMP NEXT", 0);
+			DeclarationScope.RecordReturnJumpSource(into.Count - 1);
 		}
 
 		public override void Debug(int depth)

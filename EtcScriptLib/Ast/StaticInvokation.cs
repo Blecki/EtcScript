@@ -27,8 +27,11 @@ namespace EtcScriptLib.Ast
 			else
 			{
 				var newParameters = Declaration.GenerateParameterListSyntaxTree(Arguments, matchingFunction.Terms);
-				newParameters.Members.Insert(0, new Ast.Literal(Source, new VirtualMachine.MacroFunction(matchingFunction)));
-				return new Ast.FunctionCall(Source, newParameters).Transform(Scope);
+
+				if (matchingFunction.OwnerContextID == Scope.EnvironmentContext.ID && matchingFunction.OwnerContextID != 0)
+					return new Ast.JumpCall(Source, matchingFunction, newParameters.Members).Transform(Scope);
+
+				return new Ast.FunctionCall(Source, matchingFunction.MakeInvokableFunction(), newParameters.Members).Transform(Scope);
 			}
 		}
 	}

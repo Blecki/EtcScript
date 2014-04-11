@@ -26,7 +26,7 @@ namespace EtcScriptTests
 				}));
 
 			var script = @"
-activity foo {
+test foo {
 	foreach x in :[foo] {
 		:[bar x];
 	}
@@ -37,7 +37,9 @@ activity foo {
 
 			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
 				 (s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Continue; });
-			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(environment, declaration.GetEntryPoint());
+			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(environment, 
+				EtcScriptLib.VirtualMachine.CodeContext.Empty);
+			declaration.MakeInvokableFunction().Invoke(context, new List<Object>());
 			EtcScriptLib.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
 			if (context.ExecutionState == EtcScriptLib.VirtualMachine.ExecutionState.Error)
 				Console.WriteLine("Error:" + context.ErrorObject.ToString());
@@ -63,7 +65,7 @@ activity foo {
 			}));
 
 			var script = @"
-activity foo {
+test foo {
 	foreach x from 0 to 5 {
 		:[bar x];
 	}
@@ -74,13 +76,17 @@ activity foo {
 
 			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
 				 (s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Continue; });
-			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(environment, declaration.GetEntryPoint());
+			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(environment, 
+				EtcScriptLib.VirtualMachine.CodeContext.Empty);
+			declaration.MakeInvokableFunction().Invoke(context, new List<Object>());
+			EtcScriptLib.Compile.EmitDebugDump(declaration);
+
 			EtcScriptLib.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
 			if (context.ExecutionState == EtcScriptLib.VirtualMachine.ExecutionState.Error)
 				Console.WriteLine("Error:" + context.ErrorObject.ToString());
 
-			if (context.Peek == null) Console.WriteLine("NULL");
-			else Console.WriteLine(context.Peek.ToString());
+			if (context.R == null) Console.WriteLine("NULL");
+			else Console.WriteLine(context.R.ToString());
 
 			Assert.AreEqual(6, total_calls);
 		}
@@ -100,7 +106,7 @@ activity foo {
 			}));
 
 			var script = @"
-activity foo {
+test foo {
 	let x = 0;
 	while (x < 5) {
 		:[bar x];
@@ -113,7 +119,9 @@ activity foo {
 
 			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
 				 (s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Continue; });
-			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(environment, declaration.GetEntryPoint());
+			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(environment, 
+				EtcScriptLib.VirtualMachine.CodeContext.Empty);
+			declaration.MakeInvokableFunction().Invoke(context, new List<object>());
 			EtcScriptLib.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
 			if (context.ExecutionState == EtcScriptLib.VirtualMachine.ExecutionState.Error)
 				Console.WriteLine("Error:" + context.ErrorObject.ToString());

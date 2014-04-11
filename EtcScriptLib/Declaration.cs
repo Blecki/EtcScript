@@ -10,27 +10,25 @@ namespace EtcScriptLib
 		public String UsageSpecifier;
 		public List<DeclarationTerm> Terms;
 		public LambdaBlock Body;
+		public WhenClause WhenClause;
 		internal ParseScope DeclarationScope;
+		internal int OwnerContextID = 0;
 
 		public VirtualMachine.InvokeableFunction MakeInvokableFunction(VirtualMachine.ScriptObject CapturedScope = null)
 		{
 			return Body.GetInvokable(DeclarationScope, Terms, CapturedScope);
 		}
 
-		public void EmitInstructions()
+		public VirtualMachine.InvokeableFunction MakeWhenInvokable(VirtualMachine.ScriptObject CapturedScope = null)
 		{
-			Body.EmitInstructions(DeclarationScope);
-		}
-
-		public VirtualMachine.CodeContext GetEntryPoint()
-		{
-			return Body.GetEntryPoint(DeclarationScope);
+			return WhenClause.GetInvokable(DeclarationScope, Terms, CapturedScope);
 		}
 
 		public static Declaration Parse(String Header)
 		{
 			var tokenIterator = new TokenStream(new Compile.StringIterator(Header), new ParseContext());
-			var headerTerms = EtcScriptLib.Parse.ParseDeclarationHeader(tokenIterator);
+			var headerTerms = EtcScriptLib.Parse.ParseMacroDeclarationHeader(tokenIterator, 
+				EtcScriptLib.Parse.DeclarationHeaderTerminatorType.StreamEnd);
 
 			var r = new Declaration();
 			r.Terms = headerTerms;

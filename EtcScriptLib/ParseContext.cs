@@ -34,6 +34,47 @@ namespace EtcScriptLib
 
 	public class ParseContext
 	{
+		public RuleSet Rules = new RuleSet();
+		public List<Declaration> PendingEmission = new List<Declaration>();
+		public int ID = 0;
+
+		public void EmitDeclarations()
+		{
+			var into = new VirtualMachine.InstructionList();
+			foreach (var declaration in PendingEmission)
+			{
+				declaration.OwnerContextID = ID;
+				declaration.Body.EmitInstructions(declaration.DeclarationScope, into);
+				if (declaration.WhenClause != null) declaration.WhenClause.EmitInstructions(declaration.DeclarationScope, into);
+
+				if (Compile.Debug)
+				{
+					Compile.EmitDebugDump(declaration);
+					Compile.DebugWrite("\n");
+				}
+			}
+
+			foreach (var declaration in PendingEmission)
+			{
+				foreach (var point in declaration.Body.CallPoints)
+					into[point] = declaration.Body.EntryPoint;
+				if (declaration.WhenClause != null)
+					foreach (var point in declaration.WhenClause.CallPoints)
+						into[point] = declaration.WhenClause.EntryPoint;
+			}
+
+			if (Compile.Debug)
+			{
+				Compile.DebugWrite("\nCOMPILED CODE:\n");
+				VirtualMachine.Debug.DumpOpcode(into.Data, Compile.DebugWrite, 1);
+				Compile.DebugWrite(" STRING TABLE:\n");
+				for (int i = 0; i < into.StringTable.Count; ++i)
+					Compile.DebugWrite(" " + i.ToString() + ": " + into.StringTable[i] + "\n");
+			}
+
+			PendingEmission.Clear();
+		}
+
 		public struct Operator
 		{
 			public String token;
@@ -45,7 +86,7 @@ namespace EtcScriptLib
 
 		public void PushNewScope()
 		{
-			var newScope = new ParseScope { Parent = ActiveScope };
+			var newScope = new ParseScope { Parent = ActiveScope, EnvironmentContext = this };
 			ActiveScope = newScope;
 		}
 
@@ -57,7 +98,7 @@ namespace EtcScriptLib
 
 		public ParseContext()
 		{
-			ActiveScope = new ParseScope();
+			ActiveScope = new ParseScope { EnvironmentContext = this };
 		}
 
 		public Dictionary<int, List<Operator>> precedence = new Dictionary<int, List<Operator>>();

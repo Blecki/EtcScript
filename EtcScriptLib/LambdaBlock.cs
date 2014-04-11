@@ -8,32 +8,43 @@ namespace EtcScriptLib
 	public class LambdaBlock
 	{
 		internal VirtualMachine.InstructionList Instructions;
+		internal int EntryPoint;
 		internal Ast.Node Body;
 		private VirtualMachine.InvokeableFunction CachedLambda;
+		internal List<int> CallPoints = new List<int>();
 
 		public LambdaBlock(Ast.Node Body)
 		{
 			this.Body = Body;
 		}
 
-		public void EmitInstructions(ParseScope DeclarationScope)
+		public virtual void EmitInstructions(ParseScope DeclarationScope, VirtualMachine.InstructionList Into)
 		{
 			if (Instructions != null) throw new InvalidOperationException("Instructions should not be emitted twice");
 
-			Body.Transform(DeclarationScope);
+			Body = Body.Transform(DeclarationScope);
 
-			Instructions = new VirtualMachine.InstructionList();
-			Instructions.AddInstructions("MARK_STACK R", "SET_VARIABLE R STRING", Instructions.AddString("@stack-size"));
+			Instructions = Into;
+			EntryPoint = Into.Count;
+			Instructions.AddInstructions("MOVE F PUSH", "MARK_STACK F");
 			Body.Emit(Instructions, Ast.OperationDestination.Discard);
+			Instructions.AddInstructions("MOVE NEXT R", 0); //If a function has no return statement, it returns 0.
+			var returnJumpPoint = Instructions.Count;
 			Instructions.AddInstructions(
-				"LOOKUP STRING PUSH", Instructions.AddString("@stack-size"),
-				"RESTORE_STACK POP",
+				"RESTORE_STACK F",
+				"MOVE POP F",
 				"CONTINUE POP");
+
+			System.Diagnostics.Debug.Assert(DeclarationScope.Type == ScopeType.Function);
+			System.Diagnostics.Debug.Assert(DeclarationScope.ReturnJumpSources != null);
+
+			foreach (var point in DeclarationScope.ReturnJumpSources)
+				Instructions[point] = returnJumpPoint;
 		}
 
-		public void CacheSystemImplementation(Func<VirtualMachine.ExecutionContext, List<Object>, Object> Implementation)
+		public void CacheSystemImplementation(int ArgumentCount, Func<VirtualMachine.ExecutionContext, List<Object>, Object> Implementation)
 		{
-			CachedLambda = new VirtualMachine.NativeFunction("SYS-LAMBDA", Implementation);
+			CachedLambda = new VirtualMachine.NativeFunction("SYS-LAMBDA", ArgumentCount, Implementation);
 		}
 
 		public VirtualMachine.InvokeableFunction GetInvokable(
@@ -43,11 +54,8 @@ namespace EtcScriptLib
 		{
 			if (CachedLambda == null)
 			{
-				if (Instructions == null)
-					EmitInstructions(DeclarationScope);
-
 				CachedLambda = VirtualMachine.LambdaFunction.CreateLambda("LAMBDA",
-				Instructions,
+				GetEntryPoint(DeclarationScope),
 				CapturedScope ?? new VirtualMachine.ScriptObject(),
 				new List<String>(
 					Terms.Where(
@@ -62,10 +70,24 @@ namespace EtcScriptLib
 			return CachedLambda;
 		}
 
+		public VirtualMachine.InvokeableFunction GetBasicInvokable(
+			ParseScope DeclarationScope,
+			List<String> Terms)
+		{
+			if (CachedLambda == null)
+			{
+				CachedLambda = VirtualMachine.LambdaFunction.CreateLambda("LAMBDA",
+				GetEntryPoint(DeclarationScope),
+				new VirtualMachine.ScriptObject(),
+				Terms);
+			}
+
+			return CachedLambda;
+		}
+
 		public VirtualMachine.CodeContext GetEntryPoint(ParseScope DeclarationScope)
 		{
-			if (Instructions == null) EmitInstructions(DeclarationScope);
-			return new VirtualMachine.CodeContext(Instructions, 0);
+			return new VirtualMachine.CodeContext(Instructions, EntryPoint);
 		}		
 	}
 }

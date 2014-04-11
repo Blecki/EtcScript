@@ -25,6 +25,11 @@ namespace EtcScriptLib.VirtualMachine
 		}
 
 		public static CodeContext Empty { get { return new CodeContext(new InstructionList(), 0); } }
+
+		public override string ToString()
+		{
+			return "CC(" + InstructionPointer + ")";
+		}
     }
 
     public enum ExecutionState
@@ -38,20 +43,21 @@ namespace EtcScriptLib.VirtualMachine
 	public class ExecutionContext
 	{
 		public ScriptObject Frame { get; internal set; }
-		internal Stack<Object> Stack = new Stack<Object>();
+		internal List<Object> Stack = new List<Object>();
 		public Object R;
+		public int F;
 		public ExecutionState ExecutionState { get; set; }
 		public CodeContext CurrentInstruction;
 		public Object Tag;
 
 		public Object ErrorObject;
 
-		public Object Peek { get { return Stack.Count > 0 ? Stack.Peek() : null; } }
+		public Object Peek { get { return Stack.Count > 0 ? Stack[Stack.Count - 1] : null; } }
 
 		public void Reset(ScriptObject GlobalScope, CodeContext ExecutionPoint)
 		{
 			Stack.Clear();
-			Stack.Push(new CodeContext(new InstructionList(), 0)); //Fake return point
+			Stack.Add(new CodeContext(new InstructionList(), 0)); //Fake return point
 			R = null;
 			Frame = new ScriptObject("@parent", GlobalScope);
 			ExecutionState = ExecutionState.Running;

@@ -12,20 +12,20 @@ namespace EtcScriptTests
         [Test]
         public void executes_trivial_script()
         {
-			TestHelper.RunSimpleTest("Activity foo {}");
+			TestHelper.RunSimpleTest("test foo {}");
         }
 
 		[Test]
 		public void simple_return()
 		{
-			TestHelper.RunSimpleTest(@"Activity foo 
+			TestHelper.RunSimpleTest(@"test foo 
 	{return;}");
 		}
 
 		[Test]
 		public void return_value()
 		{
-			TestHelper.RunSimpleTest(@"Activity foo
+			TestHelper.RunSimpleTest(@"test foo
 	{return 4 + 5;}", 9);
 		}
 
@@ -33,7 +33,7 @@ namespace EtcScriptTests
 		public void _if()
 		{
 			Assert.AreEqual(5,
-				TestHelper.RunSimpleTest(@"Activity foo
+				TestHelper.RunSimpleTest(@"test foo
 	{let x = 4;
 	if (x == 4)
 {
@@ -48,7 +48,7 @@ namespace EtcScriptTests
 		{
 			Assert.AreEqual(9,
 				TestHelper.RunSimpleTest(@"
-Activity foo {
+test foo {
 	let x = 7;
 	if (x == 4) {
 		return 5;
@@ -59,6 +59,25 @@ Activity foo {
 	}
 }
 "));
+		}
+
+		[Test]
+		public void local_variable()
+		{
+			Assert.AreEqual(9,
+				TestHelper.RunSimpleTest(@"
+test _ {
+	var x = 3;
+	return x * x;
+}"));
+
+			Assert.AreEqual(4,
+				TestHelper.RunSimpleTest(@"
+test _ {
+	var x = 3;
+	let x = 2;
+	return x * x;
+}"));
 		}
     }
 

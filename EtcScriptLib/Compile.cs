@@ -7,13 +7,15 @@ namespace EtcScriptLib
 {
     public class Compile
     {
-        private static void EmitDeclarations(Declaration node)
-        {
-            Console.WriteLine(node.UsageSpecifier.ToString() + ": ");
-			VirtualMachine.Debug.DumpOpcode(node.Body.Instructions.Data, Console.Out, 1);
-        }
+		public static bool Debug = false;
+		public static Action<String> _DebugWrite;
 
-		public class StringIterator : Iterator<int>
+		public static void DebugWrite(String s)
+		{
+			if (_DebugWrite != null) _DebugWrite(s);
+		}
+
+        public class StringIterator : Iterator<int>
 		{
 			private String data;
 			private int place = 0;
@@ -45,6 +47,7 @@ namespace EtcScriptLib
 
 			var tokenStream = new TokenStream(new StringIterator(data), operatorSettings);
 			var ast = Parse.Build(tokenStream, operatorSettings, OnError);
+			operatorSettings.EmitDeclarations();
 			if (ast != null) foreach (var d in ast)
 				{
 					//d.EmitInstructions();
@@ -57,30 +60,40 @@ namespace EtcScriptLib
 
 		public static void EmitDebugDump(Declaration declaration)
 		{
-			Console.WriteLine(declaration.UsageSpecifier.ToString() + ": ");
-			Console.Write(" TERMS: ");
-			foreach (var term in declaration.Terms) Console.Write(term.ToString() + " ");
+			DebugWrite(declaration.UsageSpecifier.ToString() + ":\n");
+			DebugWrite(" TERMS: ");
+			foreach (var term in declaration.Terms) DebugWrite(term.ToString() + " ");
 			//Console.WriteLine();
-			Console.WriteLine("\n AST:");
-			declaration.Body.Body.Debug(0);
-			Console.WriteLine(" INSTRUCTIONS:");
-			VirtualMachine.Debug.DumpOpcode(declaration.Body.Instructions.Data, Console.Out, 1);
-			Console.WriteLine(" STRING TABLE:");
-			for (int i = 0; i < declaration.Body.Instructions.StringTable.Count; ++i)
-				Console.WriteLine(" " + i.ToString() + ": " + declaration.Body.Instructions.StringTable[i]);
+			if (declaration.WhenClause != null)
+			{
+				//DebugWrite("\n WHEN AST:\n");
+				//declaration.WhenClause.Body.Debug(0);
+				DebugWrite("\n WHEN ENTRY: " + declaration.WhenClause.EntryPoint + "\n");
+			}
+			else
+				DebugWrite("\n NO WHEN CLAUSE\n");
+			//DebugWrite(" AST:\n");
+			//declaration.Body.Body.Debug(0);
+			DebugWrite(" ENTRY: " + declaration.Body.EntryPoint + "\n");
 		}
 
 		public static List<Declaration> Build(
 			String script, 
 			ParseContext context, 
-			Func<String, ErrorStrategy> OnError)
+			Func<String, ErrorStrategy> OnError,
+			bool DelayEmission = false)
 		{
-		    return Parse.Build(new TokenStream(new StringIterator(script), context), context, OnError);
+		    var r = Parse.Build(new TokenStream(new StringIterator(script), context), context, OnError);
+			if (!DelayEmission) context.EmitDeclarations();
+			return r;
 		}
+
+		private static int __contextID = 1;
 
 		public static ParseContext GetDefaultOperators()
 		{
 			var operatorSettings = new ParseContext();
+			operatorSettings.ID = ++__contextID;
 
 			operatorSettings.AddOperator(1, "|", VirtualMachine.InstructionSet.OR);
 			operatorSettings.AddOperator(0, "||", VirtualMachine.InstructionSet.LOR);
@@ -138,6 +151,14 @@ namespace EtcScriptLib
 					{
 						return new Ast.While(parameters[0].Source, parameters[0], body);
 					}));
+
+			operatorSettings.AddControl(Control.Create(
+				Declaration.Parse("consider (x)"),
+				ControlBlockType.NoBlock,
+				(parameters, body) =>
+				{
+					return new Ast.ConsiderRule(parameters[0].Source, parameters[0]);
+				}));
 
 			return operatorSettings;
 		}

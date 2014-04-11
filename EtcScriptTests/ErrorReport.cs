@@ -31,9 +31,9 @@ namespace EtcScriptTests
         [Test]
         public void errors_reported()
         {
-			throws_error(@"activity foo
+			throws_error(@"test foo
 	let bar = (one two three)");
-			throws_error(@"activity foo
+			throws_error(@"test foo
 	let bar = one.(three.four)");
         }
 

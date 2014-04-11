@@ -8,37 +8,40 @@ namespace EtcScriptLib.VirtualMachine
     public class LambdaFunction : InvokeableFunction
     {
         public String Name = null;
-		public InstructionList Body;
+		public CodeContext EntryPoint;
 		public ScriptObject Scope;
 		public List<String> Arguments;
-		private static InstructionList Cleanup;
+
+		public override bool IsStackInvokable { get { return true; } }
+
+		public override void StackInvoke(ExecutionContext context)
+		{
+			context.CurrentInstruction = EntryPoint;
+		}
 
         public override InvokationResult Invoke(ExecutionContext context, List<Object> arguments)
         {
-			if (Cleanup == null)
-				Cleanup = new InstructionList(
-					"SET_FRAME POP",
-					"CONTINUE POP");
+			if (arguments.Count > 1)
+			{
+				var cleanup = new InstructionList("CLEANUP NEXT", arguments.Count - 1, "CONTINUE POP");
+				VirtualMachine.SetOperand(Operand.PUSH, context.CurrentInstruction, context);
+				for (int i = 1; i < arguments.Count; ++i)
+					VirtualMachine.SetOperand(Operand.PUSH, arguments[i], context);
+				VirtualMachine.SetOperand(Operand.PUSH, new CodeContext(cleanup, 0), context);
+			}
+			else
+				VirtualMachine.SetOperand(Operand.PUSH, context.CurrentInstruction, context);
 
-			VirtualMachine.SetOperand(Operand.PUSH, context.CurrentInstruction, context);
-			VirtualMachine.SetOperand(Operand.PUSH, context.Frame, context);
-			VirtualMachine.SetOperand(Operand.PUSH, new CodeContext(Cleanup, 0), context);
-			context.Frame = new ScriptObject("@parent", Scope);
-			context.CurrentInstruction = new CodeContext(Body, 0);
-
-			for (int i = 0; i < Arguments.Count && i < arguments.Count - 1; ++i)
-				context.Frame.SetProperty(Arguments[i], arguments[i + 1]);
+			context.CurrentInstruction = EntryPoint;
 
 			return InvokationResult.Success;
         }
 
-		public static LambdaFunction CreateLambda(String Name, InstructionList Body, ScriptObject Scope, List<String> Arguments)
+		public static LambdaFunction CreateLambda(String Name, CodeContext Body, ScriptObject Scope, List<String> Arguments)
 		{
 			var r = new LambdaFunction();
 			r.Name = Name;
-			r.Body = Body;//new InstructionList(
-				//new InPlace(Body),
-				//"CONTINUE POP");
+			r.EntryPoint = Body;
 			r.Scope = Scope;
 			r.Arguments = Arguments;
 			return r;

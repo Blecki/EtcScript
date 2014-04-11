@@ -39,12 +39,17 @@ namespace EtcScriptLib.VirtualMachine
         INDEX,          // INDEX        LIST            DESTINATION --Place LIST[INDEX] in DESTINATION.
         PREPEND,
         PREPEND_RANGE,
+		REPLACE_FRONT,	// VALUE		LIST			DESTINATION
 
         INVOKE,
+		STACK_INVOKE,
+		CALL,
         LAMBDA,
 		SET_FRAME,		// SOURCE									Replace the current frame with SOURCE.
 
         SET_VARIABLE,
+		LOAD_PARAMETER,		// SOURCE-OFFSET		DESTINATION
+		STORE_PARAMETER,	// SOURCE		DESTINATION-OFFSET
 
         DECREMENT,
         INCREMENT,

@@ -14,6 +14,7 @@ namespace EtcScriptLib.VirtualMachine
 		PEEK = 4,
 		R = 5,
 		STRING = 6,
+		F = 7,
 	}
 
 	public struct Instruction

@@ -5,74 +5,27 @@ using System.Text;
 
 namespace EtcScriptLib.Ast
 {
-	public class AssembleList : Node
-	{
-		public List<Node> Members = new List<Node>();
-		public AssembleList(Token Source, List<Node> Members)
-			: base(Source)
-		{
-			this.Members = Members;
-		}
-
-		public override Node Transform(ParseScope Scope)
-		{
-			Members = new List<Node>(Members.Select(s => s.Transform(Scope)));
-			return this;
-		}
-
-		public override void Emit(VirtualMachine.InstructionList Instructions, OperationDestination Destination)
-		{
-			Instructions.AddInstructions("EMPTY_LIST PUSH");
-
-			foreach (var member in Members)
-			{
-				member.Emit(Instructions, OperationDestination.R);
-				Instructions.AddInstructions("APPEND R PEEK PEEK");
-			}
-
-			if (Destination == OperationDestination.Discard)
-				Instructions.AddInstructions("MOVE POP");
-			else if (Destination != OperationDestination.Top)
-				Instructions.AddInstructions("MOVE POP " + WriteOperand(Destination));			
-		}
-
-		public override void Debug(int depth)
-		{
-			Console.Write(new String(' ', depth * 3));
-			Console.WriteLine("Assemble List");
-			foreach (var member in Members)
-				member.Debug(depth + 1);
-		}
-	}
-
 	public class FunctionCall : Statement
 	{
-		public Node Parameters;
+		public List<Node> Arguments;
+		public VirtualMachine.InvokeableFunction Function;
 
-		public FunctionCall(Token Source, Node Parameters) : base(Source) 
+		public FunctionCall(Token Source, VirtualMachine.InvokeableFunction Function, List<Node> Arguments) : base(Source) 
 		{
-			this.Parameters = Parameters;
+			this.Function = Function;
+			this.Arguments = Arguments;
 		}
 
 		public override Node Transform(ParseScope Scope)
 		{
-			Parameters = Parameters.Transform(Scope);
-			return this;
+			if (Function.IsStackInvokable) return new StackCall(Source, Function, Arguments).Transform(Scope);
+			else return new CompatibleCall(Source, new AssembleList(Source, Arguments)).Transform(Scope);
 		}
 
 		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
 		{
-			Parameters.Emit(into, OperationDestination.Top);
-			into.AddInstructions("INVOKE POP");
-			if (Destination != OperationDestination.R && Destination != OperationDestination.Discard)
-				into.AddInstructions("MOVE R " + Node.WriteOperand(Destination));
+			throw new InvalidOperationException();
 		}
 
-		public override void Debug(int depth)
-		{
-			Console.Write(new String(' ', depth * 3));
-			Console.WriteLine("Invoke");
-			Parameters.Debug(depth + 1);
-		}
 	}
 }

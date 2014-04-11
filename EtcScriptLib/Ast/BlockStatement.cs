@@ -8,6 +8,7 @@ namespace EtcScriptLib.Ast
 	public class BlockStatement : Statement
 	{
 		public List<Node> Statements = new List<Node>();
+		private ParseScope LocalScope;
 
 		public BlockStatement(Token Source) : base(Source) { }
 
@@ -15,6 +16,7 @@ namespace EtcScriptLib.Ast
 		{
 			foreach (var statement in Statements)
 				statement.Emit(into, OperationDestination.Discard);
+			if (LocalScope.Variables.Count > 0) into.AddInstructions("CLEANUP NEXT", LocalScope.Variables.Count);
 		}
 
 		public override void Debug(int depth)
@@ -25,7 +27,8 @@ namespace EtcScriptLib.Ast
 
 		public override Node Transform(ParseScope Scope)
 		{
-			Statements = new List<Node>(Statements.Select(s => s.Transform(Scope)));
+			LocalScope = Scope.Push();
+			Statements = new List<Node>(Statements.Select(s => s.Transform(LocalScope)).Where(n => n != null));
 			return this;
 		}
 	}

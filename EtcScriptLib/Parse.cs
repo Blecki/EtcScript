@@ -41,6 +41,37 @@ namespace EtcScriptLib
 			return new Ast.Let(start, LHS, RHS);
 		}
 
+		private static Ast.LocalDeclaration ParseLocalDeclaration(
+			Iterator<Token> Stream,
+			ParseContext Context)
+		{
+			var start = Stream.Next();
+
+			Stream.Advance();
+
+			if (Stream.Next().Type != TokenType.Identifier)
+				throw new CompileError("Expected identifier", Stream);
+
+			var r = new Ast.LocalDeclaration(start);
+			r.Name = Stream.Next().Value;
+			Stream.Advance();
+
+			if (Stream.Next().Type == TokenType.Semicolon)
+			{
+				Stream.Advance();
+				return r;
+			}
+			else if (Stream.Next().Type == TokenType.Operator && Stream.Next().Value == "=")
+			{
+				Stream.Advance();
+				r.Value = ParseExpression(Stream, Context, TokenType.Semicolon);
+				if (!IsEndOfStatement(Stream)) throw new CompileError("Expected ;", Stream);
+				Stream.Advance();
+				return r;
+			}
+			throw new CompileError("Expected ; or =", Stream);
+		}
+
 		private static Ast.Return ParseReturnStatement(
 			Iterator<Token> Stream,
 			ParseContext Context)
@@ -108,11 +139,15 @@ namespace EtcScriptLib
 			{
 				r = ParseReturnStatement(Stream, Context);
 			}
+			else if (firstToken == "VAR" || firstToken == "VARIABLE")
+			{
+				r = ParseLocalDeclaration(Stream, Context);
+			}
 			else if (Stream.Next().Type == TokenType.Colon)
 			{
 				Stream.Advance();
 				var parameters = ParseDynamicInvokation(Stream, Context);
-				r = new Ast.FunctionCall(parameters[0].Source, new Ast.AssembleList(new Token(), parameters));
+				r = new Ast.CompatibleCall(parameters[0].Source, new Ast.AssembleList(new Token(), parameters));
 				if (Stream.Next().Type != TokenType.Semicolon) throw new CompileError("Expected ;", Stream);
 				Stream.Advance();
 			}
@@ -215,7 +250,7 @@ namespace EtcScriptLib
 			{
 				Stream.Advance();
 				var parameters = ParseDynamicInvokation(Stream, Context);
-				r = new Ast.FunctionCall(parameters[0].Source, new Ast.AssembleList(new Token(), parameters));
+				r = new Ast.CompatibleCall(parameters[0].Source, new Ast.AssembleList(new Token(), parameters));
 			}
 			else if (Stream.Next().Type == TokenType.Identifier ||
 				Stream.Next().Type == TokenType.Number ||
@@ -424,18 +459,31 @@ namespace EtcScriptLib
 			return r;
 		}
 
-		internal static List<DeclarationTerm> ParseDeclarationHeader(Iterator<Token> Stream)
+		internal enum DeclarationHeaderTerminatorType
+		{
+			StreamEnd,
+			OpenBrace,
+			OpenBraceOrWhen
+		}
+
+		internal static List<DeclarationTerm> ParseMacroDeclarationHeader(Iterator<Token> Stream, 
+			DeclarationHeaderTerminatorType TerminatorType)
 		{
 			var r = new List<DeclarationTerm>();
 			while (true)
 			{
-				if (Stream.AtEnd()) return r; //This is probably an error.
-				if (Stream.Next().Type == TokenType.OpenBrace) return r;
+				if (TerminatorType == DeclarationHeaderTerminatorType.StreamEnd && Stream.AtEnd()) return r;
+				else if (TerminatorType == DeclarationHeaderTerminatorType.OpenBrace && Stream.Next().Type == TokenType.OpenBrace) return r;
+				else if (TerminatorType == DeclarationHeaderTerminatorType.OpenBraceOrWhen)
+				{
+					if (Stream.Next().Type == TokenType.OpenBrace) return r;
+					else if (Stream.Next().Value.ToUpper() == "WHEN") return r;
+				}
 				r.Add(ParseDeclarationTerm(Stream));
 			}
 		}
 
-		internal static Declaration ParseDeclaration(Iterator<Token> Stream, ParseContext Context)
+		internal static Declaration ParseMacroDeclaration(Iterator<Token> Stream, ParseContext Context)
 		{
 			if (Stream.AtEnd()) throw new CompileError("Impossible error: ParseDeclaration entered at end of stream.", Stream);
 
@@ -448,16 +496,19 @@ namespace EtcScriptLib
 				r.UsageSpecifier = Stream.Next().Value;
 				Stream.Advance();
 
-				r.Terms = ParseDeclarationHeader(Stream);
+				r.Terms = ParseMacroDeclarationHeader(Stream, DeclarationHeaderTerminatorType.OpenBrace);
 
 				if (!Stream.AtEnd() && Stream.Next().Type == TokenType.OpenBrace)
+				{
+					Context.PushNewScope();
+					Context.ActiveScope.ChangeToFunctionType();
+					CreateParameterDescriptors(Context.ActiveScope, r.Terms);
 					r.Body = new LambdaBlock(ParseBlock(Stream, Context));
+					r.DeclarationScope = Context.ActiveScope;
+					Context.PopScope();
+				}
 				else
 					throw new CompileError("Expected block", Stream);
-
-				r.DeclarationScope = Context.ActiveScope;
-				if (r.UsageSpecifier.ToUpper() == "MACRO")
-					Context.ActiveScope.Macros.Add(r);
 
 				return r;
 			}
@@ -471,6 +522,100 @@ namespace EtcScriptLib
 			}
 		}
 
+		// Given a list of terms, create the variable objects to represent the parameters of the declaration
+		private static void CreateParameterDescriptors(ParseScope Scope, List<DeclarationTerm> Terms)
+		{
+			int parameterIndex = -3;
+			for (int i = Terms.Count - 1; i >= 0; --i)
+			{
+				if (Terms[i].Type == DeclarationTermType.Term)
+				{
+					var variable = new Variable
+					{
+						Name = Terms[i].Name,
+						Offset = parameterIndex
+					};
+					--parameterIndex;
+					Scope.Variables.Add(variable);
+				}
+			}
+		}
+
+		internal static Declaration ParseRuleDeclaration(Iterator<Token> Stream, ParseContext Context)
+		{
+			if (Stream.AtEnd()) throw new CompileError("Impossible error: ParseRuleDeclaration entered at end of stream.", Stream);
+
+			try
+			{
+				var r = new Declaration();
+
+				if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("Expected identifier", Stream.Next());
+
+				r.UsageSpecifier = Stream.Next().Value;
+				Stream.Advance();
+
+				r.Terms = ParseMacroDeclarationHeader(Stream, DeclarationHeaderTerminatorType.OpenBraceOrWhen);
+
+				Context.PushNewScope();
+				Context.ActiveScope.ChangeToFunctionType();
+				CreateParameterDescriptors(Context.ActiveScope, r.Terms);
+
+				if (Stream.Next().Value.ToUpper() == "WHEN")
+				{
+					Stream.Advance();
+					r.WhenClause = new WhenClause(ParseExpression(Stream, Context, TokenType.OpenBrace));
+				}
+
+				if (Stream.Next().Type == TokenType.OpenBrace)
+				{
+					r.Body = new LambdaBlock(ParseBlock(Stream, Context));
+					r.DeclarationScope = Context.ActiveScope;
+					Context.PopScope();
+				}
+				else
+				{
+					Context.PopScope();
+					throw new CompileError("Expected block", Stream);
+				}
+
+				return r;
+			}
+			catch (CompileError ce)
+			{
+				throw ce;
+			}
+			catch (Exception e)
+			{
+				throw new CompileError(e.Message + e.StackTrace, Stream);
+			}
+		}
+
+		internal static String ParseVariableDeclaration(Iterator<Token> Stream, ParseContext Context)
+		{
+			if (Stream.AtEnd()) throw new CompileError("Impossible error: ParseVariableDeclaration entered at end of stream.", Stream);
+
+			try
+			{
+				if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("Expected identifier", Stream.Next());
+				Stream.Advance();
+				if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("Expected identifier", Stream.Next());
+				var r = Stream.Next().Value;
+				Stream.Advance();
+				if (Stream.Next().Type != TokenType.Semicolon) throw new CompileError("Expected ;", Stream.Next());
+				Stream.Advance();
+				return r;
+			}
+			catch (CompileError ce)
+			{
+				throw ce;
+			}
+			catch (Exception e)
+			{
+				throw new CompileError(e.Message + e.StackTrace, Stream);
+			}
+		}
+
+
 		public static List<Declaration> Build(
 			Iterator<Token> Stream, 
 			ParseContext Context,
@@ -481,7 +626,33 @@ namespace EtcScriptLib
 			{
 				try
 				{
-					r.Add(ParseDeclaration(Stream, Context));
+					if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("Expected identifier", Stream);
+					if (Stream.Next().Value.ToUpper() == "MACRO")
+					{
+						var declaration = ParseMacroDeclaration(Stream, Context);
+						Context.ActiveScope.Macros.Add(declaration);
+						Context.PendingEmission.Add(declaration);
+					}
+					else if (Stream.Next().Value.ToUpper() == "TEST")
+					{
+						var declaration = ParseMacroDeclaration(Stream, Context);
+						r.Add(declaration);
+						Context.PendingEmission.Add(declaration);
+					}
+					else if (Stream.Next().Value.ToUpper() == "RULE")
+					{
+						var declaration = ParseRuleDeclaration(Stream, Context);
+						var rulebook = Context.Rules.FindMatchingRulebook(declaration.Terms);
+						if (rulebook == null)
+						{
+							rulebook = new Rulebook { DeclarationTerms = declaration.Terms };
+							Context.Rules.Rulebooks.Add(rulebook);
+						}
+						rulebook.Rules.Add(declaration);
+						Context.PendingEmission.Add(declaration);
+					}
+					else
+						throw new CompileError("Unknown declaration type", Stream);
 				}
 				catch (Exception e)
 				{

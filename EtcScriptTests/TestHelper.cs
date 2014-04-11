@@ -15,7 +15,7 @@ namespace EtcScriptTests
 
 		public static void QuickTest(String script, Object expectedResult)
 		{
-			RunSimpleTest(@"activity foo { " + script + " }", expectedResult);
+			RunSimpleTest(@"test foo { " + script + " }", expectedResult);
 		}
 
 		public static void CompileTestAssertNoErrors(String script)
@@ -40,10 +40,14 @@ namespace EtcScriptTests
         {
 			Console.WriteLine("Test script: " + script);
 
+			EtcScriptLib.Compile.Debug = true;
+			EtcScriptLib.Compile._DebugWrite = Console.Write;
+
 			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
 				(s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Continue; });
 			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(new EtcScriptLib.VirtualMachine.ScriptObject(),
-				declaration.GetEntryPoint());
+				EtcScriptLib.VirtualMachine.CodeContext.Empty);
+			declaration.MakeInvokableFunction().Invoke(context, new List<Object>());
 			EtcScriptLib.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
 			if (context.ExecutionState == EtcScriptLib.VirtualMachine.ExecutionState.Error)
 				Console.WriteLine("Error:" + context.ErrorObject.ToString());
@@ -57,12 +61,18 @@ namespace EtcScriptTests
 		{
 			Console.WriteLine("Test script: " + script);
 			var environment = EtcScriptLib.Environment.CreateStandardEnvironment();
+			environment.AddSystemMacro("fail", (c, a) => { Assert.IsTrue(false); return null; });
 			var declarations = environment.Build(script, (s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Abort; });
 			foreach (var declaration in declarations)
 			{
 				environment.GlobalScope.SetProperty(declaration.UsageSpecifier, declaration.MakeInvokableFunction());
-				EtcScriptLib.Compile.EmitDebugDump(declaration);
+				//EtcScriptLib.Compile.EmitDebugDump(declaration);
 			}
+
+			foreach (var rulebook in environment.Context.Rules.Rulebooks)
+				foreach (var rule in rulebook.Rules)
+					EtcScriptLib.Compile.EmitDebugDump(rule);
+
 			return environment;
 		}
 
@@ -73,11 +83,15 @@ namespace EtcScriptTests
 			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(scope.GlobalScope,
 				new EtcScriptLib.VirtualMachine.CodeContext(new EtcScriptLib.VirtualMachine.InstructionList(), 0));
 
-
-			func.Invoke(context, new List<object>());
+			var argList = new List<Object>();
+			argList.Add(func);
+			func.Invoke(context, argList);
 			EtcScriptLib.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
 			if (context.ExecutionState == EtcScriptLib.VirtualMachine.ExecutionState.Error)
+			{
 				Console.WriteLine("Error:" + context.ErrorObject.ToString());
+				Assert.IsTrue(false);
+			}
 
 			if (context.R == null) Console.WriteLine("NULL");
 			else Console.WriteLine(context.R.ToString());

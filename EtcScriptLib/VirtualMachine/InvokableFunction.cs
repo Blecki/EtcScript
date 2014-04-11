@@ -23,5 +23,7 @@ namespace EtcScriptLib.VirtualMachine
     public class InvokeableFunction
     {
         public virtual InvokationResult Invoke(ExecutionContext context, List<Object> arguments) { throw new NotImplementedException(); }
+		public virtual void StackInvoke(ExecutionContext context) { throw new NotImplementedException(); }
+		public virtual bool IsStackInvokable { get { return false; } }
     }
 }

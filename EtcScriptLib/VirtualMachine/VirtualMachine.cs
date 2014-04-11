@@ -27,6 +27,60 @@ namespace EtcScriptLib.VirtualMachine
 				ExecuteSingleInstruction(context);
 		}
 
+		public static bool DetailedTracing = false;
+		public static Action<String> WriteTraceLine;
+
+		private static void Trace(ExecutionContext Context)
+		{
+			System.Diagnostics.Debug.Assert(WriteTraceLine != null);
+
+			var str = "";
+
+			var Instruction = Context.CurrentInstruction.Instruction.Value;
+			
+			str += Instruction.Opcode.ToString();
+			
+			int ip = Context.CurrentInstruction.InstructionPointer;
+			if (Instruction.FirstOperand != Operand.NONE)
+			{
+				str += " " + TraceOperand(Context, Instruction.FirstOperand, out ip, ip);
+				if (Instruction.SecondOperand != Operand.NONE)
+				{
+					str += " " + TraceOperand(Context, Instruction.SecondOperand, out ip, ip);
+					if (Instruction.ThirdOperand != Operand.NONE)
+					{
+						str += " " + TraceOperand(Context, Instruction.ThirdOperand, out ip, ip);
+					}
+				}
+			}
+
+			str += "  R: " + (Context.R == null ? "null" : Context.R.ToString()) + "  F: " + Context.F.ToString();
+
+			str += "  STACK TOP:";
+
+			for (int i = Context.Stack.Count - 1; i >= 0 && i > Context.Stack.Count - 10; --i)
+				str += " [" + (Context.Stack[i] == null ? "null" : Context.Stack[i].ToString()) + "]";
+
+			WriteTraceLine(str);
+		}
+
+		private static String TraceOperand(ExecutionContext Context, Operand Operand, out int NewIP, int IP)
+		{
+			NewIP = IP;
+			if (Operand == EtcScriptLib.VirtualMachine.Operand.NEXT)
+			{
+				NewIP = IP + 1;
+				return Context.CurrentInstruction.Code[NewIP] == null ? "null" : Context.CurrentInstruction.Code[NewIP].ToString();
+			}
+			else if (Operand == EtcScriptLib.VirtualMachine.Operand.STRING)
+			{
+				NewIP = IP + 1;
+				return "STRING[" + Context.CurrentInstruction.Code[NewIP].ToString() + "]";
+			}
+			else
+				return Operand.ToString();
+		}
+		
         public static void ExecuteSingleInstruction(ExecutionContext context)
         {
             //When an error represents bad output from the compiler or a built in function,
@@ -42,6 +96,7 @@ namespace EtcScriptLib.VirtualMachine
 			}
 
 			//Console.Write(context.CurrentInstruction.InstructionPointer + " ");
+			if (DetailedTracing) Trace(context);
 
 			var instructionStart = context.CurrentInstruction;
 			var nextInstruction = context.CurrentInstruction.Instruction;
@@ -280,11 +335,7 @@ namespace EtcScriptLib.VirtualMachine
                     case InstructionSet.CLEANUP:
                         {
                             var count = (GetOperand(ins.FirstOperand, context) as int?).Value;
-                            while (count > 0)
-                            {
-                                context.Stack.Pop();
-                                --count;
-                            }
+							context.Stack.RemoveRange(context.Stack.Count - count, count);
                         }
                         break;
 
@@ -318,7 +369,6 @@ namespace EtcScriptLib.VirtualMachine
 
                             if (arguments == null)
                             {
-
                                 Throw(new RuntimeError("Argument list is null? ", ins), context);
                                 break;
                             }
@@ -333,7 +383,6 @@ namespace EtcScriptLib.VirtualMachine
                             if (function is InvokeableFunction)
                             {
 								//SetOperand(Operand.PUSH, instructionStart, context); //Push return point.
-
                                 try
                                 {
                                     var InvokationResult = (function as InvokeableFunction).Invoke(context, arguments);
@@ -356,14 +405,40 @@ namespace EtcScriptLib.VirtualMachine
                         }
                         break;
 
-                    case InstructionSet.LAMBDA:
-                        {
-							var arguments = GetOperand(ins.FirstOperand, context) as List<String>;
-							var code = GetOperand(ins.SecondOperand, context) as InstructionList;
-							var lambda = LambdaFunction.CreateLambda("", code, context.Frame, arguments);
-							SetOperand(ins.ThirdOperand, lambda, context);
-                        }
-                        break;
+					case InstructionSet.STACK_INVOKE:
+						{
+							var invokable = GetOperand(ins.FirstOperand, context) as InvokeableFunction;
+
+							if (invokable == null)
+							{
+								Throw(new RuntimeError("Attempted to invoke what isn't a function", ins), context);
+								break;
+							}
+
+							System.Diagnostics.Debug.Assert(invokable.IsStackInvokable);
+
+							SetOperand(Operand.PUSH, context.CurrentInstruction, context);
+							invokable.StackInvoke(context);
+						}
+						break;
+
+					case InstructionSet.CALL:
+						{
+							var target = GetOperand(ins.FirstOperand, context) as int?;
+							SetOperand(Operand.PUSH, context.CurrentInstruction, context);
+							context.CurrentInstruction.InstructionPointer = target.Value;
+						}
+						break;
+
+
+					//case InstructionSet.LAMBDA:
+					//    {
+					//        var arguments = GetOperand(ins.FirstOperand, context) as List<String>;
+					//        var code = GetOperand(ins.SecondOperand, context) as InstructionList;
+					//        var lambda = LambdaFunction.CreateLambda("", code, context.Frame, arguments);
+					//        SetOperand(ins.ThirdOperand, lambda, context);
+					//    }
+					//    break;
                     
 					case InstructionSet.MARK_STACK:
 						SetOperand(ins.FirstOperand, context.Stack.Count, context);
@@ -372,8 +447,8 @@ namespace EtcScriptLib.VirtualMachine
 					case InstructionSet.RESTORE_STACK:
 						{
 							var goal = GetOperand(ins.FirstOperand, context) as int?;
-							if (goal.HasValue)
-								while (context.Stack.Count > goal.Value) context.Stack.Pop();
+							if (goal < context.Stack.Count)
+								context.Stack.RemoveRange(goal.Value, context.Stack.Count - goal.Value);
 						}
 						break;
 
@@ -423,7 +498,15 @@ namespace EtcScriptLib.VirtualMachine
                             SetOperand(ins.ThirdOperand, l, context);
                         }
                         break;
-
+					case InstructionSet.REPLACE_FRONT:
+						{
+							var v = GetOperand(ins.FirstOperand, context);
+							var l = GetOperand(ins.SecondOperand, context) as List<Object>;
+							if (l.Count > 0) l[0] = v;
+							else l.Insert(0, v);
+							SetOperand(ins.ThirdOperand, l, context);
+						}
+						break;
                     case InstructionSet.LENGTH:
                         {
 							var v = GetOperand(ins.FirstOperand, context);
@@ -452,6 +535,22 @@ namespace EtcScriptLib.VirtualMachine
                             context.Frame[name] = v;
                         }
                         break;
+
+					case InstructionSet.LOAD_PARAMETER:
+						{
+							var offset = GetOperand(ins.FirstOperand, context) as int?;
+							SetOperand(ins.SecondOperand, context.Stack[context.F + offset.Value], context);
+						}
+						break;
+
+					case InstructionSet.STORE_PARAMETER:
+						{
+							var value = GetOperand(ins.FirstOperand, context);
+							var offset = GetOperand(ins.SecondOperand, context) as int?;
+							context.Stack[context.F + offset.Value] = value;
+						}
+						break;
+
                     #endregion
 
                     #region Loop control
@@ -650,7 +749,7 @@ namespace EtcScriptLib.VirtualMachine
             {
                 Throw(new RuntimeError(e.Message + "\nBEFORE: " +
 					context.CurrentInstruction.InstructionPointer + 
-					"\nINSTRUCTION: [" + ins.ToString() + "]\nSTACK TRACE:\n" +
+					"\nINSTRUCTION: [" + ins.ToString() + "]\nSTACK DUMP:\n" +
 					String.Join("\n", context.Stack.Select((o)=> { return o == null ? "NULL" : o.ToString(); }))
 				, ins), context);
             }
@@ -668,7 +767,8 @@ namespace EtcScriptLib.VirtualMachine
                     break;
                 }
 
-                var topOfStack = context.Stack.Pop();
+				var topOfStack = context.Stack[context.Stack.Count - 1];
+				context.Stack.RemoveAt(context.Stack.Count - 1);
                 if (topOfStack is ErrorHandler)
                 {
                     var handler = (topOfStack as ErrorHandler?).Value;
@@ -686,11 +786,16 @@ namespace EtcScriptLib.VirtualMachine
             {
                 case Operand.NEXT: throw new InvalidOperationException("Can't set to next");
                 case Operand.NONE: break; //Silently ignore.
-                case Operand.PEEK: context.Stack.Pop(); context.Stack.Push(value); break;
+				case Operand.PEEK: context.Stack[context.Stack.Count - 1] = value; break;
                 case Operand.POP: throw new InvalidOperationException("Can't set to pop");
-                case Operand.PUSH: context.Stack.Push(value); break;
+                case Operand.PUSH: context.Stack.Add(value); break;
 				case Operand.R: context.R = value; break;
 				case Operand.STRING: throw new InvalidOperationException("Can't set to the string table");
+				case Operand.F: 
+					if (value is int) 
+						context.F = (value as int?).Value; 
+					else throw new InvalidOperationException("F can only be an integer"); 
+					break;
             }
         }
 
@@ -700,8 +805,13 @@ namespace EtcScriptLib.VirtualMachine
             {
                 case Operand.NEXT: return context.CurrentInstruction.Code[context.CurrentInstruction.InstructionPointer++];
                 case Operand.NONE: throw new InvalidOperationException("Can't fetch from nothing");
-                case Operand.PEEK: return context.Stack.Peek();
-                case Operand.POP: return context.Stack.Pop();
+				case Operand.PEEK: return context.Stack[context.Stack.Count - 1];
+				case Operand.POP: 
+					{ 
+						var r = context.Stack[context.Stack.Count - 1]; 
+						context.Stack.RemoveAt(context.Stack.Count - 1); 
+						return r; 
+					}
                 case Operand.PUSH: throw new InvalidOperationException("Can't fetch from push");
 				case Operand.R: return context.R;
 				case Operand.STRING:
@@ -710,6 +820,7 @@ namespace EtcScriptLib.VirtualMachine
 						if (!tableIndex.HasValue) throw new InvalidOperationException("Index into string table was not integer");
 						return context.CurrentInstruction.Code.StringTable[tableIndex.Value];
 					}
+				case Operand.F: return context.F;
                 default: throw new InvalidProgramException();
             }
         }
@@ -728,9 +839,9 @@ namespace EtcScriptLib.VirtualMachine
                 throw new RuntimeError("Encountered non-code in instruction stream", new Instruction());
             var ins = nextInstruction.Value;
 
-			if (ins.FirstOperand == Operand.NEXT) context.CurrentInstruction.Increment();
-            if (ins.SecondOperand == Operand.NEXT) context.CurrentInstruction.Increment();
-            if (ins.ThirdOperand == Operand.NEXT) context.CurrentInstruction.Increment();
+			if (ins.FirstOperand == Operand.NEXT || ins.FirstOperand == Operand.STRING) context.CurrentInstruction.Increment();
+			if (ins.SecondOperand == Operand.NEXT || ins.SecondOperand == Operand.STRING) context.CurrentInstruction.Increment();
+			if (ins.ThirdOperand == Operand.NEXT || ins.ThirdOperand == Operand.STRING) context.CurrentInstruction.Increment();
         }
 
         public struct MemberLookupResult

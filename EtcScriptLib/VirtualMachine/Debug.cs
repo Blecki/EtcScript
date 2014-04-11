@@ -7,39 +7,39 @@ namespace EtcScriptLib.VirtualMachine
 {
     public class Debug
     {
-        internal static void DumpOpcode(List<Object> opcode, System.IO.TextWriter to, int indent)
+        internal static void DumpOpcode(List<Object> opcode, Action<String> Write, int indent)
         {
 			var iterator = opcode.GetIterator();
 
 			while (!iterator.AtEnd())
 			{
 				var instruction = iterator.Next();
-				to.Write(new String(' ', indent * 4));
-				if (instruction == null) to.Write("NULL\n");
+				Write(new String(' ', indent * 4));
+				if (instruction == null) Write("NULL\n");
 				else if (instruction is List<String>)
                 {
-                    to.Write("[ ");
-					foreach (var entry in instruction as List<String>) to.Write(entry + " ");
-                    to.Write("]\n");
+                    Write("[ ");
+					foreach (var entry in instruction as List<String>) Write(entry + " ");
+                    Write("]\n");
                 }
 				else if (instruction is List<Object>)
                 {
-                    to.Write("--- Embedded instruction stream\n");
-					DumpOpcode(instruction as List<Object>, to, indent + 1);
-                    to.Write(new String(' ', indent * 4));
-                    to.Write("--- End embedded stream\n");
+                    Write("--- Embedded instruction stream\n");
+					DumpOpcode(instruction as List<Object>, Write, indent + 1);
+                    Write(new String(' ', indent * 4));
+                    Write("--- End embedded stream\n");
                 }
 				else if (instruction is String)
-					to.Write("\"" + instruction.ToString() + "\"\n");
+					Write("\"" + instruction.ToString() + "\"\n");
 				else if (instruction is Instruction)
 				{
 					var ins = (instruction as Instruction?).Value;
-					to.Write(iterator._place.ToString() + ": " + ins.Opcode.ToString() + "  ");
-					to.Write(GetOperandString(ins.FirstOperand, iterator) + "  ");
-					to.Write(GetOperandString(ins.SecondOperand, iterator) + "  ");
-					to.Write(GetOperandString(ins.ThirdOperand, iterator) + "\n");
+					Write(iterator._place.ToString() + ": " + ins.Opcode.ToString() + "  ");
+					Write(GetOperandString(ins.FirstOperand, iterator) + "  ");
+					Write(GetOperandString(ins.SecondOperand, iterator) + "  ");
+					Write(GetOperandString(ins.ThirdOperand, iterator) + "\n");
 				}
-				else to.Write(instruction.ToString() + "\n");
+				else Write(instruction.ToString() + "\n");
 
 				iterator.Advance();
             }
