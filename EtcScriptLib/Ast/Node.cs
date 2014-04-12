@@ -47,6 +47,7 @@ namespace EtcScriptLib.Ast
 		}
 
 		public Token Source;
+		public Type ResultType;
 
 		public Node(Token Source)
 		{

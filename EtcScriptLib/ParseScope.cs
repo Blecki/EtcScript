@@ -5,12 +5,6 @@ using System.Text;
 
 namespace EtcScriptLib
 {
-	public class Variable
-	{
-		public String Name;
-		public int Offset;
-	}
-
 	public enum ScopeType
 	{
 		Block,
@@ -22,6 +16,7 @@ namespace EtcScriptLib
 		public ParseScope Parent = null;
 		public List<Declaration> Macros = new List<Declaration>();
 		public List<Variable> Variables = new List<Variable>();
+		public List<Type> Types = new List<Type>();
 		public ParseContext EnvironmentContext = null;
 		public int VariableIndex = 0;
 		public ScopeType Type = ScopeType.Block;
@@ -44,9 +39,16 @@ namespace EtcScriptLib
 			return r;
 		}
 
-		public Variable NewLocal(String Name)
+		public Type FindType(String Name)
 		{
-			var r = new Variable { Name = Name, Offset = VariableIndex };
+			var r = Types.FirstOrDefault(type => type.Name == Name);
+			if (r == null && Parent != null) return Parent.FindType(Name);
+			return r;
+		}
+
+		public Variable NewLocal(String Name, Type Type)
+		{
+			var r = new Variable { Name = Name, Offset = VariableIndex, DeclaredType = Type };
 			VariableIndex += 1;
 			Variables.Add(r);
 			return r;

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace EtcScriptLib.Ast
 {
-	public class Identifier : Node
+	public class Identifier : Node, IAssignable
 	{
 		public Token Name;
 		public Variable MatchedVariable;
@@ -22,7 +22,19 @@ namespace EtcScriptLib.Ast
 				if (Name.Value.ToUpper() == "TRUE") return new Literal(Source, true);
 				else if (Name.Value.ToUpper() == "FALSE") return new Literal(Source, false);
 				else MatchedVariable = Scope.FindVariable(Name.Value);
+
+				if (MatchedVariable != null) ResultType = MatchedVariable.DeclaredType;
+				else ResultType = Type.Generic;
 			}
+			else if (Name.Type == TokenType.String)
+			{
+				ResultType = Scope.FindType("string");
+			}
+			else if (Name.Type == TokenType.Number)
+			{
+				ResultType = Scope.FindType("number");
+			}
+
 			return this;
 		}
 
@@ -46,9 +58,9 @@ namespace EtcScriptLib.Ast
 			if (Name.Type == TokenType.Identifier)
 			{
 				if (MatchedVariable != null)
-					into.AddInstructions("STORE_PARAMETER R NEXT", MatchedVariable.Offset);
+					into.AddInstructions("STORE_PARAMETER POP NEXT", MatchedVariable.Offset);
 				else
-					into.AddInstructions("SET_VARIABLE R STRING", into.AddString(Name.Value));
+					into.AddInstructions("SET_VARIABLE POP STRING", into.AddString(Name.Value));
 			}
 			else
 				throw new InvalidOperationException();

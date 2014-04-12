@@ -27,6 +27,7 @@ namespace EtcScriptLib.Ast
 
 		public override Node Transform(ParseScope Scope)
 		{
+			ResultType = Type.Void;
 			LocalScope = Scope.Push();
 			Statements = new List<Node>(Statements.Select(s => s.Transform(LocalScope)).Where(n => n != null));
 			return this;

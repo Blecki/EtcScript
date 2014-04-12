@@ -31,6 +31,7 @@ namespace EtcScriptLib.Ast
 		{
 			LHS = LHS.Transform(Scope);
 			RHS = RHS.Transform(Scope);
+			ResultType = LHS.ResultType;
 			return this;
 		}
 

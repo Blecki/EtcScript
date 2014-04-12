@@ -20,6 +20,10 @@ namespace EtcScriptLib.VirtualMachine
 		DYN_SET_MEMBER, // VALUE		NAME			OBJECT		--Like SET_MEMBER, except R indicates success. Does not produce errors.
         RECORD,         // DESTINATION  UNUSED          UNUSED      --Create an empty record and store in DESTINATION.
 
+		ALLOC_RSO,		// SIZE			DESTINATION
+		LOAD_RSO_M,		// RSO			MEMBER			DESTINATION
+		STORE_RSO_M,	// VALUE		RSO				MEMBER
+
         MARK,           // DESTINATION  UNUSED          UNUSED      --Places the current execution point in DESTINATION.
 		MARK_STACK,
 		RESTORE_STACK,

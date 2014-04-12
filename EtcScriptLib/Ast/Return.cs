@@ -14,6 +14,7 @@ namespace EtcScriptLib.Ast
 
 		public override Node Transform(ParseScope Scope)
 		{
+			ResultType = Type.Void;
 			if (Value != null) Value = Value.Transform(Scope);
 			DeclarationScope = Scope;
 			return this;

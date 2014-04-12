@@ -47,16 +47,12 @@ namespace EtcScriptLib
 			CachedLambda = new VirtualMachine.NativeFunction("SYS-LAMBDA", ArgumentCount, Implementation);
 		}
 
-		public VirtualMachine.InvokeableFunction GetInvokable(
-			ParseScope DeclarationScope,
-			List<DeclarationTerm> Terms, 
-			VirtualMachine.ScriptObject CapturedScope = null)
+		public VirtualMachine.InvokeableFunction GetInvokable(List<DeclarationTerm> Terms)
 		{
 			if (CachedLambda == null)
 			{
 				CachedLambda = VirtualMachine.LambdaFunction.CreateLambda("LAMBDA",
-				GetEntryPoint(DeclarationScope),
-				CapturedScope ?? new VirtualMachine.ScriptObject(),
+				GetEntryPoint(),
 				new List<String>(
 					Terms.Where(
 						(d) => { return d.Type == DeclarationTermType.Term; }
@@ -70,22 +66,19 @@ namespace EtcScriptLib
 			return CachedLambda;
 		}
 
-		public VirtualMachine.InvokeableFunction GetBasicInvokable(
-			ParseScope DeclarationScope,
-			List<String> Terms)
+		public VirtualMachine.InvokeableFunction GetBasicInvokable(List<String> Terms)
 		{
 			if (CachedLambda == null)
 			{
 				CachedLambda = VirtualMachine.LambdaFunction.CreateLambda("LAMBDA",
-				GetEntryPoint(DeclarationScope),
-				new VirtualMachine.ScriptObject(),
+				GetEntryPoint(),
 				Terms);
 			}
 
 			return CachedLambda;
 		}
 
-		public VirtualMachine.CodeContext GetEntryPoint(ParseScope DeclarationScope)
+		public VirtualMachine.CodeContext GetEntryPoint()
 		{
 			return new VirtualMachine.CodeContext(Instructions, EntryPoint);
 		}		

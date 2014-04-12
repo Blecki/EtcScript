@@ -11,7 +11,7 @@ namespace EtcScriptLib
 		Keyword
 	}
 
-	public enum DeclarationTermRepititionType
+	public enum DeclarationTermRepetitionType
 	{
 		Once,
 		Optional,
@@ -19,17 +19,18 @@ namespace EtcScriptLib
 		NoneOrMany
 	}
 
-	public struct DeclarationTerm
+	public class DeclarationTerm
 	{
 		public String Name;
 		public DeclarationTermType Type;
-		public DeclarationTermRepititionType RepititionType;
+		public DeclarationTermRepetitionType RepetitionType;
+		public String DeclaredTypeName;
+		public Type DeclaredType;
 
 		public static bool Matches(DeclarationTerm term, Ast.Node node)
 		{
 			if (term.Type == DeclarationTermType.Keyword)
 			{
-
 				if (node is Ast.Identifier)
 					return term.Name == (node as Ast.Identifier).Name.Value.ToUpper();
 				return false;
@@ -41,19 +42,19 @@ namespace EtcScriptLib
 		public override string ToString()
 		{
 			if (Type == DeclarationTermType.Keyword)
-				return Name + RepitionMarker(RepititionType);
+				return Name + RepetitionMarker(RepetitionType);
 			else
-				return "(" + Name + ")" + RepitionMarker(RepititionType);
+				return "(" + Name + ")" + RepetitionMarker(RepetitionType);
 		}
 
-		private static string RepitionMarker(DeclarationTermRepititionType RepititionType)
+		private static string RepetitionMarker(DeclarationTermRepetitionType RepetitionType)
 		{
-			switch (RepititionType)
+			switch (RepetitionType)
 			{
-				case DeclarationTermRepititionType.NoneOrMany: return "*";
-				case DeclarationTermRepititionType.Once: return "";
-				case DeclarationTermRepititionType.OneOrMany: return "+";
-				case DeclarationTermRepititionType.Optional: return "?";
+				case DeclarationTermRepetitionType.NoneOrMany: return "*";
+				case DeclarationTermRepetitionType.Once: return "";
+				case DeclarationTermRepetitionType.OneOrMany: return "+";
+				case DeclarationTermRepetitionType.Optional: return "?";
 				default: throw new InvalidProgramException();
 			}
 		}

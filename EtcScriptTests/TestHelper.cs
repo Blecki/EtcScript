@@ -78,6 +78,9 @@ namespace EtcScriptTests
 
 		public static Object CallEnvironmentFunction(String script, String function)
 		{
+			EtcScriptLib.Compile.Debug = true;
+			EtcScriptLib.Compile._DebugWrite = Console.Write;
+
 			var scope = BuildEnvironment(script);
 			var func = scope.GlobalScope.GetOwnProperty(function) as EtcScriptLib.VirtualMachine.InvokeableFunction;
 			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(scope.GlobalScope,

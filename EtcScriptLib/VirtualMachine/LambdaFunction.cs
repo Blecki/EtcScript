@@ -9,7 +9,6 @@ namespace EtcScriptLib.VirtualMachine
     {
         public String Name = null;
 		public CodeContext EntryPoint;
-		public ScriptObject Scope;
 		public List<String> Arguments;
 
 		public override bool IsStackInvokable { get { return true; } }
@@ -37,12 +36,11 @@ namespace EtcScriptLib.VirtualMachine
 			return InvokationResult.Success;
         }
 
-		public static LambdaFunction CreateLambda(String Name, CodeContext Body, ScriptObject Scope, List<String> Arguments)
+		public static LambdaFunction CreateLambda(String Name, CodeContext Body, List<String> Arguments)
 		{
 			var r = new LambdaFunction();
 			r.Name = Name;
 			r.EntryPoint = Body;
-			r.Scope = Scope;
 			r.Arguments = Arguments;
 			return r;
 		}

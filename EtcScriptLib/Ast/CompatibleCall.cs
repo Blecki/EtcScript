@@ -17,6 +17,7 @@ namespace EtcScriptLib.Ast
 
 		public override Node Transform(ParseScope Scope)
 		{
+			ResultType = Type.Generic;
 			Parameters = Parameters.Transform(Scope) as AssembleList;
 			return this;
 		}

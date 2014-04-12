@@ -46,6 +46,11 @@
     <Compile Include="AST\ControlInvokation.cs" />
     <Compile Include="AST\AssembleList.cs" />
     <Compile Include="AST\CompatibleCall.cs" />
+    <Compile Include="AST\GenericMemberAccess.cs" />
+    <Compile Include="AST\DynamicMemberAccess.cs" />
+    <Compile Include="AST\StaticMemberAccess.cs" />
+    <Compile Include="AST\IAssignable.cs" />
+    <Compile Include="AST\New.cs" />
     <Compile Include="AST\LocalDeclaration.cs" />
     <Compile Include="AST\StackCall.cs" />
     <Compile Include="AST\JumpCall.cs" />
@@ -66,6 +71,9 @@
     <Compile Include="Compile.cs" />
     <Compile Include="CompileError.cs" />
     <Compile Include="Construct.cs" />
+    <Compile Include="Variable.cs" />
+    <Compile Include="Type.cs" />
+    <Compile Include="VirtualMachine\RuntimeScriptObject.cs" />
     <Compile Include="WhenClause.cs" />
     <Compile Include="ParseScope.cs" />
     <Compile Include="LambdaBlock.cs" />

@@ -15,6 +15,7 @@ namespace EtcScriptLib.Ast
 
 		public override Node Transform(ParseScope Scope)
 		{
+			ResultType = Type.Void;
 			Header = Header.Transform(Scope);
 			ThenBlock = ThenBlock.Transform(Scope);
 			if (ElseBlock != null) ElseBlock = ElseBlock.Transform(Scope);

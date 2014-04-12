@@ -26,6 +26,8 @@ namespace EtcScriptLib.Ast
 				throw new CompileError("Could not find matching function for static invokation", Source);
 			else
 			{
+				ResultType = matchingFunction.ReturnType;
+
 				var newParameters = Declaration.GenerateParameterListSyntaxTree(Arguments, matchingFunction.Terms);
 
 				if (matchingFunction.OwnerContextID == Scope.EnvironmentContext.ID && matchingFunction.OwnerContextID != 0)

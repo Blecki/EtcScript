@@ -67,12 +67,13 @@ namespace EtcScriptLib.Ast
 			}
 			else
 			{
-				Instructions.AddInstructions("MOVE NEXT R", Block.GetInvokable(Rule.DeclarationScope, Rule.Terms), "STACK_INVOKE R");
+				Instructions.AddInstructions("MOVE NEXT R", Block.GetInvokable(Rule.Terms), "STACK_INVOKE R");
 			}
 		}
 
 		public override EtcScriptLib.Ast.Node Transform(ParseScope Scope)
 		{
+			ResultType = Type.Void;
 			DeclarationScope = Scope;
 
 			//All the rules in the rulebook should be determined by now.
@@ -81,6 +82,17 @@ namespace EtcScriptLib.Ast
 				return null;
 			var assembleList = Declaration.GenerateParameterListSyntaxTree(Arguments, Rulebook.DeclarationTerms);
 			Arguments = new List<Node>(assembleList.Members.Select(n => n.Transform(Scope)));
+
+			//Check types
+			int argumentIndex = 0;
+			foreach (var term in Rulebook.DeclarationTerms)
+				if (term.Type == DeclarationTermType.Term)
+				{
+					if (!Type.AreTypesCompatible(Arguments[argumentIndex].ResultType, term.DeclaredType))
+						throw new CompileError("Types are not compatible", Source);
+					argumentIndex += 1;
+				}
+
 			return this;
 		}
 

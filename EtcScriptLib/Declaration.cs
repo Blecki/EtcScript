@@ -13,15 +13,17 @@ namespace EtcScriptLib
 		public WhenClause WhenClause;
 		internal ParseScope DeclarationScope;
 		internal int OwnerContextID = 0;
+		public Type ReturnType = Type.Void;
+		public String ReturnTypeName;
 
-		public VirtualMachine.InvokeableFunction MakeInvokableFunction(VirtualMachine.ScriptObject CapturedScope = null)
+		public VirtualMachine.InvokeableFunction MakeInvokableFunction()
 		{
-			return Body.GetInvokable(DeclarationScope, Terms, CapturedScope);
+			return Body.GetInvokable(Terms);
 		}
 
-		public VirtualMachine.InvokeableFunction MakeWhenInvokable(VirtualMachine.ScriptObject CapturedScope = null)
+		public VirtualMachine.InvokeableFunction MakeWhenInvokable()
 		{
-			return WhenClause.GetInvokable(DeclarationScope, Terms, CapturedScope);
+			return WhenClause.GetInvokable(Terms);
 		}
 
 		public static Declaration Parse(String Header)
@@ -42,8 +44,19 @@ namespace EtcScriptLib
 			for (int i = 0; i < A.Count; ++i)
 			{
 				if (A[i].Type != B[i].Type) return false;
-				if (A[i].Name != B[i].Name) return false;
-				if (A[i].RepititionType != B[i].RepititionType) return false;
+				if (A[i].Type == DeclarationTermType.Keyword && A[i].Name != B[i].Name) return false;
+				if (A[i].RepetitionType != B[i].RepetitionType) return false;
+			}
+			return true;
+		}
+
+		public static bool AreTermTypesCompatible(List<DeclarationTerm> A, List<DeclarationTerm> B)
+		{
+			if (A.Count != B.Count) return false;
+			for (int i = 0; i < A.Count; ++i)
+			{
+				if (A[i].Type == DeclarationTermType.Term &&
+					A[i].DeclaredTypeName != B[i].DeclaredTypeName) return false;
 			}
 			return true;
 		}
@@ -62,13 +75,13 @@ namespace EtcScriptLib
 				bool match = false;
 				if (nodeIndex < Nodes.Count) match = DeclarationTerm.Matches(currentTerm, Nodes[nodeIndex]);
 
-				if (currentTerm.RepititionType == DeclarationTermRepititionType.Once)
+				if (currentTerm.RepetitionType == DeclarationTermRepetitionType.Once)
 				{
 					if (currentTerm.Type == DeclarationTermType.Term) r.Add(Nodes[nodeIndex]);
 					termIndex += 1;
 					nodeIndex += 1;
 				}
-				else if (currentTerm.RepititionType == DeclarationTermRepititionType.Optional)
+				else if (currentTerm.RepetitionType == DeclarationTermRepetitionType.Optional)
 				{
 					termIndex += 1;
 					if (match)
@@ -79,8 +92,8 @@ namespace EtcScriptLib
 					else
 						if (currentTerm.Type == DeclarationTermType.Term) r.Add(new Ast.Literal(new Token(), null));
 				}
-				else if (currentTerm.RepititionType == DeclarationTermRepititionType.NoneOrMany ||
-					currentTerm.RepititionType == DeclarationTermRepititionType.OneOrMany)
+				else if (currentTerm.RepetitionType == DeclarationTermRepetitionType.NoneOrMany ||
+					currentTerm.RepetitionType == DeclarationTermRepetitionType.OneOrMany)
 				{
 					var localList = new List<Ast.Node>();
 					termIndex += 1;
@@ -109,18 +122,18 @@ namespace EtcScriptLib
 				bool match = false;
 				if (nodeIndex < Nodes.Count) match = DeclarationTerm.Matches(currentTerm, Nodes[nodeIndex]);
 
-				if (currentTerm.RepititionType == DeclarationTermRepititionType.Once)
+				if (currentTerm.RepetitionType == DeclarationTermRepetitionType.Once)
 				{
 					if (!match) return false;
 					termIndex += 1;
 					nodeIndex += 1;
 				}
-				else if (currentTerm.RepititionType == DeclarationTermRepititionType.Optional)
+				else if (currentTerm.RepetitionType == DeclarationTermRepetitionType.Optional)
 				{
 					termIndex += 1;
 					if (match) nodeIndex += 1;
 				}
-				else if (currentTerm.RepititionType == DeclarationTermRepititionType.NoneOrMany)
+				else if (currentTerm.RepetitionType == DeclarationTermRepetitionType.NoneOrMany)
 				{
 					termIndex += 1;
 					while (match)
@@ -129,7 +142,7 @@ namespace EtcScriptLib
 						match = (nodeIndex < Nodes.Count) ? DeclarationTerm.Matches(currentTerm, Nodes[nodeIndex]) : false;
 					}
 				}
-				else if (currentTerm.RepititionType == DeclarationTermRepititionType.OneOrMany)
+				else if (currentTerm.RepetitionType == DeclarationTermRepetitionType.OneOrMany)
 				{
 					termIndex += 1;
 					if (!match) return false;

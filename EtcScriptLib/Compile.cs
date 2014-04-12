@@ -160,6 +160,9 @@ namespace EtcScriptLib
 					return new Ast.ConsiderRule(parameters[0].Source, parameters[0]);
 				}));
 
+			operatorSettings.ActiveScope.Types.Add(Type.CreatePrimitive("NUMBER"));
+			operatorSettings.ActiveScope.Types.Add(Type.CreatePrimitive("STRING"));
+
 			return operatorSettings;
 		}
     }

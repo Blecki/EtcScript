@@ -26,12 +26,13 @@ namespace EtcScriptLib.Ast
 
 		public override Node Transform(ParseScope Scope)
 		{
+			ResultType = Type.Void;
 			Max = Max.Transform(Scope);
 			var nestedScope = Scope.Push();
-			TotalVariable = nestedScope.NewLocal("__total@" + VariableName);
+			TotalVariable = nestedScope.NewLocal("__total@" + VariableName, Scope.FindType("number"));
 			Min = Min.Transform(nestedScope);
-			CounterVariable = nestedScope.NewLocal("__counter@" + VariableName);
-			ValueVariable = nestedScope.NewLocal(VariableName);
+			CounterVariable = nestedScope.NewLocal("__counter@" + VariableName, Scope.FindType("number"));
+			ValueVariable = nestedScope.NewLocal(VariableName, Scope.FindType("number"));
 			Body = Body.Transform(nestedScope);
 			return this;
 		}

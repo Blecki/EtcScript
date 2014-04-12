@@ -25,7 +25,7 @@ namespace EtcScriptTests
 			{
 				Console.WriteLine("Header: " + header);
 				foreach (var term in declaration.Terms)
-					Console.WriteLine("  " + term.Name + " " + term.Type + " " + term.RepititionType);
+					Console.WriteLine("  " + term.Name + " " + term.Type + " " + term.RepetitionType);
 				Console.WriteLine("Invokation: " + script);
 				foreach (var node in invokation)
 					node.Debug(1);

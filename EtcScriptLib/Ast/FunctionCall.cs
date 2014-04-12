@@ -18,6 +18,7 @@ namespace EtcScriptLib.Ast
 
 		public override Node Transform(ParseScope Scope)
 		{
+			ResultType = Function.ReturnType;
 			if (Function.IsStackInvokable) return new StackCall(Source, Function, Arguments).Transform(Scope);
 			else return new CompatibleCall(Source, new AssembleList(Source, Arguments)).Transform(Scope);
 		}

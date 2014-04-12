@@ -18,7 +18,19 @@ namespace EtcScriptLib.Ast
 
 		public override Node Transform(ParseScope Scope)
 		{
+			ResultType = Function.ReturnType;
 			Arguments = new List<Node>(Arguments.Select(n => n.Transform(Scope)));
+
+			//Check types
+			int argumentIndex = 0;
+			foreach (var term in Function.Terms)
+				if (term.Type == DeclarationTermType.Term)
+				{
+					if (!Type.AreTypesCompatible(Arguments[argumentIndex].ResultType, term.DeclaredType))
+						throw new CompileError("Types are not compatible", Source);
+					argumentIndex += 1;
+				}
+
 			return this;
 		}
 

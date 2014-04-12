@@ -1,24 +1,24 @@
 ﻿
 EtcScript Grammar
 
-Script				:= (MacroDeclaration | RuleDeclaration | VariableDeclaration)*
-VariableDeclaration	:= "variable" + Identifier + ";"  [Todo: Initialization]
-MacroDeclaration	:= "macro" + DeclarationHeader + Block
+Script				:= (MacroDeclaration | RuleDeclaration | TypeDeclaration)*
+MacroDeclaration	:= "macro" + DeclarationHeader + Block + (: + Identifier)?
 DeclarationHeader	:= (DeclarationTerm)*
 RuleDeclaration		:= "rule" + DeclarationHeader + WhenClause? + Block
 WhenClause			:= "when" + Expression
-DeclarationTerm		:= Identifier | String | ( "(" + Identifier + ")" + RepititionMarker? )
+DeclarationTerm		:= Identifier | String | ( "(" + Identifier + (: + Identifier)? + ")" + RepetitionMarker? )
 Identifier			:= [a-z, A-Z, any non-operator symbol][any non-delimeter symbol]*
-RepitionMarker		:= "?" | "*" | "+"
+RepetitionMarker	:= "?" | "*" | "+"
 Block				:= { + Statement+ + }
 Statement			:= Let | If | Invokation + ; | DynamicInvokation + ; | BracketInvokation + ; | Control | LocalDeclaration
 Let					:= "let" + (Identifier | MemberAccess) + "=" + Expression + ;
 If					:= "if" + Expression + Block
 MemberAccess		:= Term + (StaticMember | DynamicMember)
 StaticMember		:= "." + Identifier
-DynamicMember		:= "?" + Identifier + (":" + Term)?
-Expression			:= Term | BinaryOperation
-Term				:= Parenthetical | Identifier | Number | String | MemberAccess | BracketInvokation | DynamicInvokation
+DynamicMember		:= "?" + Identifier + ":" + Term
+Expression			:= Term | BinaryOperation | New
+Term				:= Parenthetical | Identifier | Number | BasicString | ComplexString 
+						| MemberAccess | BracketInvokation | DynamicInvokation
 Parenthetical		:= "(" + Expression + ")"
 BinaryOperation		:= Term + Operator + Term
 Invokation			:= Term+
@@ -26,8 +26,14 @@ BracketInvokation	:= "[" + Invokation + "]"
 DynamicInvokation	:= ":" + BracketInvokation
 Control				:= Invokation + (Block | ;)
 Operator			:= Any of operators specified in operator table
-String				:= Quote-deliminated string
-LocalDeclaration	:= "var" + Identifier + ("=" + Expression)? + ;
+BasicString			:= Ordinary quote-delimited string
+ComplexString		:= \" + ( Text | EmbeddedExpression )* + \"
+Text				:= Any sequence of characters except [ or ", matched greedily.
+EmbeddedExpression	:= [ + Expression + ]
+LocalDeclaration	:= "var" + Identifier + (: + Identifier)? + ("=" + Expression)? + ;
+TypeDeclaration		:= "type" + Identifier + { + MemberDeclaration* + }
+MemberDeclaration	:=  "var" + Identifier + (: + Identifier)? + ;
+New					:= "new" + Identifier
 
 Delimeter symbols	:= []{}()\s\t\r\n.:;
 

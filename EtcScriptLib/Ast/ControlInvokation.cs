@@ -25,6 +25,7 @@ namespace EtcScriptLib.Ast
 
 		public override Ast.Node Transform(ParseScope Scope)
 		{
+			ResultType = Type.Void;
 			var r = Control.TransformationFunction(
 				Declaration.GenerateParameterListSyntaxTree(Arguments, Control.DeclarationTerms).Members,
 				Body);

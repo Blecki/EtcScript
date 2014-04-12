@@ -18,6 +18,7 @@ namespace EtcScriptLib.Ast
 
 		public override Node Transform(ParseScope Scope)
 		{
+			ResultType = Function.ReturnType;
 			Arguments = new List<Node>(Arguments.Select(n => n.Transform(Scope)));
 			return this;
 		}

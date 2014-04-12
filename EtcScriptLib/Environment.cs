@@ -80,7 +80,7 @@ namespace EtcScriptLib
 			var lambdaBlock = new LambdaBlock(block);
 			Context.ID = 0;
 			lambdaBlock.EmitInstructions(Context.ActiveScope, new VirtualMachine.InstructionList());
-			var r = lambdaBlock.GetBasicInvokable(Context.ActiveScope, argumentNames);
+			var r = lambdaBlock.GetBasicInvokable(argumentNames);
 			Context.PopScope();
 
 			

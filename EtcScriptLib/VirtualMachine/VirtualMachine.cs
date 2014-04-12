@@ -307,9 +307,34 @@ namespace EtcScriptLib.VirtualMachine
                         break;
                     #endregion
 
-                    #region Flow Control
+					#region RSOs
 
-                    case InstructionSet.MARK:
+					case InstructionSet.ALLOC_RSO:
+						SetOperand(ins.SecondOperand, 
+							new RuntimeScriptObject((GetOperand(ins.FirstOperand, context) as int?).Value),
+							context);
+						break;
+					case InstructionSet.STORE_RSO_M:
+						{
+							var v = GetOperand(ins.FirstOperand, context);
+							var rso = GetOperand(ins.SecondOperand, context) as RuntimeScriptObject;
+							var m = GetOperand(ins.ThirdOperand, context) as int?;
+							rso.Data[m.Value] = v;
+						}
+						break;
+					case InstructionSet.LOAD_RSO_M:
+						{
+							var rso = GetOperand(ins.FirstOperand, context) as RuntimeScriptObject;
+							var m = GetOperand(ins.SecondOperand, context) as int?;
+							SetOperand(ins.ThirdOperand, rso.Data[m.Value], context);
+						}
+						break;
+
+					#endregion
+
+					#region Flow Control
+
+					case InstructionSet.MARK:
                         {
                             var storedContext = context.CurrentInstruction;
                             SetOperand(ins.FirstOperand, storedContext, context);
