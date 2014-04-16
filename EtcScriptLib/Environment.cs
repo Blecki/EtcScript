@@ -5,10 +5,22 @@ using System.Text;
 
 namespace EtcScriptLib
 {
+	public class SystemVariable : Variable
+	{
+		public VirtualMachine.InvokeableFunction Implementation;
+
+		public SystemVariable(String Name, Func<VirtualMachine.ExecutionContext, Object> Implementation, String Typename)
+		{
+			this.Implementation = new VirtualMachine.NativeFunction((c, l) => Implementation(c));
+			this.StorageMethod = VariableStorageMethod.System;
+			this.DeclaredTypeName = Typename;
+			this.Name = Name;
+		}
+	}
+
 	public class Environment
 	{
-		public ParseContext Context = Compile.GetDefaultOperators();
-		public VirtualMachine.ScriptObject GlobalScope = new VirtualMachine.ScriptObject();
+		public ParseContext Context = Compile.GetDefaultParseContext();
 
 		private List<Declaration> Functions = new List<Declaration>();
 
@@ -34,7 +46,14 @@ namespace EtcScriptLib
 			var decl = Declaration.Parse(Header);
 			var argumentCount = decl.Terms.Count(t => t.Type == DeclarationTermType.Term);
 			decl.Body.CacheSystemImplementation(argumentCount, Implementation);
+			decl.Type = DeclarationType.System;
 			Context.ActiveScope.Macros.Add(decl);
+		}
+
+		public void AddSystemVariable(String Name, String ResultTypeName, Func<VirtualMachine.ExecutionContext, Object> Implementation)
+		{
+			var variable = new SystemVariable(Name, Implementation, ResultTypeName);
+			Context.ActiveScope.Variables.Add(variable);
 		}
 
 		public void AddControl(Control Control)
@@ -57,9 +76,7 @@ namespace EtcScriptLib
 		/// <returns></returns>
 		public VirtualMachine.InvokeableFunction GenerateBasicConsiderRuleImplementation(String Name, int ArgumentCount)
 		{
-			Context.PushNewScope();
-			Context.ActiveScope.ChangeToFunctionType();
-			var argumentNames = new List<String>();
+			Context.PushNewScope(ScopeType.Function);
 			var argumentList = new List<Ast.Node>();
 			argumentList.Add(new Ast.Identifier(new Token { Type = TokenType.Identifier, Value = Name }));
 			int argumentIndexBase = -2 - ArgumentCount;
@@ -71,7 +88,6 @@ namespace EtcScriptLib
 					Offset = argumentIndexBase + i
 				});
 				argumentList.Add(new Ast.Identifier(new Token { Type = TokenType.Identifier, Value = "_" + i.ToString() }));
-				argumentNames.Add("_" + i.ToString());
 			}
 			var staticInvokation = new Ast.StaticInvokation(new Token(), argumentList);
 			var considerRule = new Ast.ConsiderRule(new Token(), staticInvokation);
@@ -80,7 +96,7 @@ namespace EtcScriptLib
 			var lambdaBlock = new LambdaBlock(block);
 			Context.ID = 0;
 			lambdaBlock.EmitInstructions(Context.ActiveScope, new VirtualMachine.InstructionList());
-			var r = lambdaBlock.GetBasicInvokable(argumentNames);
+			var r = lambdaBlock.GetBasicInvokable(argumentList.Count - 1);
 			Context.PopScope();
 
 			

@@ -19,12 +19,12 @@ type foo
 	var y;
 }
 
-test _ {
+test _ : number {
 	return 6;	
 }
 ";
 
-			var result = TestHelper.CallEnvironmentFunction(script, "test");
+			var result = TestHelper.CallTestFunction(script);
 			Assert.AreEqual(6, result);
 		}
 
@@ -38,13 +38,13 @@ type foo
 	var y;
 }
 
-test _ {
+test _ : number {
 	var a = new foo;
 	return 6;	
 }
 ";
 
-			var result = TestHelper.CallEnvironmentFunction(script, "test");
+			var result = TestHelper.CallTestFunction(script);
 			Assert.AreEqual(6, result);
 		}
 
@@ -54,11 +54,11 @@ test _ {
 			var script = @"
 type foo
 {
-	var x;
-	var y;
+	var x:number;
+	var y:number;
 }
 
-test _ {
+test _ : number {
 	var a = new foo;
 	let a.x = 4;
 	let a.y = a.x * 2;
@@ -66,7 +66,7 @@ test _ {
 }
 ";
 
-			var result = TestHelper.CallEnvironmentFunction(script, "test");
+			var result = TestHelper.CallTestFunction(script);
 			Assert.AreEqual(8, result);
 		}
 
@@ -74,37 +74,10 @@ test _ {
 		public void argument_types()
 		{
 			var script = @"
-macro bar (a:foo) 
+macro bar (a:foo) : number 
 {
 	return a.y;
-} : number
-
-type foo
-{
-	var x;
-	var y;
 }
-
-test _ {
-	var a = new foo;
-	let a.x = 4;
-	let a.y = a.x * 2;
-	return [bar a];
-}
-";
-
-			var result = TestHelper.CallEnvironmentFunction(script, "test");
-			Assert.AreEqual(8, result);
-		}
-
-		[Test]
-		public void member_types()
-		{
-			var script = @"
-macro bar (a:number) 
-{
-	return a;
-} : number
 
 type foo
 {
@@ -112,7 +85,34 @@ type foo
 	var y:number;
 }
 
-test _ {
+test _ : number {
+	var a = new foo;
+	let a.x = 4;
+	let a.y = a.x * 2;
+	return [bar a];
+}
+";
+
+			var result = TestHelper.CallTestFunction(script);
+			Assert.AreEqual(8, result);
+		}
+
+		[Test]
+		public void member_types()
+		{
+			var script = @"
+macro bar (a:number) : number
+{
+	return a;
+}
+
+type foo
+{
+	var x:number;
+	var y:number;
+}
+
+test _ : number {
 	var a = new foo;
 	let a.x = 4;
 	let a.y = a.x * 2;
@@ -120,7 +120,7 @@ test _ {
 }
 ";
 
-			var result = TestHelper.CallEnvironmentFunction(script, "test");
+			var result = TestHelper.CallTestFunction(script);
 			Assert.AreEqual(8, result);
 		}
 	}

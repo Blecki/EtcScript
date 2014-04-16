@@ -14,7 +14,8 @@ namespace EtcScriptLib.Ast
 
 		public override Node Transform(ParseScope Scope)
 		{
-			Object = Object.Transform(Scope);
+			ResultType = Type.Generic;
+			//Object = Object.Transform(Scope);
 			return this;
 		}
 
@@ -27,7 +28,7 @@ namespace EtcScriptLib.Ast
 		public void EmitAssignment(VirtualMachine.InstructionList into)
 		{
 			Object.Emit(into, OperationDestination.R);
-			into.AddInstructions("SET_MEMBER POP NEXT R", into.AddString(Name));
+			into.AddInstructions("SET_MEMBER POP STRING R", into.AddString(Name));
 		}
 	}
 }

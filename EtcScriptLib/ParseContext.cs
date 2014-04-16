@@ -5,33 +5,6 @@ using System.Text;
 
 namespace EtcScriptLib
 {
-	public enum ControlBlockType
-	{
-		NoBlock,
-		OptionalBlock,
-		RequiredBlock
-	}
-
-	public class Control
-	{
-		public List<DeclarationTerm> DeclarationTerms;
-		public Func<List<Ast.Node>, Ast.Node, Ast.Node> TransformationFunction;
-		public ControlBlockType BlockType = ControlBlockType.RequiredBlock;
-
-		public static Control Create(
-			Declaration Declaration,
-			ControlBlockType BlockType,
-			Func<List<Ast.Node>, Ast.Node, Ast.Node> TransformationFunction)
-		{
-			return new Control
-			{
-				DeclarationTerms = Declaration.Terms,
-				TransformationFunction = TransformationFunction,
-				BlockType = BlockType
-			};
-		}
-	}
-
 	public class ParseContext
 	{
 		public RuleSet Rules = new RuleSet();
@@ -43,52 +16,24 @@ namespace EtcScriptLib
 			var into = new VirtualMachine.InstructionList();
 
 			foreach (var type in ActiveScope.Types)
-				if (type.Origin == TypeOrigin.Script)
-					foreach (var member in type.Members)
-					{
-						if (String.IsNullOrEmpty(member.DeclaredTypeName))
-							member.DeclaredType = Type.Generic;
-						else
-						{
-							member.DeclaredType = ActiveScope.FindType(member.DeclaredTypeName);
-							if (member.DeclaredType == null) throw new CompileError("Could not find type '" +
-								member.DeclaredTypeName + "'.");
-						}
-					}
+				type.ResolveTypes(ActiveScope);
+
+			foreach (var variable in ActiveScope.Variables)
+				variable.ResolveType(ActiveScope);
+
+			foreach (var macro in ActiveScope.Macros)
+				macro.ResolveTypes(ActiveScope);
+
+			foreach (var declaration in PendingEmission)
+				declaration.ResolveTypes(ActiveScope);
+
+			foreach (var declaration in PendingEmission)
+				declaration.Transform(ID);
 
 			foreach (var declaration in PendingEmission)
 			{
-				if (!String.IsNullOrEmpty(declaration.ReturnTypeName))
-				{
-					declaration.ReturnType = declaration.DeclarationScope.FindType(declaration.ReturnTypeName);
-					if (declaration.ReturnType == null) throw new CompileError("Could not find type '" +
-						declaration.ReturnTypeName + "'.", declaration.Body.Body.Source);
-				}
-				else
-					declaration.ReturnType = Type.Void;
-
-				CreateParameterDescriptors(declaration.DeclarationScope, declaration.Terms);
-
-				foreach (var term in declaration.Terms)
-					if (term.Type == DeclarationTermType.Term)
-					{
-						if (String.IsNullOrEmpty(term.DeclaredTypeName))
-							term.DeclaredType = Type.Generic;
-						else
-						{
-							term.DeclaredType = declaration.DeclarationScope.FindType(term.DeclaredTypeName);
-							if (term.DeclaredType == null) throw new CompileError("Could not find type '" +
-								term.DeclaredTypeName + "'.");
-						}
-					}
-			}				
-
-			foreach (var declaration in PendingEmission)
-			{
-				declaration.OwnerContextID = ID;
-				declaration.Body.EmitInstructions(declaration.DeclarationScope, into);
-				if (declaration.WhenClause != null) declaration.WhenClause.EmitInstructions(declaration.DeclarationScope, into);
-
+				declaration.Emit(into);
+			
 				if (Compile.Debug)
 				{
 					Compile.EmitDebugDump(declaration);
@@ -97,13 +42,7 @@ namespace EtcScriptLib
 			}
 
 			foreach (var declaration in PendingEmission)
-			{
-				foreach (var point in declaration.Body.CallPoints)
-					into[point] = declaration.Body.EntryPoint;
-				if (declaration.WhenClause != null)
-					foreach (var point in declaration.WhenClause.CallPoints)
-						into[point] = declaration.WhenClause.EntryPoint;
-			}
+				declaration.ResolveCallPoints();
 
 			if (Compile.Debug)
 			{
@@ -117,28 +56,6 @@ namespace EtcScriptLib
 			PendingEmission.Clear();
 		}
 
-		// Given a list of terms, create the variable objects to represent the parameters of the declaration
-		private static void CreateParameterDescriptors(ParseScope Scope, List<DeclarationTerm> Terms)
-		{
-			int parameterIndex = -3;
-			for (int i = Terms.Count - 1; i >= 0; --i)
-			{
-				if (Terms[i].Type == DeclarationTermType.Term)
-				{
-					var declaredType = String.IsNullOrEmpty(Terms[i].DeclaredTypeName) ? Type.Generic : Scope.FindType(Terms[i].DeclaredTypeName);
-					if (declaredType == null) throw new CompileError("Could not find type '" + Terms[i].DeclaredTypeName + "'.");
-					var variable = new Variable
-					{
-						Name = Terms[i].Name,
-						Offset = parameterIndex,
-						DeclaredType = declaredType
-					};					
-					--parameterIndex;
-					Scope.Variables.Add(variable);
-				}
-			}
-		}
-
 		public struct Operator
 		{
 			public String token;
@@ -147,10 +64,11 @@ namespace EtcScriptLib
 
 		public List<Control> Controls = new List<Control>();
 		public ParseScope ActiveScope { get; private set; }
+		public ParseScope TopScope { get; private set; }
 
-		public void PushNewScope()
+		public void PushNewScope(ScopeType Type)
 		{
-			var newScope = new ParseScope { Parent = ActiveScope, EnvironmentContext = this };
+			var newScope = new ParseScope(Type) { Parent = ActiveScope, EnvironmentContext = this };
 			ActiveScope = newScope;
 		}
 
@@ -162,7 +80,8 @@ namespace EtcScriptLib
 
 		public ParseContext()
 		{
-			ActiveScope = new ParseScope { EnvironmentContext = this };
+			ActiveScope = new ParseScope(ScopeType.Root) { EnvironmentContext = this };
+			TopScope = ActiveScope;
 		}
 
 		public Dictionary<int, List<Operator>> precedence = new Dictionary<int, List<Operator>>();

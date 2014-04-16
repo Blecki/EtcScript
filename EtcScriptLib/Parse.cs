@@ -50,6 +50,7 @@ namespace EtcScriptLib
 
 			var r = new Ast.LocalDeclaration(start);
 			r.Name = Stream.Next().Value;
+			//r.Typename = "GENERIC";
 			Stream.Advance();
 
 			if (Stream.Next().Type == TokenType.Colon)
@@ -220,11 +221,11 @@ namespace EtcScriptLib
 				MA.Name = RHS;
 				Stream.Advance();
 
-				if (Stream.AtEnd() || Stream.Next().Type != TokenType.Colon)
-					throw new CompileError("Expected :", Stream);
-
-				Stream.Advance();
-				MA.DefaultValue = ParseTerm(Stream, Context);
+				if (!Stream.AtEnd() && Stream.Next().Type == TokenType.Colon)
+				{
+					Stream.Advance();
+					MA.DefaultValue = ParseTerm(Stream, Context);
+				}
 
 				return ParseOptionalDot(Stream, MA, Context);
 			}
@@ -243,6 +244,14 @@ namespace EtcScriptLib
 				Stream.Advance();
 				r = ParseExpression(Stream, Context, TokenType.CloseParen);
 				Stream.Advance();
+				if (!Stream.AtEnd() && Stream.Next().Type == TokenType.Colon)
+				{
+					Stream.Advance();
+					if (Stream.Next().Type != TokenType.Identifier)
+						throw new CompileError("Expected identifier", Stream);
+					r = new Ast.Cast(Stream.Next(), r, Stream.Next().Value.ToUpper());
+					Stream.Advance();
+				}
 			}
 			else if (Stream.Next().Type == TokenType.OpenBracket)
 			{
@@ -260,14 +269,16 @@ namespace EtcScriptLib
 				Stream.Next().Type == TokenType.String)
 			{
 				r = new Ast.Identifier(Stream.Next());
-				(r as Ast.Identifier).Name = Stream.Next();
 				Stream.Advance();
 			}
 			else if (Stream.Next().Type == TokenType.Operator)
 			{
 				r = new Ast.Identifier(Stream.Next());
-				(r as Ast.Identifier).Name = Stream.Next();
 				Stream.Advance();
+			}
+			else if (Stream.Next().Type == TokenType.At)
+			{
+				return ParseComplexString(Stream, Context);
 			}
 			else
 				throw new CompileError("Illegal token in argument list", Stream.Next());
@@ -275,6 +286,48 @@ namespace EtcScriptLib
 			r = ParseOptionalDot(Stream, r, Context);
 
 			return r;
+		}
+
+		public static Ast.ComplexString ParseComplexString(Iterator<Token> Stream, ParseContext Context)
+		{
+			System.Diagnostics.Debug.Assert(Stream.Next().Type == TokenType.At);
+			var start = Stream.Next();
+
+			var tokenStream = Stream as TokenStream;
+			tokenStream.PushState(TokenStreamState.ComplexString); //Enter complex string parsing mode
+
+			Stream.Advance();
+			if (Stream.Next().Type != TokenType.ComplexStringQuote)
+				throw new CompileError("Expected \"", Stream);
+			Stream.Advance();
+
+			var stringPieces = new List<Ast.Node>();
+
+			while (Stream.Next().Type != TokenType.ComplexStringQuote)
+			{
+				if (Stream.Next().Type == TokenType.ComplexStringPart)
+				{
+					stringPieces.Add(new Ast.StringLiteral(Stream.Next(), Stream.Next().Value));
+					Stream.Advance();
+				}
+				else if (Stream.Next().Type == TokenType.OpenBracket)
+				{
+					tokenStream.PushState(TokenStreamState.Normal); //Make sure we are parsing normally for the
+					Stream.Advance(); //Skip the [						//embedded expression
+					stringPieces.Add(ParseExpression(Stream, Context, TokenType.CloseBracket));
+					if (Stream.Next().Type != TokenType.CloseBracket)	//Shouldn't be possible
+						throw new CompileError("Expected ]", Stream);
+					tokenStream.PopState();	//Return to complex string parsing mode
+					Stream.Advance();
+				}
+				else
+					throw new InvalidProgramException();
+			}
+
+			tokenStream.PopState(); //Return to normal parsing mode
+			Stream.Advance();
+
+			return new Ast.ComplexString(start, stringPieces);
 		}
 
 		public static List<Ast.Node> ParseStaticInvokation(
@@ -380,7 +433,13 @@ namespace EtcScriptLib
 			ParseContext Context,
 			TokenType terminal)
 		{
-			if (Stream.Next().Type == TokenType.Identifier && Stream.Next().Value.ToUpper() == "NEW")
+			if (Stream.Next().Type == TokenType.Identifier && Stream.Next().Value.ToUpper() == "LAMBDA")
+			{
+				var declaration = ParseMacroDeclaration(Stream, Context);
+				declaration.Type = DeclarationType.Lambda;
+				return new Ast.Lambda(declaration.Body.Body.Source, declaration, "GENERIC");
+			}
+			else if (Stream.Next().Type == TokenType.Identifier && Stream.Next().Value.ToUpper() == "NEW")
 				return ParseNew(Stream, Context);
 			else
 				return ParseExpression(ParseTerm(Stream, Context), Stream, Context, 0, terminal);
@@ -474,11 +533,15 @@ namespace EtcScriptLib
 					var repetitionMarker = Stream.Next().Value;
 					Stream.Advance();
 					if (repetitionMarker == "?")
+					{
+						if (r.Type == DeclarationTermType.Term)
+							throw new CompileError("Only keywords can be optional in a declaration header", Stream);
 						r.RepetitionType = DeclarationTermRepetitionType.Optional;
-					else if (repetitionMarker == "+")
-						r.RepetitionType = DeclarationTermRepetitionType.OneOrMany;
-					else if (repetitionMarker == "*")
-						r.RepetitionType = DeclarationTermRepetitionType.NoneOrMany;
+					}
+					//else if (repetitionMarker == "+")
+					//    r.RepetitionType = DeclarationTermRepetitionType.OneOrMany;
+					//else if (repetitionMarker == "*")
+					//    r.RepetitionType = DeclarationTermRepetitionType.NoneOrMany;
 					else
 						throw new CompileError("Unrecognized repetition marker on declaration term", marker);
 				}
@@ -501,6 +564,7 @@ namespace EtcScriptLib
 			while (true)
 			{
 				if (TerminatorType == DeclarationHeaderTerminatorType.StreamEnd && Stream.AtEnd()) return r;
+				else if (Stream.Next().Type == TokenType.Colon) return r;
 				else if (TerminatorType == DeclarationHeaderTerminatorType.OpenBrace && Stream.Next().Type == TokenType.OpenBrace) return r;
 				else if (TerminatorType == DeclarationHeaderTerminatorType.OpenBraceOrWhen)
 				{
@@ -518,24 +582,14 @@ namespace EtcScriptLib
 			try
 			{
 				var r = new Declaration();
+				r.ReturnTypeName = "VOID";
 
 				if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("Expected identifier", Stream.Next());
 
-				r.UsageSpecifier = Stream.Next().Value;
+				r.Type = DeclarationType.Macro;
 				Stream.Advance();
 
 				r.Terms = ParseMacroDeclarationHeader(Stream, DeclarationHeaderTerminatorType.OpenBrace);
-
-				if (!Stream.AtEnd() && Stream.Next().Type == TokenType.OpenBrace)
-				{
-					Context.PushNewScope();
-					Context.ActiveScope.ChangeToFunctionType();
-					r.Body = new LambdaBlock(ParseBlock(Stream, Context));
-					r.DeclarationScope = Context.ActiveScope;
-					Context.PopScope();
-				}
-				else
-					throw new CompileError("Expected block", Stream);
 
 				if (!Stream.AtEnd() && Stream.Next().Type == TokenType.Colon)
 				{
@@ -545,6 +599,13 @@ namespace EtcScriptLib
 					Stream.Advance();
 				}
 
+				if (!Stream.AtEnd() && Stream.Next().Type == TokenType.OpenBrace)
+				{
+					r.Body = new LambdaBlock(ParseBlock(Stream, Context));
+				}
+				else
+					throw new CompileError("Expected block", Stream);
+				
 				return r;
 			}
 			catch (CompileError ce)
@@ -594,13 +655,10 @@ namespace EtcScriptLib
 
 				if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("Expected identifier", Stream.Next());
 
-				r.UsageSpecifier = Stream.Next().Value;
+				r.Type = DeclarationType.Rule;
 				Stream.Advance();
 
 				r.Terms = ParseMacroDeclarationHeader(Stream, DeclarationHeaderTerminatorType.OpenBraceOrWhen);
-
-				Context.PushNewScope();
-				Context.ActiveScope.ChangeToFunctionType();
 
 				if (Stream.Next().Value.ToUpper() == "WHEN")
 				{
@@ -611,13 +669,10 @@ namespace EtcScriptLib
 				if (Stream.Next().Type == TokenType.OpenBrace)
 				{
 					r.Body = new LambdaBlock(ParseBlock(Stream, Context));
-					r.DeclarationScope = Context.ActiveScope;
-					Context.PopScope();
+					
 				}
 				else
-				{
-					Context.PopScope();
-					throw new CompileError("Expected block", Stream);
+				{	throw new CompileError("Expected block", Stream);
 				}
 
 				return r;
@@ -638,6 +693,8 @@ namespace EtcScriptLib
 			Stream.Advance();
 
 			var r = new Variable();
+			r.StorageMethod = VariableStorageMethod.Member;
+
 			if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("Expected identifier", Stream.Next());
 			r.Name = Stream.Next().Value;
 

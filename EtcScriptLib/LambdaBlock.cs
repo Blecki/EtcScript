@@ -12,17 +12,29 @@ namespace EtcScriptLib
 		internal Ast.Node Body;
 		private VirtualMachine.InvokeableFunction CachedLambda;
 		internal List<int> CallPoints = new List<int>();
+		internal int CleanupPoint;
+		internal int CleanupCall = -1;
 
 		public LambdaBlock(Ast.Node Body)
 		{
 			this.Body = Body;
 		}
 
+		public void Transform(ParseScope DeclarationScope)
+		{
+			Body = Body.Transform(DeclarationScope);
+		}
+
 		public virtual void EmitInstructions(ParseScope DeclarationScope, VirtualMachine.InstructionList Into)
 		{
 			if (Instructions != null) throw new InvalidOperationException("Instructions should not be emitted twice");
 
-			Body = Body.Transform(DeclarationScope);
+			CleanupPoint = Into.Count;
+
+			if (CleanupCall >= 0) 
+				Into[CleanupCall] = CleanupPoint;
+
+			Into.AddInstructions("CLEANUP NEXT", DeclarationScope.Owner.ActualParameterCount, "CONTINUE POP");
 
 			Instructions = Into;
 			EntryPoint = Into.Count;
@@ -42,39 +54,22 @@ namespace EtcScriptLib
 				Instructions[point] = returnJumpPoint;
 		}
 
+		public void ResolveCallPoints()
+		{
+			foreach (var point in CallPoints)
+				Instructions[point] = EntryPoint;
+		}
+
 		public void CacheSystemImplementation(int ArgumentCount, Func<VirtualMachine.ExecutionContext, List<Object>, Object> Implementation)
 		{
 			CachedLambda = new VirtualMachine.NativeFunction("SYS-LAMBDA", ArgumentCount, Implementation);
 		}
 
-		public VirtualMachine.InvokeableFunction GetInvokable(List<DeclarationTerm> Terms)
+		public VirtualMachine.InvokeableFunction GetBasicInvokable(int ArgumentCount)
 		{
 			if (CachedLambda == null)
-			{
-				CachedLambda = VirtualMachine.LambdaFunction.CreateLambda("LAMBDA",
-				GetEntryPoint(),
-				new List<String>(
-					Terms.Where(
-						(d) => { return d.Type == DeclarationTermType.Term; }
-					).Select(
-						(d) => { return d.Name; }
-					)
-					)
-				);
-			}
-
-			return CachedLambda;
-		}
-
-		public VirtualMachine.InvokeableFunction GetBasicInvokable(List<String> Terms)
-		{
-			if (CachedLambda == null)
-			{
-				CachedLambda = VirtualMachine.LambdaFunction.CreateLambda("LAMBDA",
-				GetEntryPoint(),
-				Terms);
-			}
-
+				CachedLambda = VirtualMachine.LambdaFunction.CreateLambda(GetEntryPoint(),	ArgumentCount);
+		
 			return CachedLambda;
 		}
 

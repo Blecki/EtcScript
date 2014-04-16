@@ -15,8 +15,8 @@ namespace EtcScriptLib
 	{
 		Once,
 		Optional,
-		OneOrMany,
-		NoneOrMany
+		//OneOrMany,
+		//NoneOrMany
 	}
 
 	public class DeclarationTerm
@@ -44,16 +44,16 @@ namespace EtcScriptLib
 			if (Type == DeclarationTermType.Keyword)
 				return Name + RepetitionMarker(RepetitionType);
 			else
-				return "(" + Name + ")" + RepetitionMarker(RepetitionType);
+				return "(" + Name + ":" + DeclaredType.Name +  ")" + RepetitionMarker(RepetitionType);
 		}
 
 		private static string RepetitionMarker(DeclarationTermRepetitionType RepetitionType)
 		{
 			switch (RepetitionType)
 			{
-				case DeclarationTermRepetitionType.NoneOrMany: return "*";
+				//case DeclarationTermRepetitionType.NoneOrMany: return "*";
 				case DeclarationTermRepetitionType.Once: return "";
-				case DeclarationTermRepetitionType.OneOrMany: return "+";
+				//case DeclarationTermRepetitionType.OneOrMany: return "+";
 				case DeclarationTermRepetitionType.Optional: return "?";
 				default: throw new InvalidProgramException();
 			}

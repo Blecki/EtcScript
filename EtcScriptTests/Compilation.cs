@@ -18,35 +18,19 @@ namespace EtcScriptTests
         }
 
 		[Test]
-		public void interpret_semicolon_as_newline_with_equal_tabs()
-		{
-			TestHelper.CompileTestAssertNoErrors(@"test foo
-	{ let x = 5; return x; }");
-			TestHelper.CompileTestAssertNoErrors(@"
-	test foo
-	{
-		foreach x in y
-		{
-			let x = 5; 
-			return x;
-		}
-	}");
-		}
-
-		[Test]
 		public void negative_number()
 		{
-			TestHelper.CompileTestAssertNoErrors(@"test foo { let x = -5; }");
-			TestHelper.CompileTestAssertNoErrors(@"test foo { let x = 5 - 4; }");
-			TestHelper.CompileTestAssertNoErrors(@"test foo { let x = 5 * -4; }");
-			TestHelper.CompileShouldError(@"test foo { let x = (5 -4); }");
+			TestHelper.CompileTestAssertNoErrors(@"test foo { var x = -5; }");
+			TestHelper.CompileTestAssertNoErrors(@"test foo { var x = 5 - 4; }");
+			TestHelper.CompileTestAssertNoErrors(@"test foo { var x = 5 * -4; }");
+			TestHelper.CompileShouldError(@"test foo { var x = (5 -4); }");
 		}
 
 		[Test]
 		public void comments()
 		{
 			TestHelper.CompileTestAssertNoErrors(@"test foo #comment comment comment
-	{ let x = 4; } #comment comment comment");
+	{ var x = 4; } #comment comment comment");
 		}
 
 		[Test]
@@ -54,8 +38,8 @@ namespace EtcScriptTests
 		{
 			TestHelper.CompileTestAssertNoErrors(@"
 test foo {
-	let x = 4;
-	LeT y = 7;
+	var x = 4;
+	VaR y = 7;
 }");
 		}        
     }

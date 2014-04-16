@@ -17,10 +17,14 @@ namespace EtcScriptLib
 			Instructions = Into;
 			EntryPoint = Into.Count;
 
+			Instructions.AddInstructions("MOVE F PUSH", "MARK_STACK F");
 			Body = Body.Transform(DeclarationScope);
 
 			Body.Emit(Instructions, Ast.OperationDestination.R);
-			Instructions.AddInstructions("CONTINUE POP");
+			Instructions.AddInstructions(
+				"RESTORE_STACK F",
+				"MOVE POP F",
+				"CONTINUE POP");
 		}
 		
 	}

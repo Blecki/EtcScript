@@ -34,13 +34,5 @@ namespace EtcScriptLib.Ast
 			ResultType = LHS.ResultType;
 			return this;
 		}
-
-		public override void Debug(int depth)
-		{
-			Console.Write(new String(' ', depth * 3));
-			Console.WriteLine("Binary Op - " + Instruction);
-			LHS.Debug(depth + 1);
-			RHS.Debug(depth + 1);
-		}
 	}
 }

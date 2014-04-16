@@ -7,9 +7,8 @@ namespace EtcScriptLib.VirtualMachine
 {
     public class LambdaFunction : InvokeableFunction
     {
-        public String Name = null;
 		public CodeContext EntryPoint;
-		public List<String> Arguments;
+		public int ArgumentCount;
 
 		public override bool IsStackInvokable { get { return true; } }
 
@@ -20,12 +19,15 @@ namespace EtcScriptLib.VirtualMachine
 
         public override InvokationResult Invoke(ExecutionContext context, List<Object> arguments)
         {
-			if (arguments.Count > 1)
+			if (arguments.Count != ArgumentCount + 1) 
+				throw new InvalidProgramException("Expected " + (ArgumentCount + 1) + " arguments, got " + arguments.Count);
+
+			if (ArgumentCount > 0)
 			{
-				var cleanup = new InstructionList("CLEANUP NEXT", arguments.Count - 1, "CONTINUE POP");
+				var cleanup = new InstructionList("CLEANUP NEXT", ArgumentCount, "CONTINUE POP");
 				VirtualMachine.SetOperand(Operand.PUSH, context.CurrentInstruction, context);
-				for (int i = 1; i < arguments.Count; ++i)
-					VirtualMachine.SetOperand(Operand.PUSH, arguments[i], context);
+				for (int i = 0; i < ArgumentCount; ++i)
+					VirtualMachine.SetOperand(Operand.PUSH, arguments[i + 1], context);
 				VirtualMachine.SetOperand(Operand.PUSH, new CodeContext(cleanup, 0), context);
 			}
 			else
@@ -36,14 +38,62 @@ namespace EtcScriptLib.VirtualMachine
 			return InvokationResult.Success;
         }
 
-		public static LambdaFunction CreateLambda(String Name, CodeContext Body, List<String> Arguments)
+		public static LambdaFunction CreateLambda(CodeContext EntryPoint, int ArgumentCount)
 		{
 			var r = new LambdaFunction();
-			r.Name = Name;
-			r.EntryPoint = Body;
-			r.Arguments = Arguments;
+			r.EntryPoint = EntryPoint;
+			r.ArgumentCount = ArgumentCount;
 			return r;
 		}
 
+		public static LambdaFunction CreateLambda(CodeContext Source, int EntryPoint, int ArgumentCount)
+		{
+			var r = new LambdaFunction();
+			r.EntryPoint = new CodeContext(Source.Code, EntryPoint);
+			r.ArgumentCount = ArgumentCount;
+			return r;
+		}
+
+		public static TrueLambdaFunction CreateTrueLambda(CodeContext Source, RuntimeScriptObject CapturedVariables)
+		{
+			return new TrueLambdaFunction
+			{
+				CapturedVariables = CapturedVariables
+			};
+		}
+
     }
+
+	public class TrueLambdaFunction : InvokeableFunction
+	{
+		public RuntimeScriptObject CapturedVariables;
+
+		public override bool IsStackInvokable { get { return false; } }
+
+		public override void StackInvoke(ExecutionContext context)
+		{
+			throw new InvalidOperationException();
+		}
+
+		public override InvokationResult Invoke(ExecutionContext context, List<Object> arguments)
+		{
+			var expectedParameterCount = (CapturedVariables.Data[CapturedVariables.Data.Count - 1] as int?).Value;
+			if (arguments.Count != expectedParameterCount)
+				return InvokationResult.Failure("Incorrect number of arguments. Expected "
+					+ (expectedParameterCount) + " got "
+					+ (arguments.Count));
+
+			VirtualMachine.SetOperand(Operand.PUSH, context.CurrentInstruction, context);
+			for (int i = 0; i < expectedParameterCount - 1; ++i)
+				VirtualMachine.SetOperand(Operand.PUSH, arguments[i + 1], context);
+			VirtualMachine.SetOperand(Operand.PUSH, CapturedVariables, context);
+			VirtualMachine.SetOperand(Operand.PUSH, new CodeContext(context.CurrentInstruction.Code,
+				(CapturedVariables.Data[CapturedVariables.Data.Count - 3] as int?).Value), context);
+
+			context.CurrentInstruction = new CodeContext(context.CurrentInstruction.Code,
+				(CapturedVariables.Data[CapturedVariables.Data.Count - 2] as int?).Value);
+
+			return InvokationResult.Success;
+		}
+	}
 }

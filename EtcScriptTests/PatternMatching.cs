@@ -11,7 +11,7 @@ namespace EtcScriptTests
     {
 		private static List<EtcScriptLib.Ast.Node> ParseInvokation(String script)
 		{
-			var parseContext = EtcScriptLib.Compile.GetDefaultOperators();
+			var parseContext = EtcScriptLib.Compile.GetDefaultParseContext();
 			var tokenIterator = new EtcScriptLib.TokenStream(new EtcScriptLib.Compile.StringIterator(script), parseContext);
 			return EtcScriptLib.Parse.ParseStaticInvokationStatement(tokenIterator, parseContext);
 		}
@@ -52,8 +52,7 @@ namespace EtcScriptTests
 		{
 			Assert.IsTrue(MatchesDeclaration("a b ? c", "a b c"));
 			Assert.IsTrue(MatchesDeclaration("a b ? c", "a c"));
-			Assert.IsTrue(MatchesDeclaration("a b ? c", "a (b) c"));
-			Assert.IsTrue(MatchesDeclaration("a (b)? c", "a (b) c"), "Optional argument");
+			Assert.IsTrue(MatchesDeclaration("a (b) c", "a (b) c"));
 			Assert.IsTrue(MatchesDeclaration("a ? b c", "b c"));
 		}
 
@@ -64,14 +63,14 @@ namespace EtcScriptTests
 			Assert.IsTrue(DoesNotMatchDeclaration("a b c", "a b", true));
 		}
 
-		[Test]
-		public void none_or_many()
-		{
-			Assert.IsTrue(MatchesDeclaration("a b *", "a b b b b b b b b", true));
-			Assert.IsTrue(MatchesDeclaration("a b *", "a"));
-			Assert.IsTrue(MatchesDeclaration("a b * c", "a b b b b b b c"));
-			Assert.IsTrue(DoesNotMatchDeclaration("a (b)* c", "a b b b b b c"), "b term consumes all following terms.");
-		}
+		//[Test]
+		//public void none_or_many()
+		//{
+		//    Assert.IsTrue(MatchesDeclaration("a b *", "a b b b b b b b b", true));
+		//    Assert.IsTrue(MatchesDeclaration("a b *", "a"));
+		//    Assert.IsTrue(MatchesDeclaration("a b * c", "a b b b b b b c"));
+		//    Assert.IsTrue(DoesNotMatchDeclaration("a (b)* c", "a b b b b b c"), "b term consumes all following terms.");
+		//}
 
 		[Test]
 		public void match_operators()

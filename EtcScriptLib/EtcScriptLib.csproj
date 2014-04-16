@@ -46,6 +46,10 @@
     <Compile Include="AST\ControlInvokation.cs" />
     <Compile Include="AST\AssembleList.cs" />
     <Compile Include="AST\CompatibleCall.cs" />
+    <Compile Include="AST\Cast.cs" />
+    <Compile Include="AST\ComplexString.cs" />
+    <Compile Include="AST\StringLiteral.cs" />
+    <Compile Include="AST\Lambda.cs" />
     <Compile Include="AST\GenericMemberAccess.cs" />
     <Compile Include="AST\DynamicMemberAccess.cs" />
     <Compile Include="AST\StaticMemberAccess.cs" />
@@ -71,6 +75,7 @@
     <Compile Include="Compile.cs" />
     <Compile Include="CompileError.cs" />
     <Compile Include="Construct.cs" />
+    <Compile Include="Control.cs" />
     <Compile Include="Variable.cs" />
     <Compile Include="Type.cs" />
     <Compile Include="VirtualMachine\RuntimeScriptObject.cs" />
@@ -102,7 +107,6 @@
     <Compile Include="VirtualMachine\InvokableFunction.cs" />
     <Compile Include="VirtualMachine\NativeFunction.cs" />
     <Compile Include="VirtualMachine\OverloadedReflectionFunction.cs" />
-    <Compile Include="VirtualMachine\ScriptObject.cs" />
     <Compile Include="VirtualMachine\Upsert.cs" />
     <Compile Include="VirtualMachine\VirtualMachine.cs" />
   </ItemGroup>

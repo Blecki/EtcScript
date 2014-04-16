@@ -16,14 +16,14 @@ namespace EtcScriptLib
 		}
     }
 
-    public enum TokenType
-    {
-        Unknown,
+	public enum TokenType
+	{
+		Unknown,
 
-        Identifier,
-        Operator,
-        OpenParen,
-        CloseParen,
+		Identifier,
+		Operator,
+		OpenParen,
+		CloseParen,
 		OpenBracket,
 		CloseBracket,
 		OpenBrace,
@@ -34,13 +34,16 @@ namespace EtcScriptLib
 		Colon,
 		At,
 
-        String,
-        Number,
-        
-        EndOfFile,
-        Tab,
-        NewLine,
-    }
+		String,
+		Number,
+
+		EndOfFile,
+		Tab,
+		NewLine,
+
+		ComplexStringPart,
+		ComplexStringQuote, //Only produced as part of parsing a complex string.
+	}
 
     public struct Token
     {

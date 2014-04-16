@@ -25,9 +25,9 @@ namespace EtcScriptTests
 				if ((i % 3) == 0 || (i % 5) == 0) total += i;
 
 			var script = @"
-test _
+test _ : number
 {
-	let total = 0;
+	var total = 0;
 	foreach i from 1 to 999
 	{
 		if (i % 3 == 0)
@@ -43,7 +43,7 @@ test _
 }
 ";
 
-			var result = TestHelper.CallEnvironmentFunction(script, "test");
+			var result = TestHelper.CallTestFunction(script);
 			Assert.AreEqual(total, result);
 
 		}        

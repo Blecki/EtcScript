@@ -20,17 +20,32 @@ namespace EtcScriptLib.Ast
 				ResultType = Type.Generic;
 			else
 			{
-			ResultType = Scope.FindType(Typename);
-			if (ResultType == null) throw new CompileError("Could not find type '" + Typename + "'.", Source);
+				ResultType = Scope.FindType(Typename);
+				if (ResultType == null) throw new CompileError("Could not find type '" + Typename + "'.", Source);
 			}
 
 			if (Value != null)
 			{
 				Value = Value.Transform(Scope);
-				if (Value.ResultType == Type.Void) throw new CompileError("Can't assign void to variable", Source);
-				ResultType = Value.ResultType;
+				
+				if (!String.IsNullOrEmpty(Typename))
+				{
+					var compatibilityResult = Type.AreTypesCompatible(Value.ResultType, ResultType, Scope);
+					if (!compatibilityResult.Compatible)
+						Type.ThrowConversionError(Value.ResultType, ResultType, Source);
+
+					if (compatibilityResult.ConversionRequired)
+						Value = Type.CreateConversionInvokation(Scope, compatibilityResult.ConversionMacro, Value)
+							.Transform(Scope);
+				}
+				else //Infer the type of the variable from the expression assigned to it.
+					ResultType = Value.ResultType;
 			}
+
 			Variable = Scope.NewLocal(Name, ResultType);
+			Variable.DeclaredTypeName = Typename;
+			Variable.DeclaredType = ResultType;
+
 			return this;
 		}
 

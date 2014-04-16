@@ -133,32 +133,32 @@ namespace EtcScriptLib.VirtualMachine
                     #endregion
 
                     #region Lookup
-                    case InstructionSet.LOOKUP:
-                        {
-                            var name = GetOperand(ins.FirstOperand, context).ToString();
-                            Object value = null;
+					//case InstructionSet.LOOKUP:
+					//    {
+					//        var name = GetOperand(ins.FirstOperand, context).ToString();
+					//        Object value = null;
 
-                            if (!context.Frame.QueryProperty(name, out value))
-                            {
-                                Throw(new RuntimeError("Could not resolve name '" + name + "'.", nextInstruction.Value), context);
-                                break;
-                            }
+					//        if (!context.Frame.QueryProperty(name, out value))
+					//        {
+					//            Throw(new RuntimeError("Could not resolve name '" + name + "'.", nextInstruction.Value), context);
+					//            break;
+					//        }
 
-                            SetOperand(ins.SecondOperand, value, context);
-                        }
-                        break;
+					//        SetOperand(ins.SecondOperand, value, context);
+					//    }
+					//    break;
 
-					case InstructionSet.DYN_LOOKUP:
-						{
-							var name = GetOperand(ins.FirstOperand, context).ToString();
-							Object value = null;
-							if (context.Frame.QueryProperty(name, out value))
-								SetOperand(Operand.R, true, context);
-							else
-								SetOperand(Operand.R, false, context);
-							SetOperand(ins.SecondOperand, value, context);
-						}
-						break;
+					//case InstructionSet.DYN_LOOKUP:
+					//    {
+					//        var name = GetOperand(ins.FirstOperand, context).ToString();
+					//        Object value = null;
+					//        if (context.Frame.QueryProperty(name, out value))
+					//            SetOperand(Operand.R, true, context);
+					//        else
+					//            SetOperand(Operand.R, false, context);
+					//        SetOperand(ins.SecondOperand, value, context);
+					//    }
+					//    break;
 					#endregion
 
 					#region LOOKUP_MEMBER
@@ -173,19 +173,7 @@ namespace EtcScriptLib.VirtualMachine
                                 Throw(new RuntimeError("Could not inspect members of NULL.", nextInstruction.Value), context);
                                 break;
                             }
-
-                            if (obj is ScriptObject) //Special handling of script objects.
-                            {
-                                var scriptObject = obj as ScriptObject;
-                                if (!scriptObject.QueryProperty(memberName, out value))
-                                {
-                                    Throw(new RuntimeError("Could not find member " + memberName + " on generic object.", nextInstruction.Value),
-                                        context);
-                                    break;
-                                }
-                            }
-                            else
-                            {
+							                           
                                 var lookupResult = LookupMemberWithReflection(obj, memberName);
                                 if (lookupResult.FoundMember == false)
                                 {
@@ -195,8 +183,7 @@ namespace EtcScriptLib.VirtualMachine
                                 }
                                 else
                                     value = lookupResult.Member;
-                            }
-
+                           
                             SetOperand(ins.ThirdOperand, value, context);
                         }
                         break;
@@ -214,18 +201,6 @@ namespace EtcScriptLib.VirtualMachine
 								break;
 							}
 
-							if (obj is ScriptObject) //Special handling of script objects.
-							{
-								var scriptObject = obj as ScriptObject;
-								if (!scriptObject.QueryProperty(memberName, out value))
-								{
-									SetOperand(ins.ThirdOperand, null, context);
-									SetOperand(Operand.R, false, context);
-									break;
-								}
-							}
-							else
-							{
 								var lookupResult = LookupMemberWithReflection(obj, memberName);
 								if (lookupResult.FoundMember == false)
 								{
@@ -235,8 +210,7 @@ namespace EtcScriptLib.VirtualMachine
 								}
 								else
 									value = lookupResult.Member;
-							}
-
+							
 							SetOperand(Operand.R, true, context);
 							SetOperand(ins.ThirdOperand, value, context);
 						}
@@ -254,13 +228,7 @@ namespace EtcScriptLib.VirtualMachine
                                 break;
                             }
 
-                            if (obj is ScriptObject) //Special handling of script objects.
-                            {
-                                var scriptObject = obj as ScriptObject;
-                                scriptObject.SetProperty(memberName, value);
-                            }
-                            else
-                            {
+                           
                                 var lookupResult = SetMemberWithReflection(obj, memberName, value);
                                 if (lookupResult.FoundMember == false)
                                 {
@@ -268,7 +236,6 @@ namespace EtcScriptLib.VirtualMachine
                                         obj.GetType().Name + ".", nextInstruction.Value), context);
                                     break;
                                 }
-                            }
                         }
                         break;
 
@@ -284,28 +251,19 @@ namespace EtcScriptLib.VirtualMachine
 								break;
 							}
 
-							if (obj is ScriptObject) //Special handling of script objects.
-							{
-								var scriptObject = obj as ScriptObject;
-								scriptObject.SetProperty(memberName, value);
-								SetOperand(Operand.R, true, context);
-							}
-							else
-							{
 								var lookupResult = SetMemberWithReflection(obj, memberName, value);
 								if (lookupResult.FoundMember == false)
 								{
 									SetOperand(Operand.R, false, context); 
 									break;
 								}
-							}
 						}
 						break;
 
-                    case InstructionSet.RECORD:
-                        SetOperand(ins.FirstOperand, new ScriptObject(), context);
-                        break;
-                    #endregion
+					//case InstructionSet.RECORD:
+					//    SetOperand(ins.FirstOperand, new ScriptObject(), context);
+					//    break;
+					#endregion
 
 					#region RSOs
 
@@ -456,14 +414,13 @@ namespace EtcScriptLib.VirtualMachine
 						break;
 
 
-					//case InstructionSet.LAMBDA:
-					//    {
-					//        var arguments = GetOperand(ins.FirstOperand, context) as List<String>;
-					//        var code = GetOperand(ins.SecondOperand, context) as InstructionList;
-					//        var lambda = LambdaFunction.CreateLambda("", code, context.Frame, arguments);
-					//        SetOperand(ins.ThirdOperand, lambda, context);
-					//    }
-					//    break;
+					case InstructionSet.LAMBDA:
+						{
+							var rso = GetOperand(ins.FirstOperand, context) as RuntimeScriptObject;
+							var lambda = LambdaFunction.CreateTrueLambda(context.CurrentInstruction, rso);
+							SetOperand(ins.SecondOperand, lambda, context);
+						}
+						break;
                     
 					case InstructionSet.MARK_STACK:
 						SetOperand(ins.FirstOperand, context.Stack.Count, context);
@@ -477,12 +434,12 @@ namespace EtcScriptLib.VirtualMachine
 						}
 						break;
 
-					case InstructionSet.SET_FRAME:
-						{
-							var frame = GetOperand(ins.FirstOperand, context) as ScriptObject;
-							context.Frame = frame;
-						}
-						break;
+					//case InstructionSet.SET_FRAME:
+					//    {
+					//        var frame = GetOperand(ins.FirstOperand, context) as ScriptObject;
+					//        context.Frame = frame;
+					//    }
+					//    break;
 
                     #endregion
 
@@ -553,13 +510,13 @@ namespace EtcScriptLib.VirtualMachine
                     #endregion
 
                     #region Variables
-                    case InstructionSet.SET_VARIABLE:
-                        {
-                            var v = GetOperand(ins.FirstOperand, context);
-                            var name = GetOperand(ins.SecondOperand, context).ToString();
-                            context.Frame[name] = v;
-                        }
-                        break;
+					//case InstructionSet.SET_VARIABLE:
+					//    {
+					//        var v = GetOperand(ins.FirstOperand, context);
+					//        var name = GetOperand(ins.SecondOperand, context).ToString();
+					//        context.Frame[name] = v;
+					//    }
+					//    break;
 
 					case InstructionSet.LOAD_PARAMETER:
 						{
@@ -669,7 +626,7 @@ namespace EtcScriptLib.VirtualMachine
                             var handler = GetOperand(ins.FirstOperand, context) as InstructionList;
                             var code = GetOperand(ins.SecondOperand, context) as InstructionList;
                             SetOperand(Operand.PUSH, returnPoint, context); //Push the return point
-                            var catchContext = new ErrorHandler(new CodeContext(handler, 0), context.Frame);
+							var catchContext = new ErrorHandler(new CodeContext(handler, 0));
                             SetOperand(Operand.PUSH, catchContext, context);
                             context.CurrentInstruction = new CodeContext(code, 0);
                         }
@@ -798,8 +755,8 @@ namespace EtcScriptLib.VirtualMachine
                 {
                     var handler = (topOfStack as ErrorHandler?).Value;
                     context.CurrentInstruction = handler.HandlerCode;
-					context.Frame = handler.ParentScope;
-					context.Frame["error"] = errorObject;
+					//context.Frame = handler.ParentScope;
+					//context.Frame["error"] = errorObject;
 					break;
                 }
             }

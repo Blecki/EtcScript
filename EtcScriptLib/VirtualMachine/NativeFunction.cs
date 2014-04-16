@@ -59,6 +59,7 @@ namespace EtcScriptLib.VirtualMachine
 
 			var result = NativeImplementation.Invoke(context, arguments);
 			VirtualMachine.SetOperand(Operand.R, result, context);
+			VirtualMachine.GetOperand(Operand.POP, context); //The VM pushed the return point onto the stack. Clean it off.
 		}
     }
 }

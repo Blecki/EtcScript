@@ -11,6 +11,11 @@ namespace EtcScriptLib.Ast
 		public Node List;
 		public Node Body;
 
+		Variable TotalVariable;
+		Variable CounterVariable;
+		Variable ListVariable;
+		Variable ValueVariable;
+
 		public ForeachIn(Token Source, String VariableName, Node List, Node Body) : base(Source) 
 		{
 			this.VariableName = VariableName;
@@ -22,45 +27,40 @@ namespace EtcScriptLib.Ast
 		{
 			ResultType = Type.Void;
 			List = List.Transform(Scope);
-			Body = Body.Transform(Scope);
+			var nestedScope = Scope.Push(ScopeType.Block);
+			ListVariable = nestedScope.NewLocal("__list@" + VariableName, Scope.FindType("LIST"));
+			TotalVariable = nestedScope.NewLocal("__total@" + VariableName, Scope.FindType("NUMBER"));
+			CounterVariable = nestedScope.NewLocal("__counter@" + VariableName, Scope.FindType("number"));
+			ValueVariable = nestedScope.NewLocal(VariableName, Scope.FindType("number"));
+			Body = Body.Transform(nestedScope);
 			return this;
 		}
 
 		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
 		{
-			List.Emit(into, OperationDestination.R);
-			into.AddInstructions(
-				"SET_VARIABLE R STRING", into.AddString("__source@" + VariableName),
-				"SET_VARIABLE NEXT STRING", 0, into.AddString("__counter@" + VariableName),
-				"LENGTH R R",
-				"SET_VARIABLE R STRING", into.AddString("__total@" + VariableName));
-
+			List.Emit(into, OperationDestination.Stack);
+			into.AddInstructions("LENGTH PEEK PUSH", "MOVE NEXT PUSH", 0);
 			var LoopStart = into.Count;
 
 			into.AddInstructions(
-				"LOOKUP STRING R", into.AddString("__total@" + VariableName),
-				"LOOKUP STRING PUSH", into.AddString("__counter@" + VariableName),
-				"GREATER_EQUAL POP R R",
+				"LOAD_PARAMETER NEXT R", TotalVariable.Offset,
+				"GREATER_EQUAL PEEK R R",
 				"IF_TRUE R",
 				"JUMP NEXT", 0);
 
 			var BreakPoint = into.Count - 1;
 
-			into.AddInstructions(
-				"LOOKUP STRING R", into.AddString("__counter@" + VariableName),
-				"LOOKUP STRING PUSH", into.AddString("__source@" + VariableName),
-				"INDEX R POP PUSH",
-				"SET_VARIABLE POP NEXT", VariableName);
-
+			into.AddInstructions("LOAD_PARAMETER NEXT R", ListVariable.Offset, "INDEX PEEK R PUSH");
 			Body.Emit(into, OperationDestination.Discard);
 
 			into.AddInstructions(
-				"LOOKUP STRING R", into.AddString("__counter@" + VariableName),
-				"INCREMENT R R",
-				"SET_VARIABLE R STRING", into.AddString("__counter@" + VariableName),
+				"MOVE POP",
+				"INCREMENT PEEK PEEK",
 				"JUMP NEXT", LoopStart);
 
 			into[BreakPoint] = into.Count;
+
+			into.AddInstructions("CLEANUP NEXT", 3);
 		}
 
 		public override void Debug(int depth)

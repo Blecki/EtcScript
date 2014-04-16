@@ -12,12 +12,70 @@ namespace EtcScriptLib
 		Primitive
 	}
 
+	public struct TypeCompatibilityResult
+	{
+		public bool Compatible;
+		public bool ConversionRequired;
+		public Declaration ConversionMacro;
+
+		public static TypeCompatibilityResult NoConversionRequired = new TypeCompatibilityResult
+		{
+			Compatible = true,
+			ConversionRequired = false
+		};
+
+		public static TypeCompatibilityResult Incompatible = new TypeCompatibilityResult
+		{
+			Compatible = false
+		};
+	}
+
 	public class Type
 	{
-		public static bool AreTypesCompatible(Type Source, Type Destination)
+		public static TypeCompatibilityResult AreTypesCompatible(Type Source, Type Destination, ParseScope Scope)
 		{
-			if (Object.ReferenceEquals(Destination, Generic)) return true;
-			return Object.ReferenceEquals(Source, Destination);
+			if (Object.ReferenceEquals(Destination, Generic)) return TypeCompatibilityResult.NoConversionRequired;
+			if (Object.ReferenceEquals(Source, Destination)) return TypeCompatibilityResult.NoConversionRequired;
+
+			var conversionArguments = new List<Ast.Node>();
+			conversionArguments.Add(new Ast.Identifier(new Token { Type = TokenType.Identifier, Value = "convert" }));
+			conversionArguments.Add(new Ast.Identifier(new Token()) { ResultType = Source });
+			conversionArguments.Add(new Ast.Identifier(new Token { Type = TokenType.Identifier, Value = "to" }));
+			conversionArguments.Add(new Ast.Identifier(new Token { Type = TokenType.Identifier, Value = Destination.Name }));
+
+			var possibleConversions = Scope.FindAllPossibleMacroMatches(conversionArguments);
+			Declaration matchingConversion = null;
+			foreach (var possibleConversion in possibleConversions)
+				if (Object.ReferenceEquals(Source, possibleConversion.Terms[1].DeclaredType))
+				{
+					matchingConversion = possibleConversion;
+					break;
+				}
+
+			if (matchingConversion != null)
+			{
+				if (!Object.ReferenceEquals(matchingConversion.ReturnType, Destination))
+					throw new CompileError("Conversion function does not return the correct type.",
+						matchingConversion.Body.Body.Source);
+
+				return new TypeCompatibilityResult
+				{
+					Compatible = true,
+					ConversionRequired = true,
+					ConversionMacro = matchingConversion
+				};
+			}
+
+			return TypeCompatibilityResult.Incompatible;
+		}
+
+		public static Ast.Node CreateConversionInvokation(
+			ParseScope Scope,
+			Declaration ConversionMacro,
+			Ast.Node Value)
+		{
+			return Ast.StaticInvokation.CreateCorrectInvokationNode(Value.Source, Scope, ConversionMacro,
+						new List<Ast.Node>(new Ast.Node[] { Value }));
 		}
 
 		private static Type _void = new Type { Name = "VOID", Origin = TypeOrigin.Primitive };
@@ -48,5 +106,29 @@ namespace EtcScriptLib
 		}
 
 		internal int Size { get { return Members.Count; } }
+
+		internal static void ThrowConversionError(Type SourceType, Type DestinationType, Token Source)
+		{
+			if (SourceType == null) throw new InvalidOperationException("Conversion Error : SourceType is null");
+			if (DestinationType == null) throw new InvalidOperationException("Conversion Error : DestinationType is null");
+			throw new CompileError("Incompatible types: Unable to convert from " + SourceType.Name + " to " +
+				DestinationType.Name + ".", Source);
+		}
+
+		public void ResolveTypes(ParseScope ActiveScope)
+		{
+			if (Origin == TypeOrigin.Script)
+				foreach (var member in Members)
+				{
+					if (String.IsNullOrEmpty(member.DeclaredTypeName))
+						member.DeclaredType = Type.Generic;
+					else
+					{
+						member.DeclaredType = ActiveScope.FindType(member.DeclaredTypeName);
+						if (member.DeclaredType == null) throw new CompileError("Could not find type '" +
+							member.DeclaredTypeName + "'.");
+					}
+				}
+		}
 	}
 }

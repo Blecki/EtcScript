@@ -67,7 +67,7 @@ namespace EtcScriptLib.Ast
 			}
 			else
 			{
-				Instructions.AddInstructions("MOVE NEXT R", Block.GetInvokable(Rule.Terms), "STACK_INVOKE R");
+				Instructions.AddInstructions("MOVE NEXT R", Block.GetBasicInvokable(Rule.ActualParameterCount), "STACK_INVOKE R");
 			}
 		}
 
@@ -88,8 +88,14 @@ namespace EtcScriptLib.Ast
 			foreach (var term in Rulebook.DeclarationTerms)
 				if (term.Type == DeclarationTermType.Term)
 				{
-					if (!Type.AreTypesCompatible(Arguments[argumentIndex].ResultType, term.DeclaredType))
-						throw new CompileError("Types are not compatible", Source);
+					var compatibilityResult = Type.AreTypesCompatible(Arguments[argumentIndex].ResultType, term.DeclaredType, Scope);
+					if (!compatibilityResult.Compatible)
+						Type.ThrowConversionError(Arguments[argumentIndex].ResultType, term.DeclaredType, Source);
+
+					if (compatibilityResult.ConversionRequired)
+						Arguments[argumentIndex] = Type.CreateConversionInvokation(Scope, compatibilityResult.ConversionMacro,
+							Arguments[argumentIndex]).Transform(Scope);
+
 					argumentIndex += 1;
 				}
 

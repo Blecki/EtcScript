@@ -17,12 +17,12 @@ rule foo (a) (b) bar {
 	return 6;
 }
 
-test _ {
+test _ : number {
 	return 6;	
 }
 ";
 
-			var result = TestHelper.CallEnvironmentFunction(script, "test");
+			var result = TestHelper.CallTestFunction(script);
 			Assert.AreEqual(6, result);
 		}
 
@@ -39,7 +39,7 @@ test _ {
 }
 ";
 
-			var result = TestHelper.CallEnvironmentFunction(script, "test");
+			var result = TestHelper.CallTestFunction(script);
 		}
 
 		[Test]
@@ -59,7 +59,7 @@ test _ {
 }
 ";
 
-			var result = TestHelper.CallEnvironmentFunction(script, "test");
+			var result = TestHelper.CallTestFunction(script);
 
 		}
 	}

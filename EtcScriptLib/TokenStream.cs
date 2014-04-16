@@ -5,11 +5,18 @@ using System.Text;
 
 namespace EtcScriptLib
 {
+	public enum TokenStreamState
+	{
+		Normal,
+		ComplexString
+	}
+
 	public class TokenStream : Iterator<Token>
 	{
 		private Iterator<int> source;
 		private CodeLocation location;
 		private Token? next_token;
+		private Stack<TokenStreamState> StateStack = new Stack<TokenStreamState>();
 
 		private ParseContext operators;
 		private String delimeters = "()[]{} \t\r\n.;:?";
@@ -53,7 +60,18 @@ namespace EtcScriptLib
 		{
 			this.source = Source;
 			this.operators = operators;
+			StateStack.Push(TokenStreamState.Normal);
 			next_token = ParseNextToken();
+		}
+
+		public void PushState(TokenStreamState State)
+		{
+			StateStack.Push(State);
+		}
+
+		public void PopState()
+		{
+			StateStack.Pop();
 		}
 
 		private String ParseNumber()
@@ -80,98 +98,124 @@ namespace EtcScriptLib
 		private Token? ParseNextToken()
 		{
 			var c = source.Next();
-			while ((c == ' ' || c == '\r' || c == '\n' || c == '\t' || c == '#') && !source.AtEnd())
+
+			var currentState = StateStack.Peek();
+
+			if (currentState == TokenStreamState.Normal)
 			{
-				if (c == '#') while (!source.AtEnd() && source.Next() != '\n') advance_source();
-				advance_source();
-				if (!source.AtEnd()) c = source.Next();
-			}
-
-			
-
-			if (source.AtEnd()) return null;
-			else c = source.Next();
-
-			var tokenStart = location;
-
-			//if (c == '\n') { advance_source(); return Token.Create(TokenType.NewLine, "\\n", tokenStart); }
-			//if (c == '\t') { advance_source(); return Token.Create(TokenType.Tab, "\\t", tokenStart); }
-			if (c == '(') { advance_source(); return Token.Create(TokenType.OpenParen, "(", tokenStart); }
-			if (c == ')') { advance_source(); return Token.Create(TokenType.CloseParen, ")", tokenStart); }
-			if (c == '[') { advance_source(); return Token.Create(TokenType.OpenBracket, "[", tokenStart); }
-			if (c == ']') { advance_source(); return Token.Create(TokenType.CloseBracket, "]", tokenStart); }
-			if (c == '{') { advance_source(); return Token.Create(TokenType.OpenBrace, "{", tokenStart); }
-			if (c == '}') { advance_source(); return Token.Create(TokenType.CloseBrace, "}", tokenStart); }
-			if (c == '.') { advance_source(); return Token.Create(TokenType.Dot, ".", tokenStart); }
-			if (c == ';') { advance_source(); return Token.Create(TokenType.Semicolon, ";", tokenStart); }
-			if (c == '?') { advance_source(); return Token.Create(TokenType.QuestionMark, "?", tokenStart); }
-			if (c == ':') { advance_source(); return Token.Create(TokenType.Colon, ":", tokenStart); }
-			if (c == '@') { advance_source(); return Token.Create(TokenType.At, "@", tokenStart); }
-			if (c == '\"')
-			{
-				var literal = "";
-				advance_source();
-				c = source.Next();
-				while (c != '\"' && !source.AtEnd())
+				#region Normal mode tokenizing
+				while ((c == ' ' || c == '\r' || c == '\n' || c == '\t' || c == '#') && !source.AtEnd())
 				{
-					literal += (char)c;
-					advance_source();
-					c = source.Next();
-				}
-				advance_source();
-				return Token.Create(TokenType.String, literal, tokenStart);
-			}
-
-			if (isValidIdentifierStart(c))
-			{
-
-				var identifier = "";
-				while (!isDelimeter(c) && !source.AtEnd())
-				{
-					identifier += (char)c;
+					if (c == '#') while (!source.AtEnd() && source.Next() != '\n') advance_source();
 					advance_source();
 					if (!source.AtEnd()) c = source.Next();
 				}
-				return Token.Create(TokenType.Identifier, identifier, tokenStart);
-			}
 
-			var parsedMinus = false;
-			if (c == '-')
-			{
-				parsedMinus = true;
-				advance_source();
-				var number = ParseNumber();
-				if (number.Length != 0) return Token.Create(TokenType.Number, "-" + number, tokenStart);
-			}
-			else if (isDigit(c))
-				return Token.Create(TokenType.Number, ParseNumber(), tokenStart);
+				if (source.AtEnd()) return null;
+				else c = source.Next();
 
-			var opSoFar = new String((char)c, 1);
-			while (true)
-			{
-				if (parsedMinus) parsedMinus = false; //If we read a -, but not a number token, source is already pointing at
-				else advance_source();					//the next character
+				var tokenStart = location;
 
-				var tempOp = opSoFar + (source.AtEnd() ? "" : new String((char)source.Next(), 1));
-
-				var possibleMatches = operators.operatorStrings.Count((s) => { return s.StartsWith(tempOp); });
-
-				if (possibleMatches == 0)
+				//if (c == '\n') { advance_source(); return Token.Create(TokenType.NewLine, "\\n", tokenStart); }
+				//if (c == '\t') { advance_source(); return Token.Create(TokenType.Tab, "\\t", tokenStart); }
+				if (c == '(') { advance_source(); return Token.Create(TokenType.OpenParen, "(", tokenStart); }
+				if (c == ')') { advance_source(); return Token.Create(TokenType.CloseParen, ")", tokenStart); }
+				if (c == '[') { advance_source(); return Token.Create(TokenType.OpenBracket, "[", tokenStart); }
+				if (c == ']') { advance_source(); return Token.Create(TokenType.CloseBracket, "]", tokenStart); }
+				if (c == '{') { advance_source(); return Token.Create(TokenType.OpenBrace, "{", tokenStart); }
+				if (c == '}') { advance_source(); return Token.Create(TokenType.CloseBrace, "}", tokenStart); }
+				if (c == '.') { advance_source(); return Token.Create(TokenType.Dot, ".", tokenStart); }
+				if (c == ';') { advance_source(); return Token.Create(TokenType.Semicolon, ";", tokenStart); }
+				if (c == '?') { advance_source(); return Token.Create(TokenType.QuestionMark, "?", tokenStart); }
+				if (c == ':') { advance_source(); return Token.Create(TokenType.Colon, ":", tokenStart); }
+				if (c == '@') { advance_source(); return Token.Create(TokenType.At, "@", tokenStart); }
+				if (c == '\"')
 				{
-					return Token.Create(TokenType.Operator, opSoFar, tokenStart);
-				}
-				else if (possibleMatches == 1)
-				{
-					var exactMatches = operators.operatorStrings.Count((s) => { return s == tempOp; });
-					if (exactMatches == 1)
+					var literal = "";
+					advance_source();
+					c = source.Next();
+					while (c != '\"' && !source.AtEnd())
 					{
+						literal += (char)c;
 						advance_source();
-						return Token.Create(TokenType.Operator, tempOp, tokenStart);
+						c = source.Next();
 					}
+					advance_source();
+					return Token.Create(TokenType.String, literal, tokenStart);
 				}
 
-				opSoFar = tempOp;
+				if (isValidIdentifierStart(c))
+				{
+
+					var identifier = "";
+					while (!isDelimeter(c) && !source.AtEnd())
+					{
+						identifier += (char)c;
+						advance_source();
+						if (!source.AtEnd()) c = source.Next();
+					}
+					return Token.Create(TokenType.Identifier, identifier, tokenStart);
+				}
+
+				var parsedMinus = false;
+				if (c == '-')
+				{
+					parsedMinus = true;
+					advance_source();
+					var number = ParseNumber();
+					if (number.Length != 0) return Token.Create(TokenType.Number, "-" + number, tokenStart);
+				}
+				else if (isDigit(c))
+					return Token.Create(TokenType.Number, ParseNumber(), tokenStart);
+
+				var opSoFar = new String((char)c, 1);
+				while (true)
+				{
+					if (parsedMinus) parsedMinus = false; //If we read a -, but not a number token, source is already pointing at
+					else advance_source();					//the next character
+
+					var tempOp = opSoFar + (source.AtEnd() ? "" : new String((char)source.Next(), 1));
+
+					var possibleMatches = operators.operatorStrings.Count((s) => { return s.StartsWith(tempOp); });
+
+					if (possibleMatches == 0)
+					{
+						return Token.Create(TokenType.Operator, opSoFar, tokenStart);
+					}
+					else if (possibleMatches == 1)
+					{
+						var exactMatches = operators.operatorStrings.Count((s) => { return s == tempOp; });
+						if (exactMatches == 1)
+						{
+							advance_source();
+							return Token.Create(TokenType.Operator, tempOp, tokenStart);
+						}
+					}
+
+					opSoFar = tempOp;
+				}
+				#endregion
 			}
+			else if (currentState == TokenStreamState.ComplexString)
+			{
+				//Despite being 'complex', ComplexString is far simpler to tokenize. It's any sequence of characters except
+				//	" or (.
+				var tokenStart = location;
+
+				if (c == '[') { advance_source(); return Token.Create(TokenType.OpenBracket, "[", tokenStart); }
+				if (c == '"') { advance_source(); return Token.Create(TokenType.ComplexStringQuote, "\"", tokenStart); }
+				
+				var text = "";
+				while (c != '"' && c != '[' && !source.AtEnd())
+				{
+					text += (char)c;
+					advance_source();
+					if (!source.AtEnd()) c = source.Next();
+				}
+				return Token.Create(TokenType.ComplexStringPart, text, tokenStart);
+			}
+			else
+				throw new InvalidProgramException();
 		}
 
 		public Token Next()

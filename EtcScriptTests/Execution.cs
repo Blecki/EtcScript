@@ -25,7 +25,7 @@ namespace EtcScriptTests
 		[Test]
 		public void return_value()
 		{
-			TestHelper.RunSimpleTest(@"test foo
+			TestHelper.RunSimpleTest(@"test foo:number
 	{return 4 + 5;}", 9);
 		}
 
@@ -33,8 +33,8 @@ namespace EtcScriptTests
 		public void _if()
 		{
 			Assert.AreEqual(5,
-				TestHelper.RunSimpleTest(@"test foo
-	{let x = 4;
+				TestHelper.RunSimpleTest(@"test foo:number
+	{var x = 4;
 	if (x == 4)
 {
 		return 5;}
@@ -48,8 +48,8 @@ namespace EtcScriptTests
 		{
 			Assert.AreEqual(9,
 				TestHelper.RunSimpleTest(@"
-test foo {
-	let x = 7;
+test foo:number {
+	var x = 7;
 	if (x == 4) {
 		return 5;
 	} else if (x == 7) {
@@ -66,18 +66,27 @@ test foo {
 		{
 			Assert.AreEqual(9,
 				TestHelper.RunSimpleTest(@"
-test _ {
+test _:number {
 	var x = 3;
 	return x * x;
 }"));
 
 			Assert.AreEqual(4,
 				TestHelper.RunSimpleTest(@"
-test _ {
+test _:number {
 	var x = 3;
 	let x = 2;
 	return x * x;
 }"));
+		}
+
+		[Test]
+		public void system_variable()
+		{
+			var r = TestHelper.CallTestFunction("test _:number { return foo; }",
+				(e) => { e.AddSystemVariable("foo", "NUMBER", (c) => { return 42; }); });
+
+			Assert.AreEqual(42, r);
 		}
     }
 

@@ -42,6 +42,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compilation.cs" />
+    <Compile Include="ComplexString.cs" />
+    <Compile Include="Lambda.cs" />
     <Compile Include="Types.cs" />
     <Compile Include="Rules.cs" />
     <Compile Include="Scope.cs" />
@@ -50,7 +52,7 @@
     <Compile Include="Euler001.cs" />
     <Compile Include="Math.cs" />
     <Compile Include="ErrorReport.cs" />
-    <Compile Include="foreach.cs" />
+    <Compile Include="Foreach.cs" />
     <Compile Include="Execution.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestHelper.cs" />

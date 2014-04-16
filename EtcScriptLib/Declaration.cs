@@ -5,25 +5,54 @@ using System.Text;
 
 namespace EtcScriptLib
 {
+	public enum DeclarationType
+	{
+		Macro,
+		Lambda,
+		Test,
+		Rule,
+		System
+	}
+
 	public class Declaration
 	{
-		public String UsageSpecifier;
+		public DeclarationType Type;
 		public List<DeclarationTerm> Terms;
 		public LambdaBlock Body;
 		public WhenClause WhenClause;
 		internal ParseScope DeclarationScope;
 		internal int OwnerContextID = 0;
-		public Type ReturnType = Type.Void;
+		public Type ReturnType = EtcScriptLib.Type.Void;
 		public String ReturnTypeName;
+		public Object Tag;
+
+		private List<Tuple<String, String>> HiddenArguments;
+
+		public void AddHiddenArgument(String Name, String Type)
+		{
+			if (HiddenArguments == null) HiddenArguments = new List<Tuple<string, string>>();
+			HiddenArguments.Add(new Tuple<string, string>(Name, Type));
+		}
+
+		public int ActualParameterCount
+		{
+			get
+			{
+				var termCount = Terms.Count(t => t.Type == DeclarationTermType.Term);
+				if (HiddenArguments != null) termCount += HiddenArguments.Count;
+				if (Type == DeclarationType.Lambda) return termCount + 1;
+				else return termCount;
+			}
+		}
 
 		public VirtualMachine.InvokeableFunction MakeInvokableFunction()
 		{
-			return Body.GetInvokable(Terms);
+			return Body.GetBasicInvokable(ActualParameterCount);
 		}
 
 		public VirtualMachine.InvokeableFunction MakeWhenInvokable()
 		{
-			return WhenClause.GetInvokable(Terms);
+			return WhenClause.GetBasicInvokable(ActualParameterCount);
 		}
 
 		public static Declaration Parse(String Header)
@@ -89,10 +118,10 @@ namespace EtcScriptLib
 						if (currentTerm.Type == DeclarationTermType.Term) r.Add(Nodes[nodeIndex]);
 						nodeIndex += 1;
 					}
-					else
-						if (currentTerm.Type == DeclarationTermType.Term) r.Add(new Ast.Literal(new Token(), null));
+					else if (currentTerm.Type == DeclarationTermType.Term) 
+						r.Add(new Ast.Literal(new Token(), null, currentTerm.DeclaredTypeName));
 				}
-				else if (currentTerm.RepetitionType == DeclarationTermRepetitionType.NoneOrMany ||
+				/*else if (currentTerm.RepetitionType == DeclarationTermRepetitionType.NoneOrMany ||
 					currentTerm.RepetitionType == DeclarationTermRepetitionType.OneOrMany)
 				{
 					var localList = new List<Ast.Node>();
@@ -104,7 +133,7 @@ namespace EtcScriptLib
 						match = (nodeIndex < Nodes.Count) ? DeclarationTerm.Matches(currentTerm, Nodes[nodeIndex]) : false;
 					}
 					if (currentTerm.Type == DeclarationTermType.Term) r.Add(new Ast.AssembleList(new Token(), localList));
-				}
+				}*/
 			}
 
 			return new Ast.AssembleList(new Token(), r);
@@ -133,7 +162,7 @@ namespace EtcScriptLib
 					termIndex += 1;
 					if (match) nodeIndex += 1;
 				}
-				else if (currentTerm.RepetitionType == DeclarationTermRepetitionType.NoneOrMany)
+				/*else if (currentTerm.RepetitionType == DeclarationTermRepetitionType.NoneOrMany)
 				{
 					termIndex += 1;
 					while (match)
@@ -152,11 +181,101 @@ namespace EtcScriptLib
 						match = (nodeIndex < Nodes.Count) ? DeclarationTerm.Matches(currentTerm, Nodes[nodeIndex]) : false;
 					}
 				}
+				 * */
 			}
 
 			if (nodeIndex < Nodes.Count) return false;
 			return true;
 		}
 
+		public void ResolveTypes(ParseScope Scope)
+		{
+			DeclarationScope = Scope.Push(ScopeType.Function);
+			DeclarationScope.Owner = this;
+
+			if (!String.IsNullOrEmpty(ReturnTypeName))
+			{
+				ReturnType = Scope.FindType(ReturnTypeName);
+				if (ReturnType == null) throw new CompileError("Could not find type '" +
+					ReturnTypeName + "'.", Body.Body.Source);
+			}
+			else
+				ReturnType = EtcScriptLib.Type.Void;
+
+			CreateParameterDescriptors();
+		}
+
+		// Given a list of terms, create the variable objects to represent the parameters of the declaration
+		private void CreateParameterDescriptors()
+		{
+			int parameterIndex = -3;
+			if (HiddenArguments != null)
+			{
+				for (int i = HiddenArguments.Count - 1; i >= 0; --i)
+				{
+					if (Type != DeclarationType.System)
+					{
+						var hiddenArgument = new Variable();
+						hiddenArgument.StorageMethod = VariableStorageMethod.Local;
+						hiddenArgument.Name = HiddenArguments[i].Item1;
+						hiddenArgument.DeclaredTypeName = HiddenArguments[i].Item2;
+						hiddenArgument.DeclaredType = DeclarationScope.FindType(hiddenArgument.DeclaredTypeName);
+						if (hiddenArgument.DeclaredType == null) throw new CompileError("Could not find type for hidden argument '"
+							+ hiddenArgument.DeclaredTypeName + "'.");
+						hiddenArgument.Offset = parameterIndex;
+						DeclarationScope.Variables.Add(hiddenArgument);
+					}
+
+					--parameterIndex;
+				}
+			}
+
+			for (int i = Terms.Count - 1; i >= 0; --i)
+			{
+				if (Terms[i].Type == DeclarationTermType.Term)
+				{
+					var declaredType = String.IsNullOrEmpty(Terms[i].DeclaredTypeName) ?
+						EtcScriptLib.Type.Generic : DeclarationScope.FindType(Terms[i].DeclaredTypeName);
+					if (declaredType == null) throw new CompileError("Could not find type '" + Terms[i].DeclaredTypeName + "'.");
+					Terms[i].DeclaredType = declaredType;
+
+					if (Type != DeclarationType.System)
+					{
+						var variable = new Variable
+						{
+							Name = Terms[i].Name,
+							Offset = parameterIndex,
+							DeclaredType = declaredType
+						};
+						DeclarationScope.Variables.Add(variable);
+					}
+
+					--parameterIndex;
+				}
+			}
+		}
+
+		public void Transform(int OwnerContextID)
+		{
+			this.OwnerContextID = OwnerContextID;
+			Body.Transform(DeclarationScope);
+			if (WhenClause != null) WhenClause.Transform(DeclarationScope);
+		}
+
+		public void Emit(VirtualMachine.InstructionList Into)
+		{
+			Body.EmitInstructions(DeclarationScope, Into);
+			if (WhenClause != null) WhenClause.EmitInstructions(DeclarationScope, Into);
+			foreach (var lambdaBody in DeclarationScope.ChildLambdas)
+				lambdaBody.Emit(Into);
+		}
+
+		public void ResolveCallPoints()
+		{
+			Body.ResolveCallPoints();
+			if (WhenClause != null) WhenClause.ResolveCallPoints();
+			foreach (var lambdaBody in DeclarationScope.ChildLambdas)
+				lambdaBody.ResolveCallPoints();
+		}
 	}
 }

@@ -26,8 +26,14 @@ namespace EtcScriptLib.Ast
 			foreach (var term in Function.Terms)
 				if (term.Type == DeclarationTermType.Term)
 				{
-					if (!Type.AreTypesCompatible(Arguments[argumentIndex].ResultType, term.DeclaredType))
-						throw new CompileError("Types are not compatible", Source);
+					var compatibilityResult = Type.AreTypesCompatible(Arguments[argumentIndex].ResultType, term.DeclaredType, Scope);
+					if (!compatibilityResult.Compatible)
+						Type.ThrowConversionError(Arguments[argumentIndex].ResultType, term.DeclaredType, Source);
+
+					if (compatibilityResult.ConversionRequired)
+						Arguments[argumentIndex] = Type.CreateConversionInvokation(Scope, compatibilityResult.ConversionMacro,
+							Arguments[argumentIndex]).Transform(Scope);
+
 					argumentIndex += 1;
 				}
 

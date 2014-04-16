@@ -2,13 +2,13 @@
 EtcScript Grammar
 
 Script				:= (MacroDeclaration | RuleDeclaration | TypeDeclaration)*
-MacroDeclaration	:= "macro" + DeclarationHeader + Block + (: + Identifier)?
+MacroDeclaration	:= "macro" + DeclarationHeader + (: + Identifier)? + Block
 DeclarationHeader	:= (DeclarationTerm)*
 RuleDeclaration		:= "rule" + DeclarationHeader + WhenClause? + Block
 WhenClause			:= "when" + Expression
-DeclarationTerm		:= Identifier | String | ( "(" + Identifier + (: + Identifier)? + ")" + RepetitionMarker? )
+Lambda				:= "lambda" + DeclarationHeader + (: + Identifier)? + Block
+DeclarationTerm		:= (Identifier + "?"?) | (String + "?"?) | ( "(" + Identifier + (: + Identifier)? + ")" )
 Identifier			:= [a-z, A-Z, any non-operator symbol][any non-delimeter symbol]*
-RepetitionMarker	:= "?" | "*" | "+"
 Block				:= { + Statement+ + }
 Statement			:= Let | If | Invokation + ; | DynamicInvokation + ; | BracketInvokation + ; | Control | LocalDeclaration
 Let					:= "let" + (Identifier | MemberAccess) + "=" + Expression + ;
@@ -16,18 +16,19 @@ If					:= "if" + Expression + Block
 MemberAccess		:= Term + (StaticMember | DynamicMember)
 StaticMember		:= "." + Identifier
 DynamicMember		:= "?" + Identifier + ":" + Term
-Expression			:= Term | BinaryOperation | New
+Expression			:= Term | BinaryOperation | New | Lambda
 Term				:= Parenthetical | Identifier | Number | BasicString | ComplexString 
-						| MemberAccess | BracketInvokation | DynamicInvokation
+						| MemberAccess | BracketInvokation | DynamicInvokation | Cast
 Parenthetical		:= "(" + Expression + ")"
+Cast				:= Parenthetical + : + Identifier	//Tell static type checking to go fuck itself.
 BinaryOperation		:= Term + Operator + Term
 Invokation			:= Term+
 BracketInvokation	:= "[" + Invokation + "]"
 DynamicInvokation	:= ":" + BracketInvokation
 Control				:= Invokation + (Block | ;)
 Operator			:= Any of operators specified in operator table
-BasicString			:= Ordinary quote-delimited string
-ComplexString		:= \" + ( Text | EmbeddedExpression )* + \"
+BasicString			:= Ordinary quote-delimited string				//This is a 'future' feature and will require lambda capture 
+ComplexString		:= @ + \" + ( Text | EmbeddedExpression )* + \"		//to implement
 Text				:= Any sequence of characters except [ or ", matched greedily.
 EmbeddedExpression	:= [ + Expression + ]
 LocalDeclaration	:= "var" + Identifier + (: + Identifier)? + ("=" + Expression)? + ;
@@ -62,3 +63,19 @@ foreach (x) in (list)
 foreach (x) from (min) to (max)
 while (x)
 
+Conversion Macros
+
+A macro with the signature "convert (x:A) to B : B" will be invoked to automatically convert 
+	an object of type A to B where appropriate.
+
+An example:
+macro convert (cstr:complexstring) to string : string {
+	return (:[cstr]):string;
+}
+
+
+Member Access Macros
+
+A macro with the signature 'get (x) from (y:A)' will be invoked to automatically query members. Without it, 
+	the default mechanism is used. This does not serve much purpose when defined in script, but the 
+	enclosing system can use it to implement member access in a generic way.

@@ -13,16 +13,16 @@ namespace EtcScriptTests
 		public void macros_callable()
 		{
 			var script = @"
-macro foo (a) (b) bar {
+macro foo (a) (b) bar : generic {
 	return 6;
 }
 
-test _ {
+test _ : generic {
 	return [foo 1 2 bar];
 }
 ";
 
-			var result = TestHelper.CallEnvironmentFunction(script, "test");
+			var result = TestHelper.CallTestFunction(script);
 			Assert.AreEqual(6, result);
 
 		}
@@ -31,22 +31,45 @@ test _ {
 		public void correct_macro_chosen()
 		{
 			var script = @"
-macro foo (a) (b) bar {
+macro foo (a) (b) bar : generic {
 	return a;
 }
 
-macro foo (a) bar (b) {
+macro foo (a) bar (b) : generic {
 	return b;
 }
 
-test _ {
+test _ : generic {
 	return [FOO 1 BAR 2];
 }
 
 ";
 
-			var result = TestHelper.CallEnvironmentFunction(script, "test");
+			var result = TestHelper.CallTestFunction(script);
 			Assert.AreEqual(2, result);
+
+		}
+
+		[Test]
+		public void types_affect_macro_choice()
+		{
+			var script = @"
+macro foo (a:number) : generic {
+	return 2;
+}
+
+macro foo (a:string) : generic {
+	return 4;
+}
+
+test _ : generic {
+	return [FOO ""string!""];
+}
+
+";
+
+			var result = TestHelper.CallTestFunction(script);
+			Assert.AreEqual(4, result);
 
 		}
 
@@ -54,19 +77,19 @@ test _ {
 		public void macros_call_self()
 		{
 			var script = @"
-macro fib (a) {
+macro fib (a:number) : number {
 	if (a < 2) {
 		return a;
 	}
-	return [fib (a - 1)] + [fib (a - 2)];
+	return ([fib (a - 1)] + [fib (a - 2)]):number;
 }
 
-test _ {
+test _ : number {
 	return [fib 6];
 }
 ";
 
-			var result = TestHelper.CallEnvironmentFunction(script, "test");
+			var result = TestHelper.CallTestFunction(script);
 			Assert.AreEqual(8, result);
 
 		}      

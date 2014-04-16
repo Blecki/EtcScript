@@ -19,20 +19,17 @@ namespace EtcScriptLib.Ast
 		{
 			if (Name.Type == TokenType.Identifier)
 			{
-				if (Name.Value.ToUpper() == "TRUE") return new Literal(Source, true);
-				else if (Name.Value.ToUpper() == "FALSE") return new Literal(Source, false);
+				if (Name.Value.ToUpper() == "TRUE") return new Literal(Source, true, "BOOLEAN");
+				else if (Name.Value.ToUpper() == "FALSE") return new Literal(Source, false, "BOOLEAN");
 				else MatchedVariable = Scope.FindVariable(Name.Value);
-
-				if (MatchedVariable != null) ResultType = MatchedVariable.DeclaredType;
-				else ResultType = Type.Generic;
+				if (MatchedVariable == null) throw new CompileError("Could not find variable named '" + Name.Value + "'.", Source);
+				ResultType = MatchedVariable.DeclaredType;
 			}
 			else if (Name.Type == TokenType.String)
-			{
-				ResultType = Scope.FindType("string");
-			}
+				return new StringLiteral(Source, Name.Value).Transform(Scope);
 			else if (Name.Type == TokenType.Number)
 			{
-				ResultType = Scope.FindType("number");
+				ResultType = Scope.FindType("NUMBER");
 			}
 
 			return this;
@@ -42,13 +39,27 @@ namespace EtcScriptLib.Ast
 		{
 			if (Name.Type == TokenType.Identifier)
 			{
-				if (MatchedVariable != null)
+				if (MatchedVariable.StorageMethod == VariableStorageMethod.Local)
 					into.AddInstructions("LOAD_PARAMETER NEXT " + Node.WriteOperand(Destination), MatchedVariable.Offset);
+				else if (MatchedVariable.StorageMethod == VariableStorageMethod.System)
+				{
+					into.AddInstructions(
+						"EMPTY_LIST PUSH",
+						"APPEND NEXT PEEK PEEK", (MatchedVariable as SystemVariable).Implementation,
+						"INVOKE POP");
+					if (Destination != OperationDestination.R)
+						into.AddInstructions("MOVE R " + Node.WriteOperand(Destination));
+				}
+				else if (MatchedVariable.StorageMethod == VariableStorageMethod.LambdaCapture)
+				{
+					into.AddInstructions("LOAD_PARAMETER NEXT R", -3,
+						"LOAD_RSO_M R NEXT " + WriteOperand(Destination), MatchedVariable.Offset);
+				}
 				else
-					into.AddInstructions("LOOKUP STRING " + Node.WriteOperand(Destination), into.AddString(Name.Value));
+					throw new NotImplementedException();
 			}
 			else if (Name.Type == TokenType.String)
-				into.AddInstructions("MOVE STRING " + Node.WriteOperand(Destination), into.AddString(Name.Value));
+				throw new InvalidOperationException();
 			else if (Name.Type == TokenType.Number)
 				into.AddInstructions("MOVE NEXT " + Node.WriteOperand(Destination), Convert.ToSingle(Name.Value));
 		}
@@ -57,10 +68,10 @@ namespace EtcScriptLib.Ast
 		{
 			if (Name.Type == TokenType.Identifier)
 			{
-				if (MatchedVariable != null)
+				if (MatchedVariable.StorageMethod == VariableStorageMethod.Local)
 					into.AddInstructions("STORE_PARAMETER POP NEXT", MatchedVariable.Offset);
 				else
-					into.AddInstructions("SET_VARIABLE POP STRING", into.AddString(Name.Value));
+					throw new NotImplementedException();
 			}
 			else
 				throw new InvalidOperationException();

@@ -21,8 +21,8 @@ namespace EtcScriptDebug
 
 			try
 			{
-				var x = new EtcScriptTests.Types();
-				x.argument_types();
+				var x = new EtcScriptTests.ComplexString();
+				x.conversion();
 			}
 			catch (Exception e)
 			{

@@ -28,11 +28,11 @@ namespace EtcScriptLib.Ast
 		{
 			ResultType = Type.Void;
 			Max = Max.Transform(Scope);
-			var nestedScope = Scope.Push();
-			TotalVariable = nestedScope.NewLocal("__total@" + VariableName, Scope.FindType("number"));
+			var nestedScope = Scope.Push(ScopeType.Block);
+			TotalVariable = nestedScope.NewLocal("__total@" + VariableName, Scope.FindType("NUMBER"));
 			Min = Min.Transform(nestedScope);
-			CounterVariable = nestedScope.NewLocal("__counter@" + VariableName, Scope.FindType("number"));
-			ValueVariable = nestedScope.NewLocal(VariableName, Scope.FindType("number"));
+			CounterVariable = nestedScope.NewLocal("__counter@" + VariableName, Scope.FindType("NUMBER"));
+			ValueVariable = nestedScope.NewLocal(VariableName, Scope.FindType("NUMBER"));
 			Body = Body.Transform(nestedScope);
 			return this;
 		}

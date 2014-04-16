@@ -42,7 +42,6 @@ namespace EtcScriptLib.VirtualMachine
 
 	public class ExecutionContext
 	{
-		public ScriptObject Frame { get; internal set; }
 		internal List<Object> Stack = new List<Object>();
 		public Object R;
 		public int F;
@@ -54,19 +53,18 @@ namespace EtcScriptLib.VirtualMachine
 
 		public Object Peek { get { return Stack.Count > 0 ? Stack[Stack.Count - 1] : null; } }
 
-		public void Reset(ScriptObject GlobalScope, CodeContext ExecutionPoint)
+		public void Reset(CodeContext ExecutionPoint)
 		{
 			Stack.Clear();
 			Stack.Add(new CodeContext(new InstructionList(), 0)); //Fake return point
 			R = null;
-			Frame = new ScriptObject("@parent", GlobalScope);
 			ExecutionState = ExecutionState.Running;
 			CurrentInstruction = ExecutionPoint;
 		}
 		
-		public ExecutionContext(ScriptObject GlobalScope, CodeContext ExecutionPoint)
+		public ExecutionContext(CodeContext ExecutionPoint)
 		{
-			Reset(GlobalScope, ExecutionPoint);
+			Reset(ExecutionPoint);
 		}
 
 	}
