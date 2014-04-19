@@ -39,7 +39,7 @@ namespace EtcScriptLib
 
 			var conversionArguments = new List<Ast.Node>();
 			conversionArguments.Add(new Ast.Identifier(new Token { Type = TokenType.Identifier, Value = "convert" }));
-			conversionArguments.Add(new Ast.Identifier(new Token()) { ResultType = Source });
+			conversionArguments.Add(new Ast.Identifier(new Token { Type = TokenType.Identifier, Value = "0" }) { ResultType = Source });
 			conversionArguments.Add(new Ast.Identifier(new Token { Type = TokenType.Identifier, Value = "to" }));
 			conversionArguments.Add(new Ast.Identifier(new Token { Type = TokenType.Identifier, Value = Destination.Name }));
 

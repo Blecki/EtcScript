@@ -11,21 +11,31 @@ namespace EtcScriptLib
 		public List<Declaration> PendingEmission = new List<Declaration>();
 		public int ID = 0;
 
-		public void EmitDeclarations()
+		public void EmitDeclarations(int StaticVariableOffset)
 		{
 			var into = new VirtualMachine.InstructionList();
 
-			foreach (var type in ActiveScope.Types)
-				type.ResolveTypes(ActiveScope);
+			foreach (var type in TopScope.Types)
+				type.ResolveTypes(TopScope);
 
-			foreach (var variable in ActiveScope.Variables)
-				variable.ResolveType(ActiveScope);
+			int variableOffset = StaticVariableOffset;
+			foreach (var variable in TopScope.Variables)
+			{
+				System.Diagnostics.Debug.Assert(variable.StorageMethod == VariableStorageMethod.Static);
+				variable.Offset = variableOffset;
+				++variableOffset;
+				variable.ResolveType(TopScope);
+			}
 
-			foreach (var macro in ActiveScope.Macros)
-				macro.ResolveTypes(ActiveScope);
+			foreach (var macro in TopScope.Macros)
+				macro.ResolveTypes(TopScope);
 
 			foreach (var declaration in PendingEmission)
-				declaration.ResolveTypes(ActiveScope);
+			{
+				if (declaration.Type == DeclarationType.Macro)
+					TopScope.Macros.Add(declaration);
+				declaration.ResolveTypes(TopScope);
+			}
 
 			foreach (var declaration in PendingEmission)
 				declaration.Transform(ID);
@@ -44,13 +54,17 @@ namespace EtcScriptLib
 			foreach (var declaration in PendingEmission)
 				declaration.ResolveCallPoints();
 
+			into.StringTable.Compress();
+
 			if (Compile.Debug)
 			{
 				Compile.DebugWrite("\nCOMPILED CODE:\n");
 				VirtualMachine.Debug.DumpOpcode(into.Data, Compile.DebugWrite, 1);
 				Compile.DebugWrite(" STRING TABLE:\n");
-				for (int i = 0; i < into.StringTable.Count; ++i)
-					Compile.DebugWrite(" " + i.ToString() + ": " + into.StringTable[i] + "\n");
+				for (int i = 0; i < into.StringTable.PartTable.Length; ++i)
+					Compile.DebugWrite(" " + i.ToString() + ": " + into.StringTable.PartTable[i] + "\n");
+				Compile.DebugWrite(" STRING DATA:\n");
+				Compile.DebugWrite("  " + into.StringTable.StringData + "\n");
 			}
 
 			PendingEmission.Clear();
@@ -65,6 +79,8 @@ namespace EtcScriptLib
 		public List<Control> Controls = new List<Control>();
 		public ParseScope ActiveScope { get; private set; }
 		public ParseScope TopScope { get; private set; }
+
+		public int StaticVariableCount { get { return TopScope.Variables.Count; } }
 
 		public void PushNewScope(ScopeType Type)
 		{
@@ -93,6 +109,7 @@ namespace EtcScriptLib
 				this.precedence.Add(precedence, new List<Operator>());
 			this.precedence[precedence].Add(new Operator { token = token, instruction = instruction });
 
+			//Insertion-sort on token length
 			var i = 0;
 			for (; i < operatorStrings.Count && operatorStrings[i].Length > token.Length; ++i)
 				;

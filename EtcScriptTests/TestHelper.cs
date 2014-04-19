@@ -10,12 +10,17 @@ namespace EtcScriptTests
     {
         public static void RunSimpleTest(String script, Object expectedResult)
         {
-            Assert.AreEqual(expectedResult, RunSimpleTest(script));
+			Assert.AreEqual(expectedResult, CallTestFunction(script));
         }
 
-		public static void QuickTest(String script, Object expectedResult)
+		public static void RunSimpleTest(String script)
 		{
-			RunSimpleTest(@"test foo : number { " + script + " }", expectedResult);
+			CallTestFunction(script);
+		}
+
+		public static void MathTest(String script, Object expectedResult)
+		{
+			RunSimpleTest(@"test _ : number { " + script + " }", expectedResult);
 		}
 
 		public static void CompileTestAssertNoErrors(String script)
@@ -23,9 +28,10 @@ namespace EtcScriptTests
 			EtcScriptLib.Compile.Debug = true;
 			EtcScriptLib.Compile._DebugWrite = Console.Write;
 
+			var environment = new EtcScriptLib.Environment();
 			Console.WriteLine("Test script: " + script);
 			bool wasError = false;
-			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
+			environment.Build(script, 
 				(s) => { Console.WriteLine(s); wasError = true; return EtcScriptLib.ErrorStrategy.Continue; });
 			Assert.False(wasError);
 		}
@@ -35,50 +41,14 @@ namespace EtcScriptTests
 			EtcScriptLib.Compile.Debug = true;
 			EtcScriptLib.Compile._DebugWrite = Console.Write;
 
+			var environment = new EtcScriptLib.Environment();
 			Console.WriteLine("Test script: " + script);
 			bool wasError = false;
-			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
+			environment.Build(script,
 				(s) => { Console.WriteLine(s); wasError = true; return EtcScriptLib.ErrorStrategy.Continue; });
 			Assert.True(wasError);
 		}
 
-        public static Object RunSimpleTest(String script)
-        {
-			Console.WriteLine("Test script: " + script);
-
-			EtcScriptLib.Compile.Debug = true;
-			EtcScriptLib.Compile._DebugWrite = Console.Write;
-
-			var declaration = EtcScriptLib.Compile.CompileDeclaration(script,
-				(s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Continue; });
-			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(EtcScriptLib.VirtualMachine.CodeContext.Empty);
-			var invokable = declaration.MakeInvokableFunction();
-			invokable.Invoke(context, new List<Object>(new Object[]{invokable}));
-			EtcScriptLib.VirtualMachine.VirtualMachine.ExecuteUntilFinished(context);
-			if (context.ExecutionState == EtcScriptLib.VirtualMachine.ExecutionState.Error)
-				Console.WriteLine("Error:" + context.ErrorObject.ToString());
-
-			if (context.R == null) Console.WriteLine("NULL");
-			else Console.WriteLine(context.R.ToString());
-			return context.R;
-        }
-
-		public static EtcScriptLib.VirtualMachine.InvokeableFunction BuildTestEnvironment(
-			String script, 
-			Action<EtcScriptLib.Environment> AdditionalSetup = null)
-		{
-			Console.WriteLine("Test script: " + script);
-			var environment = EtcScriptLib.Environment.CreateStandardEnvironment();
-			environment.AddSystemMacro("fail", (c, a) => { Assert.IsTrue(false); return null; });
-			if (AdditionalSetup != null) AdditionalSetup(environment);
-			var declarations = environment.Build(script, (s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Abort; });
-			EtcScriptLib.VirtualMachine.InvokeableFunction r = null;
-			foreach (var declaration in declarations)
-				r = declaration.MakeInvokableFunction();
-			
-			return r;
-		}
-		
 		public static Object CallTestFunction(
 			String script,
 			Action<EtcScriptLib.Environment> AdditionalSetup = null)
@@ -86,9 +56,14 @@ namespace EtcScriptTests
 			EtcScriptLib.Compile.Debug = true;
 			EtcScriptLib.Compile._DebugWrite = Console.Write;
 
-			var func = BuildTestEnvironment(script, AdditionalSetup);
-			var context = new EtcScriptLib.VirtualMachine.ExecutionContext(EtcScriptLib.VirtualMachine.CodeContext.Empty);
-
+			Console.WriteLine("Test script: " + script);
+			var environment = new EtcScriptLib.Environment();
+			environment.AddSystemMacro("fail", (c, a) => { Assert.IsTrue(false); return null; });
+			if (AdditionalSetup != null) AdditionalSetup(environment);
+			var testFunctions = environment.Build(script, s => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Abort; });
+			Assert.IsTrue(testFunctions.Count > 0);
+			var context = environment.CreateExecutionContext(EtcScriptLib.VirtualMachine.CodeContext.Empty);
+			var func = testFunctions[0].MakeInvokableFunction();
 			var argList = new List<Object>();
 			argList.Add(func);
 			func.Invoke(context, argList);

@@ -14,7 +14,8 @@ namespace EtcScriptTests
 			bool errorCaught = false;
 
 			Console.WriteLine("Script: " + script);
-			EtcScriptLib.Compile.Build(script, EtcScriptLib.Compile.GetDefaultParseContext(), (s) =>
+			var environment = new EtcScriptLib.Environment();
+			environment.Build(script, (s) =>
 			{
 				Console.WriteLine("Error: " + s);
 				errorCaught = true;

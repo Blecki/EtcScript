@@ -104,7 +104,7 @@ namespace EtcScriptLib
 
 		public Variable NewLocal(String Name, Type Type)
 		{
-			var r = new Variable { Name = Name, Offset = VariableIndex, DeclaredType = Type };
+			var r = new Variable { Name = Name.ToUpper(), Offset = VariableIndex, DeclaredType = Type };
 			VariableIndex += 1;
 			Variables.Add(r);
 			return r;
@@ -137,15 +137,23 @@ namespace EtcScriptLib
 		{
 			get
 			{
+				return OwnerFunction.ReturnType;
+			}
+		}
+
+		public Declaration OwnerFunction
+		{
+			get
+			{
 				if (Type == ScopeType.Function)
 				{
 					if (Owner == null) throw new InvalidProgramException();
-					return Owner.ReturnType;
+					return Owner;
 				}
 				else
 				{
 					if (Parent == null) throw new InvalidProgramException();
-					return Parent.OwnerFunctionReturnType;
+					return Parent.OwnerFunction;
 				}
 			}
 		}

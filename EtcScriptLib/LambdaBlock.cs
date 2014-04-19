@@ -7,6 +7,7 @@ namespace EtcScriptLib
 {
 	public class LambdaBlock
 	{
+		internal String Name;
 		internal VirtualMachine.InstructionList Instructions;
 		internal int EntryPoint;
 		internal Ast.Node Body;
@@ -34,11 +35,11 @@ namespace EtcScriptLib
 			if (CleanupCall >= 0) 
 				Into[CleanupCall] = CleanupPoint;
 
-			Into.AddInstructions("CLEANUP NEXT", DeclarationScope.Owner.ActualParameterCount, "CONTINUE POP");
+			Into.AddInstructions("CLEANUP NEXT #Cleanup " + Name, DeclarationScope.Owner.ActualParameterCount, "CONTINUE POP");
 
 			Instructions = Into;
 			EntryPoint = Into.Count;
-			Instructions.AddInstructions("MOVE F PUSH", "MARK_STACK F");
+			Instructions.AddInstructions("MOVE F PUSH #Enter " + Name, "MARK_STACK F");
 			Body.Emit(Instructions, Ast.OperationDestination.Discard);
 			Instructions.AddInstructions("MOVE NEXT R", 0); //If a function has no return statement, it returns 0.
 			var returnJumpPoint = Instructions.Count;
@@ -60,15 +61,22 @@ namespace EtcScriptLib
 				Instructions[point] = EntryPoint;
 		}
 
-		public void CacheSystemImplementation(int ArgumentCount, Func<VirtualMachine.ExecutionContext, List<Object>, Object> Implementation)
+		public void CacheSystemImplementation(
+			int ArgumentCount, 
+			String Header,
+			Func<VirtualMachine.ExecutionContext, List<Object>, Object> Implementation)
 		{
-			CachedLambda = new VirtualMachine.NativeFunction("SYS-LAMBDA", ArgumentCount, Implementation);
+			CachedLambda = new VirtualMachine.NativeFunction(Header, ArgumentCount, Implementation);
 		}
 
 		public VirtualMachine.InvokeableFunction GetBasicInvokable(int ArgumentCount)
 		{
 			if (CachedLambda == null)
-				CachedLambda = VirtualMachine.LambdaFunction.CreateLambda(GetEntryPoint(),	ArgumentCount);
+			{
+				if (Instructions == null) throw new InvalidOperationException();
+
+				CachedLambda = VirtualMachine.LambdaFunction.CreateLambda(Name, GetCleanupPoint(), GetEntryPoint(), ArgumentCount);
+			}
 		
 			return CachedLambda;
 		}
@@ -76,6 +84,11 @@ namespace EtcScriptLib
 		public VirtualMachine.CodeContext GetEntryPoint()
 		{
 			return new VirtualMachine.CodeContext(Instructions, EntryPoint);
-		}		
+		}
+
+		public VirtualMachine.CodeContext GetCleanupPoint()
+		{
+			return new VirtualMachine.CodeContext(Instructions, CleanupPoint);
+		}
 	}
 }

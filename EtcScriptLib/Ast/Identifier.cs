@@ -21,7 +21,7 @@ namespace EtcScriptLib.Ast
 			{
 				if (Name.Value.ToUpper() == "TRUE") return new Literal(Source, true, "BOOLEAN");
 				else if (Name.Value.ToUpper() == "FALSE") return new Literal(Source, false, "BOOLEAN");
-				else MatchedVariable = Scope.FindVariable(Name.Value);
+				else MatchedVariable = Scope.FindVariable(Name.Value.ToUpper());
 				if (MatchedVariable == null) throw new CompileError("Could not find variable named '" + Name.Value + "'.", Source);
 				ResultType = MatchedVariable.DeclaredType;
 			}
@@ -55,6 +55,10 @@ namespace EtcScriptLib.Ast
 					into.AddInstructions("LOAD_PARAMETER NEXT R", -3,
 						"LOAD_RSO_M R NEXT " + WriteOperand(Destination), MatchedVariable.Offset);
 				}
+				else if (MatchedVariable.StorageMethod == VariableStorageMethod.Static)
+				{
+					into.AddInstructions("LOAD_STATIC NEXT " + Node.WriteOperand(Destination), MatchedVariable.Offset);
+				}
 				else
 					throw new NotImplementedException();
 			}
@@ -70,6 +74,8 @@ namespace EtcScriptLib.Ast
 			{
 				if (MatchedVariable.StorageMethod == VariableStorageMethod.Local)
 					into.AddInstructions("STORE_PARAMETER POP NEXT", MatchedVariable.Offset);
+				else if (MatchedVariable.StorageMethod == VariableStorageMethod.Static)
+					into.AddInstructions("STORE_STATIC POP NEXT", MatchedVariable.Offset);
 				else
 					throw new NotImplementedException();
 			}

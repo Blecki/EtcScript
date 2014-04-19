@@ -31,7 +31,7 @@ namespace EtcScriptLib
 		public void AddHiddenArgument(String Name, String Type)
 		{
 			if (HiddenArguments == null) HiddenArguments = new List<Tuple<string, string>>();
-			HiddenArguments.Add(new Tuple<string, string>(Name, Type));
+			HiddenArguments.Add(new Tuple<string, string>(Name.ToUpper(), Type.ToUpper()));
 		}
 
 		public int ActualParameterCount
@@ -42,6 +42,14 @@ namespace EtcScriptLib
 				if (HiddenArguments != null) termCount += HiddenArguments.Count;
 				if (Type == DeclarationType.Lambda) return termCount + 1;
 				else return termCount;
+			}
+		}
+
+		public String DescriptiveHeader
+		{
+			get
+			{
+				return String.Join(" ", Terms.Select(term => term.ToString())) + " : " + ReturnTypeName;
 			}
 		}
 
@@ -58,10 +66,22 @@ namespace EtcScriptLib
 		public static Declaration Parse(String Header)
 		{
 			var tokenIterator = new TokenStream(new Compile.StringIterator(Header), new ParseContext());
-			var headerTerms = EtcScriptLib.Parse.ParseMacroDeclarationHeader(tokenIterator, 
+			var headerTerms = EtcScriptLib.Parse.ParseMacroDeclarationHeader(tokenIterator,
 				EtcScriptLib.Parse.DeclarationHeaderTerminatorType.StreamEnd);
 
 			var r = new Declaration();
+			r.ReturnTypeName = "VOID";
+
+			if (!tokenIterator.AtEnd() && tokenIterator.Next().Type == TokenType.Colon)
+			{
+				tokenIterator.Advance();
+				if (tokenIterator.Next().Type != TokenType.Identifier) throw new CompileError("Expected identifier", tokenIterator);
+				r.ReturnTypeName = tokenIterator.Next().Value.ToUpper();
+				tokenIterator.Advance();
+			}
+
+			if (!tokenIterator.AtEnd()) throw new CompileError("Header did not end when expected");
+
 			r.Terms = headerTerms;
 			r.Body = new LambdaBlock(null);
 			return r;
@@ -118,7 +138,7 @@ namespace EtcScriptLib
 						if (currentTerm.Type == DeclarationTermType.Term) r.Add(Nodes[nodeIndex]);
 						nodeIndex += 1;
 					}
-					else if (currentTerm.Type == DeclarationTermType.Term) 
+					else if (currentTerm.Type == DeclarationTermType.Term)
 						r.Add(new Ast.Literal(new Token(), null, currentTerm.DeclaredTypeName));
 				}
 				/*else if (currentTerm.RepetitionType == DeclarationTermRepetitionType.NoneOrMany ||
@@ -203,6 +223,10 @@ namespace EtcScriptLib
 				ReturnType = EtcScriptLib.Type.Void;
 
 			CreateParameterDescriptors();
+
+			var header = DescriptiveHeader;
+			Body.Name = header;
+			if (WhenClause != null) WhenClause.Name = header + " : when ...";
 		}
 
 		// Given a list of terms, create the variable objects to represent the parameters of the declaration
@@ -257,7 +281,7 @@ namespace EtcScriptLib
 
 		public void Transform(int OwnerContextID)
 		{
-			this.OwnerContextID = OwnerContextID;
+			//this.OwnerContextID = OwnerContextID;
 			Body.Transform(DeclarationScope);
 			if (WhenClause != null) WhenClause.Transform(DeclarationScope);
 		}

@@ -9,6 +9,7 @@ namespace EtcScriptLib.Ast
 	{
 		public Declaration Function;
 		public String ResultTypeName;
+		private bool HasBeenTransformed = false;
 
 		public Lambda(Token Source, Declaration Function, String ResultTypeName) : base(Source) 
 		{
@@ -18,6 +19,9 @@ namespace EtcScriptLib.Ast
 
 		public override Node Transform(ParseScope Scope)
 		{
+			if (HasBeenTransformed) return this;
+			HasBeenTransformed = true;
+
 			Function.ResolveTypes(Scope);
 			Function.Transform(Scope.EnvironmentContext.ID);
 

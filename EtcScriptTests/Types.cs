@@ -123,5 +123,29 @@ test _ : number {
 			var result = TestHelper.CallTestFunction(script);
 			Assert.AreEqual(8, result);
 		}
+
+		[Test]
+		public void initializer()
+		{
+			var script = @"
+type foo
+{
+	var x:number;
+	var y:number;
+}
+
+test _ : number {
+	var a = new foo {
+		let x = 5;
+		let y = 6;
+	};
+
+	return a.x * a.y;
+}
+";
+
+			var result = TestHelper.CallTestFunction(script);
+			Assert.AreEqual(30, result);
+		}
 	}
 }

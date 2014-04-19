@@ -23,13 +23,20 @@ namespace EtcScriptLib.VirtualMachine
         public Operand FirstOperand;
         public Operand SecondOperand;
         public Operand ThirdOperand;
+		public String Annotation;
 
-		public Instruction(InstructionSet Opcode, Operand FirstOperand, Operand SecondOperand, Operand ThirdOperand)
+		public Instruction(
+			InstructionSet Opcode, 
+			Operand FirstOperand, 
+			Operand SecondOperand, 
+			Operand ThirdOperand,
+			String Annotation = null)
 		{
 			this.Opcode = Opcode;
 			this.FirstOperand = FirstOperand;
 			this.SecondOperand = SecondOperand;
 			this.ThirdOperand = ThirdOperand;
+			this.Annotation = Annotation;
 		}
 
         public static Instruction? TryParse(String parseFrom)
@@ -47,6 +54,14 @@ namespace EtcScriptLib.VirtualMachine
         public static Instruction Parse(String parseFrom)
         {
             var r = new Instruction();
+
+			var annotationPoint = parseFrom.IndexOf('#');
+			if (annotationPoint >= 0)
+			{
+				r.Annotation = parseFrom.Substring(annotationPoint + 1);
+				parseFrom = parseFrom.Substring(0, annotationPoint);
+			}
+
             var parts = parseFrom.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             r.Opcode = (Enum.Parse(typeof(InstructionSet), parts[0]) as InstructionSet?).Value;
             r.FirstOperand = r.SecondOperand = r.ThirdOperand = Operand.NONE;
@@ -65,10 +80,11 @@ namespace EtcScriptLib.VirtualMachine
 
         public override string ToString()
         {
-            return fittab(Opcode.ToString(), 24) + "\t" 
-				+ fittab(FirstOperand.ToString(), 5) + "\t" 
-				+ fittab(SecondOperand.ToString(), 5) + "\t" 
-				+ fittab(ThirdOperand.ToString(), 5);
+			return fittab(Opcode.ToString(), 24) + "\t"
+				+ fittab(FirstOperand.ToString(), 5) + "\t"
+				+ fittab(SecondOperand.ToString(), 5) + "\t"
+				+ fittab(ThirdOperand.ToString(), 5) +
+				(String.IsNullOrEmpty(Annotation) ? "" : (" #" + Annotation));
         }
     }
 }

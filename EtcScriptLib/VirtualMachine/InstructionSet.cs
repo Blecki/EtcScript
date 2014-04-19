@@ -24,6 +24,9 @@ namespace EtcScriptLib.VirtualMachine
 		LOAD_RSO_M,		// RSO			MEMBER			DESTINATION
 		STORE_RSO_M,	// VALUE		RSO				MEMBER
 
+		LOAD_STATIC,	// OFFSET		DESTINATION
+		STORE_STATIC,	// VALUE		OFFSET
+
         MARK,           // DESTINATION  UNUSED          UNUSED      --Places the current execution point in DESTINATION.
 		MARK_STACK,
 		RESTORE_STACK,

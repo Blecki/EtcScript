@@ -7,6 +7,8 @@ namespace EtcScriptLib.VirtualMachine
 {
     public class LambdaFunction : InvokeableFunction
     {
+		public String Name;
+		public CodeContext CleanupPoint;
 		public CodeContext EntryPoint;
 		public int ArgumentCount;
 
@@ -24,11 +26,10 @@ namespace EtcScriptLib.VirtualMachine
 
 			if (ArgumentCount > 0)
 			{
-				var cleanup = new InstructionList("CLEANUP NEXT", ArgumentCount, "CONTINUE POP");
 				VirtualMachine.SetOperand(Operand.PUSH, context.CurrentInstruction, context);
 				for (int i = 0; i < ArgumentCount; ++i)
 					VirtualMachine.SetOperand(Operand.PUSH, arguments[i + 1], context);
-				VirtualMachine.SetOperand(Operand.PUSH, new CodeContext(cleanup, 0), context);
+				VirtualMachine.SetOperand(Operand.PUSH, CleanupPoint, context);
 			}
 			else
 				VirtualMachine.SetOperand(Operand.PUSH, context.CurrentInstruction, context);
@@ -38,19 +39,13 @@ namespace EtcScriptLib.VirtualMachine
 			return InvokationResult.Success;
         }
 
-		public static LambdaFunction CreateLambda(CodeContext EntryPoint, int ArgumentCount)
+		public static LambdaFunction CreateLambda(String Name, CodeContext CleanupPoint, CodeContext EntryPoint, int ArgumentCount)
 		{
 			var r = new LambdaFunction();
+			r.CleanupPoint = CleanupPoint;
 			r.EntryPoint = EntryPoint;
 			r.ArgumentCount = ArgumentCount;
-			return r;
-		}
-
-		public static LambdaFunction CreateLambda(CodeContext Source, int EntryPoint, int ArgumentCount)
-		{
-			var r = new LambdaFunction();
-			r.EntryPoint = new CodeContext(Source.Code, EntryPoint);
-			r.ArgumentCount = ArgumentCount;
+			r.Name = Name;
 			return r;
 		}
 
@@ -62,6 +57,10 @@ namespace EtcScriptLib.VirtualMachine
 			};
 		}
 
+		public override string ToString()
+		{
+			return "Lambda { " + Name + " }";
+		}
     }
 
 	public class TrueLambdaFunction : InvokeableFunction
@@ -94,6 +93,11 @@ namespace EtcScriptLib.VirtualMachine
 				(CapturedVariables.Data[CapturedVariables.Data.Count - 2] as int?).Value);
 
 			return InvokationResult.Success;
+		}
+
+		public override string ToString()
+		{
+			return "TrueLambda";
 		}
 	}
 }

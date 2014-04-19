@@ -8,7 +8,7 @@ namespace EtcScriptLib.VirtualMachine
 	public class InstructionList
     {
 		public List<Object> Data = new List<Object>();
-		public List<String> StringTable = new List<string>();
+		public StringTable StringTable = new StringTable();
 
 		public int Count { get { return Data.Count; } }
 		public Object this[int key]
@@ -74,11 +74,9 @@ namespace EtcScriptLib.VirtualMachine
 
 		public int AddString(String str)
 		{
-			var r = StringTable.IndexOf(str);
-			if (r >= 0) return r;
-			r = StringTable.Count;
-			StringTable.Add(str);
-			return r;
+			return StringTable.Add(str);
 		}
+
+		
 	}
 }

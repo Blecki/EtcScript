@@ -83,6 +83,8 @@ namespace EtcScriptLib.VirtualMachine
 		
         public static void ExecuteSingleInstruction(ExecutionContext context)
         {
+			if (context.CurrentInstruction.Code == null) throw new InvalidProgramException("Null code");
+
             //When an error represents bad output from the compiler or a built in function,
             //      an exception is thrown in C#. 
             //When an error represents faulty input code, an exception is thrown in MISP.
@@ -510,14 +512,7 @@ namespace EtcScriptLib.VirtualMachine
                     #endregion
 
                     #region Variables
-					//case InstructionSet.SET_VARIABLE:
-					//    {
-					//        var v = GetOperand(ins.FirstOperand, context);
-					//        var name = GetOperand(ins.SecondOperand, context).ToString();
-					//        context.Frame[name] = v;
-					//    }
-					//    break;
-
+					
 					case InstructionSet.LOAD_PARAMETER:
 						{
 							var offset = GetOperand(ins.FirstOperand, context) as int?;
@@ -530,6 +525,24 @@ namespace EtcScriptLib.VirtualMachine
 							var value = GetOperand(ins.FirstOperand, context);
 							var offset = GetOperand(ins.SecondOperand, context) as int?;
 							context.Stack[context.F + offset.Value] = value;
+						}
+						break;
+
+					case InstructionSet.LOAD_STATIC:
+						{
+							var offset = GetOperand(ins.FirstOperand, context) as int?;
+							if (context.StaticVariables.ContainsKey(offset.Value))
+								SetOperand(ins.SecondOperand, context.StaticVariables[offset.Value], context);
+							else
+								SetOperand(ins.SecondOperand, null, context);
+						}
+						break;
+
+					case InstructionSet.STORE_STATIC:
+						{
+							var value = GetOperand(ins.FirstOperand, context);
+							var offset = GetOperand(ins.SecondOperand, context) as int?;
+							context.StaticVariables.Upsert(offset.Value, value);
 						}
 						break;
 

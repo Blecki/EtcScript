@@ -44,7 +44,7 @@ namespace EtcScriptLib
 			if (Type == DeclarationTermType.Keyword)
 				return Name + RepetitionMarker(RepetitionType);
 			else
-				return "(" + Name + ":" + DeclaredType.Name +  ")" + RepetitionMarker(RepetitionType);
+				return "(" + Name + ":" + DeclaredTypeName +  ")" + RepetitionMarker(RepetitionType);
 		}
 
 		private static string RepetitionMarker(DeclarationTermRepetitionType RepetitionType)

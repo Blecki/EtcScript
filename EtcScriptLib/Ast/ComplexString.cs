@@ -22,6 +22,8 @@ namespace EtcScriptLib.Ast
 
 			if (Pieces.Count == 0) return new StringLiteral(Source, "");
 
+			Pieces.Insert(0, new StringLiteral(Source, ""));
+
 			var lambdaDeclaration = new Declaration();
 			lambdaDeclaration.Type = DeclarationType.Lambda;
 			lambdaDeclaration.Terms = new List<DeclarationTerm>();

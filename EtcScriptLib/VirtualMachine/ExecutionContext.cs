@@ -42,6 +42,7 @@ namespace EtcScriptLib.VirtualMachine
 
 	public class ExecutionContext
 	{
+		internal Dictionary<int,Object> StaticVariables = null;
 		internal List<Object> Stack = new List<Object>();
 		public Object R;
 		public int F;
@@ -50,21 +51,15 @@ namespace EtcScriptLib.VirtualMachine
 		public Object Tag;
 
 		public Object ErrorObject;
-
 		public Object Peek { get { return Stack.Count > 0 ? Stack[Stack.Count - 1] : null; } }
 
-		public void Reset(CodeContext ExecutionPoint)
+		internal ExecutionContext(Dictionary<int,Object> StaticVariables, CodeContext ExecutionPoint)
 		{
-			Stack.Clear();
+			this.StaticVariables = StaticVariables;
 			Stack.Add(new CodeContext(new InstructionList(), 0)); //Fake return point
 			R = null;
 			ExecutionState = ExecutionState.Running;
 			CurrentInstruction = ExecutionPoint;
-		}
-		
-		public ExecutionContext(CodeContext ExecutionPoint)
-		{
-			Reset(ExecutionPoint);
 		}
 
 	}

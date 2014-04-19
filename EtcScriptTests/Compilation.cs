@@ -12,18 +12,16 @@ namespace EtcScriptTests
         [Test]
         public void environment_compiles_trivial_script()
         {
-			var declaration = EtcScriptLib.Compile.CompileDeclaration(@"test foo {}
-			", (s) => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Continue; });
-            Assert.AreNotEqual(null, declaration);
+			TestHelper.CompileTestAssertNoErrors("test _ {}");
         }
 
 		[Test]
 		public void negative_number()
 		{
-			TestHelper.CompileTestAssertNoErrors(@"test foo { var x = -5; }");
-			TestHelper.CompileTestAssertNoErrors(@"test foo { var x = 5 - 4; }");
-			TestHelper.CompileTestAssertNoErrors(@"test foo { var x = 5 * -4; }");
-			TestHelper.CompileShouldError(@"test foo { var x = (5 -4); }");
+			TestHelper.CompileTestAssertNoErrors(@"test _ { var x = -5; }");
+			TestHelper.CompileTestAssertNoErrors(@"test _ { var x = 5 - 4; }");
+			TestHelper.CompileTestAssertNoErrors(@"test _ { var x = 5 * -4; }");
+			TestHelper.CompileShouldError(@"test _ { var x = (5 -4); }");
 		}
 
 		[Test]

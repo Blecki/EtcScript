@@ -16,6 +16,11 @@ namespace EtcScriptLib.Ast
 
 		public override Node Transform(ParseScope Scope)
 		{
+			//var existingVariable = Scope.FindVariable(Name);
+			//if (existingVariable != null)
+			//    throw new CompileError("A variable called '" + Name +
+			//        "' can't be defined here because it would hide a variable already defined with that name.", Source);
+
 			if (String.IsNullOrEmpty(Typename))
 				ResultType = Type.Generic;
 			else
@@ -42,7 +47,7 @@ namespace EtcScriptLib.Ast
 					ResultType = Value.ResultType;
 			}
 
-			Variable = Scope.NewLocal(Name, ResultType);
+			Variable = Scope.NewLocal(Name.ToUpper(), ResultType);
 			Variable.DeclaredTypeName = Typename;
 			Variable.DeclaredType = ResultType;
 

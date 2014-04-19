@@ -1,7 +1,15 @@
-﻿
+﻿TODO List:
+	*Implement global variables
+	*Compress string table
+	Github page w/ examples
+	IDE or line-by-line debugger?
+	Namespaces?
+	String Library + Documentation
+
 EtcScript Grammar
 
-Script				:= (MacroDeclaration | RuleDeclaration | TypeDeclaration)*
+Script				:= (MacroDeclaration | RuleDeclaration | TypeDeclaration | GlobalDeclaration)*
+GlobalDeclaration	:= "global" + Identifier + (: + Identifier)? + ;
 MacroDeclaration	:= "macro" + DeclarationHeader + (: + Identifier)? + Block
 DeclarationHeader	:= (DeclarationTerm)*
 RuleDeclaration		:= "rule" + DeclarationHeader + WhenClause? + Block
@@ -34,7 +42,9 @@ EmbeddedExpression	:= [ + Expression + ]
 LocalDeclaration	:= "var" + Identifier + (: + Identifier)? + ("=" + Expression)? + ;
 TypeDeclaration		:= "type" + Identifier + { + MemberDeclaration* + }
 MemberDeclaration	:=  "var" + Identifier + (: + Identifier)? + ;
-New					:= "new" + Identifier
+New					:= "new" + Identifier + InitializerBlock?
+InitializerBlock	:= { + InitializerItem* + }
+InitializerItem		:= "let" + Identifier + "=" + Expression + ;
 
 Delimeter symbols	:= []{}()\s\t\r\n.:;
 
@@ -62,6 +72,17 @@ Default Controls
 foreach (x) in (list)
 foreach (x) from (min) to (max)
 while (x)
+consider (x)
+
+Default Types
+VOID
+GENERIC
+NUMBER
+STRING
+COMPLEXSTRING
+BOOLEAN
+LIST
+
 
 Conversion Macros
 

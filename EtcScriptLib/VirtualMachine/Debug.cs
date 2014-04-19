@@ -37,7 +37,9 @@ namespace EtcScriptLib.VirtualMachine
 					Write(iterator._place.ToString() + ": " + ins.Opcode.ToString() + "  ");
 					Write(GetOperandString(ins.FirstOperand, iterator) + "  ");
 					Write(GetOperandString(ins.SecondOperand, iterator) + "  ");
-					Write(GetOperandString(ins.ThirdOperand, iterator) + "\n");
+					Write(GetOperandString(ins.ThirdOperand, iterator) + "  ");
+					if (!String.IsNullOrEmpty(ins.Annotation)) Write("#" + ins.Annotation);
+					Write("\n");
 				}
 				else Write(instruction.ToString() + "\n");
 

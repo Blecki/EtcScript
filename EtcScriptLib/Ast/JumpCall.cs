@@ -44,7 +44,7 @@ namespace EtcScriptLib.Ast
 		{
 			foreach (var arg in Arguments)
 				arg.Emit(into, OperationDestination.Stack);
-			into.AddInstructions("CALL NEXT", 0);
+			into.AddInstructions("CALL NEXT #" + Function.DescriptiveHeader, 0);
 			Function.Body.CallPoints.Add(into.Count - 1);
 			into.AddInstructions("CLEANUP NEXT", Arguments.Count);
 			if (Destination != OperationDestination.R && Destination != OperationDestination.Discard)

@@ -22,6 +22,15 @@ namespace EtcScriptLib.Ast
 			LHS = LHS.Transform(Scope);
 			if (!(LHS is IAssignable)) throw new CompileError("Assignment target is not an lvalue", Source);
 			Value = Value.Transform(Scope);
+
+			var compatibilityResult = Type.AreTypesCompatible(Value.ResultType, LHS.ResultType, Scope);
+			if (!compatibilityResult.Compatible)
+				Type.ThrowConversionError(Value.ResultType, LHS.ResultType, Source);
+
+			if (compatibilityResult.ConversionRequired)
+				Value = Type.CreateConversionInvokation(Scope, compatibilityResult.ConversionMacro, Value)
+					.Transform(Scope);
+
 			return this;
 		}
 
@@ -46,14 +55,6 @@ namespace EtcScriptLib.Ast
 			//}
 			//else
 			//    throw new InvalidProgramException();
-		}
-
-		public override void Debug(int depth)
-		{
-			Console.WriteLine(new String(' ', depth * 3) + "Assign");
-			Value.Debug(depth + 1);
-			Console.WriteLine(new String(' ', depth * 3) + "To");
-			LHS.Debug(depth + 1);
 		}
 	}
 }
