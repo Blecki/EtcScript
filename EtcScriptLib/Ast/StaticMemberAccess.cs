@@ -35,5 +35,8 @@ namespace EtcScriptLib.Ast
 			Object.Emit(into, OperationDestination.R);
 			into.AddInstructions("STORE_RSO_M POP R NEXT", MemberVariable.Offset);
 		}
+
+		public Node TransformAssignment(ParseScope Scope, Let Let, Node Value) { return Let; }
+
 	}
 }

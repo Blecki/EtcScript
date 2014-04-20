@@ -48,6 +48,7 @@ namespace EtcScriptLib.Ast
 
 		public Token Source;
 		public Type ResultType;
+		public bool IsAssignmentTarget = false;
 
 		public Node(Token Source)
 		{

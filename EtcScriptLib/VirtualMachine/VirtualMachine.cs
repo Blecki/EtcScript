@@ -609,7 +609,7 @@ namespace EtcScriptLib.VirtualMachine
             }
             catch (Exception e)
             {
-                Throw(new RuntimeError(e.Message + "\nBEFORE: " +
+                Throw(new RuntimeError(e.Message + e.StackTrace + "\nBEFORE: " +
 					context.CurrentInstruction.InstructionPointer + 
 					"\nINSTRUCTION: [" + ins.ToString() + "]\nSTACK DUMP:\n" +
 					String.Join("\n", context.Stack.Select((o)=> { return o == null ? "NULL" : o.ToString(); }))

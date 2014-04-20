@@ -148,25 +148,90 @@ test _ : number {
 			Assert.AreEqual(30, result);
 		}
 
+		private class T
+		{
+			public int X;
+			public int Y;
+
+			public T(int X, int Y)
+			{
+				this.X = X;
+				this.Y = Y;
+			}
+		}
+
 		[Test]
-		public void system_accessor()
+		public void system_getter()
 		{
 			var script = @"
 test _ : number {
-	return ([foo].bar):number;
+	var t = [make t];
+	return (t.x * t.y):number;
 }";
 			var result = TestHelper.CallTestFunction(script, e =>
 				{
-					e.AddSystemType("_foo");
-					e.AddSystemMacro("foo : _foo", (c, l) => { return new Tuple<int, int>(42, 87); });
-					e.AddSystemMacro("get (x:string) from (y:_foo) : generic", (c, l) =>
-					{
-						var v = l[1] as Tuple<int, int>;
-						return v.Item1 * v.Item2;
+					e.AddSystemType("T");
+					e.AddSystemMacro("make t : T", (c, l) => { return new T(42, 87); });
+					e.AddSystemMacro("get (x:string) from (y:T) : generic", (c, l) =>
+					{							
+						var v = l[1] as T;
+						var n = l[0].ToString().ToUpper();
+
+						if (n == "X")
+							return v.X;
+						else if (n == "Y")
+							return v.Y;
+						else
+							EtcScriptLib.VirtualMachine.VirtualMachine.Throw("'" + n + "' is not a member of T.", c);
+						return 0;
 					});
 				});
 
 			Assert.AreEqual(42 * 87, result);
+		}
+
+		[Test]
+		public void system_setter()
+		{
+			var script = @"
+test _ : number {
+	var t = [make t];
+	let t.x = 5;
+	let t.y = 6;
+	return (t.x * t.y):number;
+}";
+			var result = TestHelper.CallTestFunction(script, e =>
+			{
+				e.AddSystemType("T");
+				e.AddSystemMacro("make t : T", (c, l) => { return new T(42, 87); });
+				e.AddSystemMacro("get (x:string) from (y:T) : generic", (c, l) =>
+				{
+					var v = l[1] as T;
+					var n = l[0].ToString().ToUpper();
+
+					if (n == "X")
+						return v.X;
+					else if (n == "Y")
+						return v.Y;
+					else
+						EtcScriptLib.VirtualMachine.VirtualMachine.Throw("'" + n + "' is not a member of T.", c);
+					return 0;
+				});
+				e.AddSystemMacro("set (x:string) on (y:T) to (z:generic)", (c, l) =>
+				{
+					var v = l[1] as T;
+					var n = l[0].ToString().ToUpper();
+					if (n == "X")
+						v.X = Convert.ToInt32(l[2]);
+					else if (n == "Y")
+						v.Y = Convert.ToInt32(l[2]);
+					else
+						EtcScriptLib.VirtualMachine.VirtualMachine.Throw("'" + n + "' is not a member of T.", c);
+					return null;
+				});
+			});
+
+			Assert.AreEqual(30, result);
 		}
 	}
 }

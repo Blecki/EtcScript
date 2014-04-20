@@ -47,6 +47,7 @@
     <Compile Include="AST\CompatibleCall.cs" />
     <Compile Include="AST\Cast.cs" />
     <Compile Include="AST\ComplexString.cs" />
+    <Compile Include="AST\GenericSetter.cs" />
     <Compile Include="AST\Initializer.cs" />
     <Compile Include="AST\StringLiteral.cs" />
     <Compile Include="AST\Lambda.cs" />

@@ -19,6 +19,7 @@ namespace EtcScriptLib.Ast
 		public override Node Transform(ParseScope Scope)
 		{
 			ResultType = Type.Void;
+			LHS.IsAssignmentTarget = true;
 			LHS = LHS.Transform(Scope);
 			if (!(LHS is IAssignable)) throw new CompileError("Assignment target is not an lvalue", Source);
 			Value = Value.Transform(Scope);
@@ -31,30 +32,13 @@ namespace EtcScriptLib.Ast
 				Value = Type.CreateConversionInvokation(Scope, compatibilityResult.ConversionMacro, Value)
 					.Transform(Scope);
 
-			return this;
+			return (LHS as IAssignable).TransformAssignment(Scope, this, Value);
 		}
 
 		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
 		{
 			Value.Emit(into, OperationDestination.Stack);
 			(LHS as IAssignable).EmitAssignment(into);
-
-			//if (LHS is MemberAccess)
-			//{
-			//    (LHS as MemberAccess).Object.Emit(into, OperationDestination.Stack);
-			//    Value.Emit(into, OperationDestination.R);
-			//    if ((LHS as MemberAccess).IsDynamicAccess)
-			//        into.AddInstructions("DYN_SET_MEMBER R STRING POP", into.AddString((LHS as MemberAccess).Name));
-			//    else
-			//        into.AddInstructions("SET_MEMBER R STRING POP", into.AddString((LHS as MemberAccess).Name));
-			//}
-			//else if (LHS is Identifier)
-			//{
-			//    Value.Emit(into, OperationDestination.R);
-			//    (LHS as Identifier).EmitAssignment(into);
-			//}
-			//else
-			//    throw new InvalidProgramException();
 		}
 	}
 }

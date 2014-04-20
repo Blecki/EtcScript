@@ -8,5 +8,6 @@ namespace EtcScriptLib.Ast
 	public interface IAssignable
 	{
 		void EmitAssignment(VirtualMachine.InstructionList into);
+		Node TransformAssignment(ParseScope Scope, Let Let, Node Value);
 	}
 }

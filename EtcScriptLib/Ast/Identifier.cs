@@ -83,9 +83,6 @@ namespace EtcScriptLib.Ast
 				throw new InvalidOperationException();
 		}
 
-		public override void Debug(int depth)
-		{
-			Console.WriteLine(new String(' ', depth * 3) + "Identifier " + Name.Value);
-		}
+		public Node TransformAssignment(ParseScope Scope, Let Let, Node Value) { return Let; }
 	}
 }
