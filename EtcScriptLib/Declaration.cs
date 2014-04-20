@@ -210,23 +210,37 @@ namespace EtcScriptLib
 
 		public void ResolveTypes(ParseScope Scope)
 		{
-			DeclarationScope = Scope.Push(ScopeType.Function);
-			DeclarationScope.Owner = this;
-
-			if (!String.IsNullOrEmpty(ReturnTypeName))
+			try
 			{
-				ReturnType = Scope.FindType(ReturnTypeName);
-				if (ReturnType == null) throw new CompileError("Could not find type '" +
-					ReturnTypeName + "'.", Body.Body.Source);
+				DeclarationScope = Scope.Push(ScopeType.Function);
+				DeclarationScope.Owner = this;
+
+				if (!String.IsNullOrEmpty(ReturnTypeName))
+				{
+					ReturnType = Scope.FindType(ReturnTypeName);
+					if (ReturnType == null)
+					{
+						if (Body != null && Body.Body != null)
+							throw new CompileError("Could not find type '" +
+								ReturnTypeName + "'.", Body.Body.Source);
+						else
+							throw new CompileError("Could not find type '" +
+								ReturnTypeName + "'.");
+					}
+				}
+				else
+					ReturnType = EtcScriptLib.Type.Void;
+
+				CreateParameterDescriptors();
+
+				var header = DescriptiveHeader;
+				Body.Name = header;
+				if (WhenClause != null) WhenClause.Name = header + " : when ...";
 			}
-			else
-				ReturnType = EtcScriptLib.Type.Void;
-
-			CreateParameterDescriptors();
-
-			var header = DescriptiveHeader;
-			Body.Name = header;
-			if (WhenClause != null) WhenClause.Name = header + " : when ...";
+			catch (Exception e)
+			{
+				throw new CompileError(e.Message + " while resolving types on " + DescriptiveHeader + "\n" + e.StackTrace);
+			}
 		}
 
 		// Given a list of terms, create the variable objects to represent the parameters of the declaration

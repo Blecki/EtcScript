@@ -23,8 +23,9 @@ namespace EtcScriptLib.VirtualMachine
 			StackCallable = true;
         }
 
-        public NativeFunction(Func<ExecutionContext, List<Object>, Object> NativeImplementation)
+        public NativeFunction(String Name, Func<ExecutionContext, List<Object>, Object> NativeImplementation)
         {
+			this.Name = Name;
             this.NativeImplementation = NativeImplementation;
 			StackCallable = false;
         }

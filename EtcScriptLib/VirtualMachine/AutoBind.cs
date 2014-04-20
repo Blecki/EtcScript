@@ -54,17 +54,5 @@ namespace EtcScriptLib.VirtualMachine
             return obj as InstructionList;
         }
 
-        public static NativeFunction GenerateMethodBinding(System.Reflection.MethodInfo method)
-        {
-            return new NativeFunction((context, arguments) =>
-                {
-                    var parameters = method.GetParameters();
-                    int start = method.IsStatic ? 0 : 1;
-                    var transformedArguments = new Object[arguments.Count - start];
-                    for (var i = 0; i < transformedArguments.Length; ++i)
-                        transformedArguments[i] = Convert.ChangeType(arguments[i + start], parameters[i].ParameterType);
-                    return method.Invoke(method.IsStatic ? null : arguments[0], transformedArguments);
-                });
-        }
     }
 }

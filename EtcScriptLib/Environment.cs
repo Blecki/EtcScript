@@ -11,7 +11,7 @@ namespace EtcScriptLib
 
 		public SystemVariable(String Name, Func<VirtualMachine.ExecutionContext, Object> Implementation, String Typename)
 		{
-			this.Implementation = new VirtualMachine.NativeFunction((c, l) => Implementation(c));
+			this.Implementation = new VirtualMachine.NativeFunction("[sys-variable] " + Name, (c, l) => Implementation(c));
 			this.StorageMethod = VariableStorageMethod.System;
 			this.DeclaredTypeName = Typename;
 			this.Name = Name;
