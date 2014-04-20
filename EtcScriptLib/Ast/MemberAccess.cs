@@ -16,7 +16,8 @@ namespace EtcScriptLib.Ast
 		{
 			Object = Object.Transform(Scope);
 			if (Object.ResultType.Origin == TypeOrigin.System)
-				return new GenericMemberAccess(Source) { Name = Name, Object = Object }.Transform(Scope);
+				throw new CompileError("Unimplemented.", Source);
+				//return new GenericMemberAccess(Source) { Name = Name, Object = Object }.Transform(Scope);
 			else if (Object.ResultType.Origin == TypeOrigin.Script)
 				return new StaticMemberAccess(Source) { MemberName = Name, Object = Object }.Transform(Scope);
 			else

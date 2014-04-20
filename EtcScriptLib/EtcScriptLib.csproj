@@ -50,8 +50,6 @@
     <Compile Include="AST\Initializer.cs" />
     <Compile Include="AST\StringLiteral.cs" />
     <Compile Include="AST\Lambda.cs" />
-    <Compile Include="AST\GenericMemberAccess.cs" />
-    <Compile Include="AST\DynamicMemberAccess.cs" />
     <Compile Include="AST\StaticMemberAccess.cs" />
     <Compile Include="AST\IAssignable.cs" />
     <Compile Include="AST\New.cs" />

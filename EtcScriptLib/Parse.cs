@@ -210,25 +210,6 @@ namespace EtcScriptLib
 
 				return ParseOptionalDot(Stream, MA, Context);
 			}
-			else if (Stream.Next().Type == TokenType.QuestionMark)
-			{
-				Stream.Advance();
-				if (Stream.Next().Type != TokenType.Identifier)
-					throw new CompileError("[010] ? operator must be followed by identifier", Stream);
-				var RHS = Stream.Next().Value;
-				var MA = new Ast.DynamicMemberAccess(LHS.Source);
-				MA.Object = LHS;
-				MA.Name = RHS;
-				Stream.Advance();
-
-				if (!Stream.AtEnd() && Stream.Next().Type == TokenType.Colon)
-				{
-					Stream.Advance();
-					MA.DefaultValue = ParseTerm(Stream, Context);
-				}
-
-				return ParseOptionalDot(Stream, MA, Context);
-			}
 			else
 				return LHS;
 		}		
