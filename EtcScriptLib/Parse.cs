@@ -745,6 +745,7 @@ namespace EtcScriptLib
 					else if (Stream.Next().Value.ToUpper() == "TEST")
 					{
 						var declaration = ParseMacroDeclaration(Stream, Context);
+						declaration.Type = DeclarationType.Test;
 						declaration.OwnerContextID = Context.ID;
 						r.Add(declaration);
 						Context.PendingEmission.Add(declaration);
