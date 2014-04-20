@@ -103,8 +103,6 @@ namespace EtcScriptLib.Ast
 			if (match == null)
 				throw new CompileError("Could not find matching function for static invokation", Source);
 
-			ResultType = match.Item1.ReturnType;
-
 			return CreateCorrectInvokationNode(Source, Scope, match.Item1, match.Item2).Transform(Scope);
 		}
 
@@ -117,7 +115,16 @@ namespace EtcScriptLib.Ast
 			if (Declaration.OwnerContextID == Scope.EnvironmentContext.ID && Declaration.OwnerContextID != 0)
 				return new Ast.JumpCall(Source, Declaration, Arguments);
 			else
-				return new Ast.FunctionCall(Source, Declaration.MakeInvokableFunction(), Arguments);
+			{
+				var implementation = Declaration.MakeInvokableFunction();
+				if (implementation.IsStackInvokable)
+					return new Ast.StackCall(Source, Declaration, Arguments);
+				else
+				{
+					Arguments.Insert(0, new Ast.Literal(Source, Declaration.MakeInvokableFunction(), "GENERIC"));
+					return new Ast.CompatibleCall(Source, Arguments, Declaration.ReturnTypeName);
+				}
+			}
 		}
 	}
 }

@@ -8,16 +8,19 @@ namespace EtcScriptLib.Ast
 	public class CompatibleCall : Statement
 	{
 		public AssembleList Parameters;
+		public String ResultTypename;
 
-		public CompatibleCall(Token Source, AssembleList Parameters)
-			: base(Source) 
+		public CompatibleCall(Token Source, List<Node> Parameters, String ResultTypename)
+			: base(Source)
 		{
-			this.Parameters = Parameters;
+			this.Parameters = new AssembleList(Source, Parameters);
+			this.ResultTypename = ResultTypename;
 		}
 
 		public override Node Transform(ParseScope Scope)
 		{
-			ResultType = Type.Generic;
+			ResultType = Scope.FindType(ResultTypename);
+			if (ResultType == null) throw new CompileError("Could not find type '" + ResultTypename + "'.", Source);
 			Parameters = Parameters.Transform(Scope) as AssembleList;
 			return this;
 		}
@@ -28,13 +31,6 @@ namespace EtcScriptLib.Ast
 			into.AddInstructions("INVOKE POP");
 			if (Destination != OperationDestination.R && Destination != OperationDestination.Discard)
 				into.AddInstructions("MOVE R " + Node.WriteOperand(Destination));
-		}
-
-		public override void Debug(int depth)
-		{
-			Console.Write(new String(' ', depth * 3));
-			Console.WriteLine("Invoke");
-			Parameters.Debug(depth + 1);
 		}
 	}
 }

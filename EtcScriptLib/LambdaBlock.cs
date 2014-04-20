@@ -15,6 +15,7 @@ namespace EtcScriptLib
 		internal List<int> CallPoints = new List<int>();
 		internal int CleanupPoint;
 		internal int CleanupCall = -1;
+		internal Type ReturnType = null;
 
 		public LambdaBlock(Ast.Node Body)
 		{

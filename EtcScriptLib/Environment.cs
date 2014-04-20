@@ -77,6 +77,11 @@ namespace EtcScriptLib
 			Context.ActiveScope.Macros.Add(PrepareSystemMacro(Header, Implementation));
 		}
 
+		public void AddSystemType(String Name)
+		{
+			Context.ActiveScope.Types.Add(new Type { Origin = TypeOrigin.System, Name = Name.ToUpper() });
+		}
+
 		public static Declaration PrepareSystemMacro(String Header,
 			Func<VirtualMachine.ExecutionContext, List<Object>, Object> Implementation)
 		{

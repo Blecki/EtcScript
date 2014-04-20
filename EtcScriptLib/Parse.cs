@@ -153,7 +153,7 @@ namespace EtcScriptLib
 			{
 				Stream.Advance();
 				var parameters = ParseDynamicInvokation(Stream, Context);
-				r = new Ast.CompatibleCall(parameters[0].Source, new Ast.AssembleList(new Token(), parameters));
+				r = new Ast.CompatibleCall(parameters[0].Source, parameters, "GENERIC");
 				if (Stream.Next().Type != TokenType.Semicolon) throw new CompileError("[00B] Expected ;", Stream);
 				Stream.Advance();
 			}
@@ -243,7 +243,7 @@ namespace EtcScriptLib
 			{
 				Stream.Advance();
 				var parameters = ParseDynamicInvokation(Stream, Context);
-				r = new Ast.CompatibleCall(parameters[0].Source, new Ast.AssembleList(new Token(), parameters));
+				r = new Ast.CompatibleCall(parameters[0].Source, parameters, "GENERIC");
 			}
 			else if (Stream.Next().Type == TokenType.Identifier ||
 				Stream.Next().Type == TokenType.Number ||

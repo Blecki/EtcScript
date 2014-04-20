@@ -58,7 +58,6 @@
     <Compile Include="AST\JumpCall.cs" />
     <Compile Include="AST\StaticInvokation.cs" />
     <Compile Include="AST\Literal.cs" />
-    <Compile Include="AST\FunctionCall.cs" />
     <Compile Include="AST\MemberAccess.cs" />
     <Compile Include="AST\Identifier.cs" />
     <Compile Include="AST\Let.cs" />
@@ -105,7 +104,6 @@
     <Compile Include="VirtualMachine\InstructionSet.cs" />
     <Compile Include="VirtualMachine\InvokableFunction.cs" />
     <Compile Include="VirtualMachine\NativeFunction.cs" />
-    <Compile Include="VirtualMachine\OverloadedReflectionFunction.cs" />
     <Compile Include="VirtualMachine\Upsert.cs" />
     <Compile Include="VirtualMachine\VirtualMachine.cs" />
   </ItemGroup>

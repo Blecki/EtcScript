@@ -8,9 +8,9 @@ namespace EtcScriptLib.Ast
 	public class StackCall : Statement
 	{
 		public List<Node> Arguments;
-		public VirtualMachine.InvokeableFunction Function;
+		public Declaration Function;
 
-		public StackCall(Token Source, VirtualMachine.InvokeableFunction Function, List<Node> Arguments) : base(Source) 
+		public StackCall(Token Source, Declaration Function, List<Node> Arguments) : base(Source) 
 		{
 			this.Function = Function;
 			this.Arguments = Arguments;
@@ -27,18 +27,11 @@ namespace EtcScriptLib.Ast
 		{
 			foreach (var arg in Arguments)
 				arg.Emit(into, OperationDestination.Stack);
-			into.AddInstructions("STACK_INVOKE NEXT", Function);
+			into.AddInstructions("STACK_INVOKE NEXT", Function.MakeInvokableFunction());
 			if (Arguments.Count > 0) into.AddInstructions("CLEANUP NEXT", Arguments.Count);
 			if (Destination != OperationDestination.R && Destination != OperationDestination.Discard)
 				into.AddInstructions("MOVE R " + Node.WriteOperand(Destination));
 		}
 
-		public override void Debug(int depth)
-		{
-			Console.Write(new String(' ', depth * 3));
-			Console.WriteLine("Stack Call");
-			foreach (var arg in Arguments)
-				arg.Debug(depth + 1);
-		}
 	}
 }

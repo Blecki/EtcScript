@@ -147,5 +147,26 @@ test _ : number {
 			var result = TestHelper.CallTestFunction(script);
 			Assert.AreEqual(30, result);
 		}
+
+		[Test]
+		public void system_accessor()
+		{
+			var script = @"
+test _ : number {
+	return ([foo].bar):number;
+}";
+			var result = TestHelper.CallTestFunction(script, e =>
+				{
+					e.AddSystemType("_foo");
+					e.AddSystemMacro("foo : _foo", (c, l) => { return new Tuple<int, int>(42, 87); });
+					e.AddSystemMacro("get (x:string) from (y:_foo) : generic", (c, l) =>
+					{
+						var v = l[1] as Tuple<int, int>;
+						return v.Item1 * v.Item2;
+					});
+				});
+
+			Assert.AreEqual(42 * 87, result);
+		}
 	}
 }
