@@ -7,9 +7,9 @@ namespace EtcScriptLib
 {
 	public partial class StandardLibrary
 	{
-		public static void ForeachXInList(ParseContext Context)
+		public static void ForeachXInList(Environment Environment)
 		{
-			Context.AddControl(Control.Create(
+			Environment.AddControl(Control.Create(
 				Declaration.Parse("foreach (x) in (list)"),
 				ControlBlockType.RequiredBlock,
 				(parameters, body) =>

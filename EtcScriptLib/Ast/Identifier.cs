@@ -84,5 +84,10 @@ namespace EtcScriptLib.Ast
 		}
 
 		public Node TransformAssignment(ParseScope Scope, Let Let, Node Value) { return Let; }
+
+		public Type DestinationType
+		{
+			get { return MatchedVariable.DeclaredType; }
+		}
 	}
 }

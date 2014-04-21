@@ -7,9 +7,9 @@ namespace EtcScriptLib
 {
 	public partial class StandardLibrary
 	{
-		public static void WhileCondition(ParseContext Context)
+		public static void WhileCondition(Environment Environment)
 		{
-			Context.AddControl(Control.Create(
+			Environment.AddControl(Control.Create(
 				Declaration.Parse("while (x)"),
 					ControlBlockType.RequiredBlock,
 					(parameters, body) =>

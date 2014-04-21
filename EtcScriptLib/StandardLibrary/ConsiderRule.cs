@@ -7,9 +7,9 @@ namespace EtcScriptLib
 {
 	public partial class StandardLibrary
 	{
-		public static void ConsiderRule(ParseContext Context)
+		public static void ConsiderRule(Environment Environment)
 		{
-			Context.AddControl(Control.Create(
+			Environment.AddControl(Control.Create(
 				Declaration.Parse("consider (x)"),
 				ControlBlockType.NoBlock,
 				(parameters, body) =>
@@ -53,6 +53,7 @@ namespace EtcScriptLib
 					int whenSkipPoint = 0;
 					if (Rule.WhenClause != null)
 					{
+						if (!quickCall) throw new CompileError("This shouldn't happen", Source);
 						EmitCallInstruction(Instructions, Rule, Rule.WhenClause, quickCall);
 						Instructions.AddInstructions("IF_FALSE R", "JUMP NEXT", 0);
 						whenSkipPoint = Instructions.Count - 1;

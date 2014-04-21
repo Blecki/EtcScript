@@ -5,22 +5,20 @@ using System.Text;
 
 namespace EtcScriptLib.Ast
 {
-	public class GenericSetter : Node, IAssignable
+	public class ExplicitSetter : Node, IAssignable
 	{
 		public Node Object;
-		public String MemberName;
 		public Declaration Function;
 
-		public GenericSetter(Token Source, Declaration Function, String MemberName, Node Object) : base(Source) 
+		public ExplicitSetter(Token Source, Declaration Function, Node Object) : base(Source) 
 		{
 			this.Function = Function;
 			this.Object = Object;
-			this.MemberName = MemberName;
 		}
 
 		public override Node Transform(ParseScope Scope)
 		{
-			ResultType = Type.Generic;
+			ResultType = Function.ReturnType;
 			return this;
 		}
 
@@ -37,12 +35,12 @@ namespace EtcScriptLib.Ast
 		public Node TransformAssignment(ParseScope Scope, Let Let, Node Value)
 		{
 			var arguments = new List<Node>();
-			arguments.Add(new StringLiteral(Source, MemberName));
 			arguments.Add(Object);
 			arguments.Add(Value);
 
 			return StaticInvokation.CreateCorrectInvokationNode(Source, Scope, Function, arguments);
 		}
+
 
 		public Type DestinationType
 		{

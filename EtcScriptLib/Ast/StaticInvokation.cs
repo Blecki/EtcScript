@@ -101,7 +101,17 @@ namespace EtcScriptLib.Ast
 			var possibleMatches = Scope.FindAllPossibleMacroMatches(Arguments);
 			var match = FindTypeMatch(possibleMatches, Arguments, Scope);
 			if (match == null)
-				throw new CompileError("Could not find matching function for static invokation", Source);
+			{
+				var errorMessage = "Could not find match for static invokation. Arguments: ";
+				foreach (var argument in Arguments)
+				{
+					errorMessage += "(";
+					if (argument is Identifier) errorMessage += (argument as Identifier).Name.Value;
+					if (argument.ResultType != null) errorMessage += argument.ResultType.Name + ") ";
+					else errorMessage += "NULL)";
+				}
+				throw new CompileError(errorMessage, Source);
+			}
 
 			return CreateCorrectInvokationNode(Source, Scope, match.Item1, match.Item2).Transform(Scope);
 		}
@@ -121,8 +131,9 @@ namespace EtcScriptLib.Ast
 					return new Ast.StackCall(Source, Declaration, Arguments);
 				else
 				{
-					Arguments.Insert(0, new Ast.Literal(Source, Declaration.MakeInvokableFunction(), "GENERIC"));
-					return new Ast.CompatibleCall(Source, Arguments, Declaration.ReturnTypeName);
+					throw new CompileError("This should be impossible", Source);
+					//Arguments.Insert(0, new Ast.Literal(Source, Declaration.MakeInvokableFunction(), "GENERIC"));
+					//return new Ast.CompatibleCall(Source, Arguments, Declaration.ReturnTypeName);
 				}
 			}
 		}

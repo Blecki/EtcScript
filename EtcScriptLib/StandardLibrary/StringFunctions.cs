@@ -7,21 +7,23 @@ namespace EtcScriptLib
 {
 	public partial class StandardLibrary
 	{
-		public static void StringFunctions(ParseContext Context)
+		public static void StringFunctions(Environment Environment)
 		{
-			Context.ActiveScope.Macros.Add(Environment.PrepareSystemMacro(
+			Environment.AddScriptMacro(@"MACRO CONVERT (S:COMPLEXSTRING) TO STRING : STRING { RETURN (:[S]):STRING; }");
+
+			Environment.AddSystemMacro(
 				"length of (s:string) : number",
 				(context, arguments) =>
 				{
 					return (int)(arguments[0] as String).Length;
-				}));
+				});
 
-			Context.ActiveScope.Macros.Add(Environment.PrepareSystemMacro(
+			Environment.AddSystemMacro(
 				"(s:string) at (n:number) : number",
 				(context, arguments) =>
 				{
 					return (int)(arguments[0] as String)[(arguments[1] as int?).Value];
-				}));
+				});
 		}
 	}
 }

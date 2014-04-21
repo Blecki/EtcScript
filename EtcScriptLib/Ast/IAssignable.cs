@@ -9,5 +9,6 @@ namespace EtcScriptLib.Ast
 	{
 		void EmitAssignment(VirtualMachine.InstructionList into);
 		Node TransformAssignment(ParseScope Scope, Let Let, Node Value);
+		Type DestinationType { get; }
 	}
 }

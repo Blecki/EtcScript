@@ -22,7 +22,7 @@ namespace EtcScriptDebug
 			try
 			{
 				var x = new EtcScriptTests.Types();
-				x.system_setter();
+				x.explicit_system_setter();
 			}
 			catch (Exception e)
 			{

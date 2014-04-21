@@ -33,6 +33,8 @@ namespace EtcScriptLib
 			{
 				if (node is Ast.Identifier)
 					return term.Name == (node as Ast.Identifier).Name.Value.ToUpper();
+				else if (node is Ast.MemberAccess.DummyKeyword)
+					return term.Name == (node as Ast.MemberAccess.DummyKeyword).Name;
 				return false;
 			}
 

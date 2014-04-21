@@ -161,7 +161,7 @@ test _ : number {
 		}
 
 		[Test]
-		public void system_getter()
+		public void generic_system_getter()
 		{
 			var script = @"
 test _ : number {
@@ -191,7 +191,33 @@ test _ : number {
 		}
 
 		[Test]
-		public void system_setter()
+		public void explicit_system_getter()
+		{
+			var script = @"
+test _ : number {
+	var t = [make t];
+	return (t.x * t.y):number;
+}";
+			var result = TestHelper.CallTestFunction(script, e =>
+			{
+				e.AddSystemType("T");
+				e.AddSystemMacro("make t : T", (c, l) => { return new T(42, 87); });
+				e.AddSystemMacro("get x from (t:T) : number", (c, l) =>
+				{
+					return (l[0] as T).X;
+				});
+				e.AddSystemMacro("get y from (t:T) : number", (c, l) =>
+				{
+					return (l[0] as T).Y;
+				});
+			});
+
+			Assert.AreEqual(42 * 87, result);
+		}
+
+
+		[Test]
+		public void generic_system_setter()
 		{
 			var script = @"
 test _ : number {
@@ -233,5 +259,43 @@ test _ : number {
 
 			Assert.AreEqual(30, result);
 		}
+
+		[Test]
+		public void explicit_system_setter()
+		{
+			var script = @"
+test _ : number {
+	var t = [make t];
+	let t.x = 5;
+	let t.y = 6;
+	return (t.x * t.y):number;
+}";
+			var result = TestHelper.CallTestFunction(script, e =>
+			{
+				e.AddSystemType("T");
+				e.AddSystemMacro("make t : T", (c, l) => { return new T(42, 87); });
+				e.AddSystemMacro("get x from (t:T) : number", (c, l) =>
+				{
+					return (l[0] as T).X;
+				});
+				e.AddSystemMacro("get y from (t:T) : number", (c, l) =>
+				{
+					return (l[0] as T).Y;
+				});
+				e.AddSystemMacro("set x on (t:T) to (a:number)", (c, l) =>
+				{
+					(l[0] as T).X = Convert.ToInt32(l[1]);
+					return null;
+				});
+				e.AddSystemMacro("set y on (t:T) to (a:number)", (c, l) =>
+				{
+					(l[0] as T).Y = Convert.ToInt32(l[1]);
+					return null;
+				});
+			});
+
+			Assert.AreEqual(30, result);
+		}
+
 	}
 }

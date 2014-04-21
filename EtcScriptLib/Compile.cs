@@ -74,9 +74,9 @@ namespace EtcScriptLib
 
 		private static int __contextID = 1;
 
-		public static ParseContext GetDefaultParseContext()
+		public static ParseContext GetDefaultParseContext(Environment Environment)
 		{
-			var context = new ParseContext();
+			var context = Environment.Context;
 			context.ID = ++__contextID;
 
 			context.AddOperator(1, "|", VirtualMachine.InstructionSet.OR);
@@ -99,7 +99,7 @@ namespace EtcScriptLib
 				if (member.IsStatic)
 					try
 					{
-						member.Invoke(null, new Object[] { context });
+						member.Invoke(null, new Object[] { Environment });
 					}
 					catch (Exception e) { }
 			

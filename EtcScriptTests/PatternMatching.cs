@@ -11,9 +11,9 @@ namespace EtcScriptTests
     {
 		private static List<EtcScriptLib.Ast.Node> ParseInvokation(String script)
 		{
-			var parseContext = EtcScriptLib.Compile.GetDefaultParseContext();
-			var tokenIterator = new EtcScriptLib.TokenStream(new EtcScriptLib.Compile.StringIterator(script), parseContext);
-			return EtcScriptLib.Parse.ParseStaticInvokationStatement(tokenIterator, parseContext);
+			var environment = new EtcScriptLib.Environment();
+			var tokenIterator = new EtcScriptLib.TokenStream(new EtcScriptLib.Compile.StringIterator(script), environment.Context);
+			return EtcScriptLib.Parse.ParseStaticInvokationStatement(tokenIterator, environment.Context);
 		}
 
 		private static bool MatchesDeclaration(String header, String script, bool debug = false)

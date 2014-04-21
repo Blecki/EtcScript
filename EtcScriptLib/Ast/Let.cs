@@ -24,9 +24,9 @@ namespace EtcScriptLib.Ast
 			if (!(LHS is IAssignable)) throw new CompileError("Assignment target is not an lvalue", Source);
 			Value = Value.Transform(Scope);
 
-			var compatibilityResult = Type.AreTypesCompatible(Value.ResultType, LHS.ResultType, Scope);
+			var compatibilityResult = Type.AreTypesCompatible(Value.ResultType, (LHS as IAssignable).DestinationType, Scope);
 			if (!compatibilityResult.Compatible)
-				Type.ThrowConversionError(Value.ResultType, LHS.ResultType, Source);
+				Type.ThrowConversionError(Value.ResultType, (LHS as IAssignable).DestinationType, Source);
 
 			if (compatibilityResult.ConversionRequired)
 				Value = Type.CreateConversionInvokation(Scope, compatibilityResult.ConversionMacro, Value)

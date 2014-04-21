@@ -20,9 +20,15 @@ namespace EtcScriptLib
 
 	public class Environment
 	{
-		public ParseContext Context = Compile.GetDefaultParseContext();
+		public ParseContext Context;
 		private Dictionary<int, Object> StaticVariableStorage = new Dictionary<int, object>();
 		private int StaticVariableCount = 0;
+
+		public Environment()
+		{
+			Context = new ParseContext();
+			Compile.GetDefaultParseContext(this);
+		}
 
 		public VirtualMachine.ExecutionContext CreateExecutionContext(VirtualMachine.CodeContext EntryPoint)
 		{
@@ -75,6 +81,14 @@ namespace EtcScriptLib
 		public void AddSystemMacro(String Header, Func<VirtualMachine.ExecutionContext, List<Object>, Object> Implementation)
 		{
 			Context.ActiveScope.Macros.Add(PrepareSystemMacro(Header, Implementation));
+		}
+
+		public void AddScriptMacro(String Script)
+		{
+			var stream = new TokenStream(new Compile.StringIterator(Script), Context);
+			var declaration = Parse.ParseMacroDeclaration(stream, Context);
+			declaration.OwnerContextID = Context.ID;
+			Context.PendingEmission.Add(declaration);
 		}
 
 		public void AddSystemType(String Name)

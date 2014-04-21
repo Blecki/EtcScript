@@ -29,7 +29,7 @@ namespace EtcScriptLib
 			source.Advance();
 			location.Character += 1;
 
-			if (r == '\r' || r == '\n')
+			if (r == '\n')
 			{
 				location.Line += 1;
 				location.Character = 0;

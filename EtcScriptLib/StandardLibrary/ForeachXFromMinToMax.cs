@@ -7,9 +7,9 @@ namespace EtcScriptLib
 {
 	public partial class StandardLibrary
 	{
-		public static void ForeachXFromMinToMax(ParseContext Context)
+		public static void ForeachXFromMinToMax(Environment Environment)
 		{
-			Context.AddControl(Control.Create(
+			Environment.AddControl(Control.Create(
 					Declaration.Parse("foreach (x) from (low) to (high)"),
 					ControlBlockType.RequiredBlock,
 					(parameters, body) =>

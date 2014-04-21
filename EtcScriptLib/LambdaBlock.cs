@@ -75,7 +75,6 @@ namespace EtcScriptLib
 			if (CachedLambda == null)
 			{
 				if (Instructions == null) throw new InvalidOperationException();
-
 				CachedLambda = VirtualMachine.LambdaFunction.CreateLambda(Name, GetCleanupPoint(), GetEntryPoint(), ArgumentCount);
 			}
 		
