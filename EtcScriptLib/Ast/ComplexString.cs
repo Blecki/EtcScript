@@ -22,7 +22,7 @@ namespace EtcScriptLib.Ast
 
 			if (Pieces.Count == 0) return new StringLiteral(Source, "");
 
-			Pieces.Insert(0, new StringLiteral(Source, ""));
+			Pieces.Insert(0, new StringLiteral(Source, "").Transform(Scope));
 
 			var lambdaDeclaration = new Declaration();
 			lambdaDeclaration.Type = DeclarationType.Lambda;
@@ -35,14 +35,28 @@ namespace EtcScriptLib.Ast
 			}
 			else
 			{
-				var binOp = Pieces[0];
+				var stringType = Scope.FindType("STRING");
+
+				var binOp = Convert(Pieces[0], stringType, Scope);
 				for (int i = 1; i < Pieces.Count; ++i)
-					binOp = new BinaryOperator(Source, VirtualMachine.InstructionSet.ADD, binOp, Pieces[i]);
+					binOp = new BinaryOperator(Source, VirtualMachine.InstructionSet.ADD, binOp, 
+						Convert(Pieces[i], stringType, Scope));
 
 				lambdaDeclaration.Body = new LambdaBlock(new Ast.Return(Source) { Value = binOp });
 			}
 
 			return new Lambda(Source, lambdaDeclaration, "COMPLEXSTRING").Transform(Scope);
+		}
+
+		private Node Convert(Node Node, Type StringType, ParseScope Scope)
+		{
+			var conversionInfo = Type.AreTypesCompatible(Node.ResultType, StringType, Scope);
+			if (!conversionInfo.Compatible)
+				Type.ThrowConversionError(Node.ResultType, StringType, Source);
+
+			if (conversionInfo.ConversionRequired)
+				return Type.CreateConversionInvokation(Scope, conversionInfo.ConversionMacro, Node).Transform(Scope);
+			return Node;
 		}
 	}
 }
