@@ -94,10 +94,13 @@ namespace EtcScriptLib.Ast
 
 		public override Ast.Node Transform(ParseScope Scope)
 		{
-			//First, check the first argument and see if it can be transformed, and the result is a lambda.
-			//		If so, transform into a compatible call of that lambda.
-
-
+			//Look for a control macro.
+			var control = Scope.EnvironmentContext.FindControl(Arguments);
+			if (control != null && control.BlockType == ControlBlockType.NoBlock)
+				return control.TransformationFunction(
+					Declaration.GenerateParameterListSyntaxTree(Arguments, control.DeclarationTerms).Members,
+					null).Transform(Scope);
+		
 			var possibleMatches = Scope.FindAllPossibleMacroMatches(Arguments);
 			var match = FindTypeMatch(possibleMatches, Arguments, Scope);
 			if (match == null)

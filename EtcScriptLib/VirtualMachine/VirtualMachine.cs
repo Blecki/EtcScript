@@ -481,10 +481,17 @@ namespace EtcScriptLib.VirtualMachine
 
                     case InstructionSet.EQUAL:
                         {
-                            dynamic a = GetOperand(ins.FirstOperand, context);
-                            dynamic b = GetOperand(ins.SecondOperand, context);
-                            var result = (a == b);
-                            SetOperand(ins.ThirdOperand, result, context);
+							try
+							{
+								dynamic a = GetOperand(ins.FirstOperand, context);
+								dynamic b = GetOperand(ins.SecondOperand, context);
+								var result = (a == b);
+								SetOperand(ins.ThirdOperand, result, context);
+							}
+							catch (Exception e)
+							{
+								SetOperand(ins.ThirdOperand, false, context);
+							}
                         }
                         break;
 

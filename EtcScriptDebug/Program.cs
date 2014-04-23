@@ -21,8 +21,8 @@ namespace EtcScriptDebug
 
 			try
 			{
-				var x = new EtcScriptTests.Types();
-				x.explicit_system_setter();
+				var x = new EtcScriptTests.Rules();
+				x.rule_types();
 			}
 			catch (Exception e)
 			{

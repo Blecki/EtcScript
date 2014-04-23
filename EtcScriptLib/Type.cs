@@ -84,6 +84,9 @@ namespace EtcScriptLib
 		private static Type _generic = new Type { Name = "GENERIC", Origin = TypeOrigin.System };
 		public static Type Generic { get { return _generic; } }
 
+		private static Type _rule_result = new Type { Name = "RULE-RESULT", Origin = TypeOrigin.Primitive };
+		public static Type RuleResult { get { return _rule_result; } }
+
 		public static Type CreatePrimitive(String Name)
 		{
 			return new Type { Name = Name, Origin = TypeOrigin.Primitive };

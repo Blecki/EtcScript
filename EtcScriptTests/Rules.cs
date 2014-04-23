@@ -14,7 +14,7 @@ namespace EtcScriptTests
 		{
 			var script = @"
 rule foo (a) (b) bar {
-	return 6;
+	return stop;
 }
 
 test _ : number {
@@ -31,7 +31,7 @@ test _ : number {
 		{
 			var script = @"
 rule foo (a) (b) bar {
-	return 1;
+	return continue;
 }
 
 test _ {
@@ -51,7 +51,7 @@ rule foo (a) when false {
 }
 
 rule foo (a) when true {
-	return 1;
+	return continue;
 }
 
 test _ {
@@ -61,6 +61,23 @@ test _ {
 
 			var result = TestHelper.CallTestFunction(script);
 
+		}
+
+		[Test]
+		public void rule_types()
+		{
+			var script = @"
+rule foo : string {
+	return ""a"";
+}
+
+test _ : string {
+	return [consider [foo]];
+}
+";
+
+			var result = TestHelper.CallTestFunction(script);
+			Assert.IsTrue(result.ToString() == "a");
 		}
 	}
 

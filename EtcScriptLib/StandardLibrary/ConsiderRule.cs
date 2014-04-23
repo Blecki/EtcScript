@@ -35,9 +35,12 @@ namespace EtcScriptLib
 				else throw new CompileError("Argument to ConsiderRule must be static invokation", Source);
 			}
 
-			public override void Emit(VirtualMachine.InstructionList Instructions, EtcScriptLib.Ast.OperationDestination Destination)
+			public override void Emit(VirtualMachine.InstructionList Instructions, 
+				EtcScriptLib.Ast.OperationDestination Destination)
 			{
-				//Try each rule in Rulebook until one of them returns 0.
+				bool useFallThrough = Rulebook.ResultTypeName == "RULE-RESULT";
+
+				//Try each rule in Rulebook until one of them returns not-null.
 				List<int> JumpToEndPositions = new List<int>();
 
 				foreach (var arg in Arguments)
@@ -53,14 +56,50 @@ namespace EtcScriptLib
 					int whenSkipPoint = 0;
 					if (Rule.WhenClause != null)
 					{
-						if (!quickCall) throw new CompileError("This shouldn't happen", Source);
-						EmitCallInstruction(Instructions, Rule, Rule.WhenClause, quickCall);
+						if (quickCall)
+						{
+							Instructions.AddInstructions("CALL NEXT", 0);
+							Rule.WhenClause.CallPoints.Add(Instructions.Count - 1);
+						}
+						else
+						{
+							//Duplicate arguments onto top of stack.
+							Instructions.AddInstructions("MOVE F PUSH", "MARK_STACK F");
+							for (int i = Arguments.Count; i > 0; --i)
+								Instructions.AddInstructions("LOAD_PARAMETER NEXT PUSH", (-i - 1));
+							Instructions.AddInstructions("MOVE NEXT R",
+								Rule.WhenClause.GetBasicInvokable(Rule.ActualParameterCount),
+								"STACK_INVOKE R",
+								"CLEANUP NEXT", Arguments.Count,
+								"MOVE POP F");
+						}
+
 						Instructions.AddInstructions("IF_FALSE R", "JUMP NEXT", 0);
 						whenSkipPoint = Instructions.Count - 1;
 					}
 
-					EmitCallInstruction(Instructions, Rule, Rule.Body, quickCall);
-					Instructions.AddInstructions("EQUAL NEXT R R", 0, "IF_TRUE R", "JUMP NEXT", 0);
+					if (quickCall)
+					{
+						Instructions.AddInstructions("CALL NEXT", 0);
+						Rule.Body.CallPoints.Add(Instructions.Count - 1);
+					}
+					else
+					{
+						//Duplicate arguments onto top of stack.
+						Instructions.AddInstructions("MOVE F PUSH", "MARK_STACK F");
+						for (int i = Arguments.Count; i > 0; --i)
+							Instructions.AddInstructions("LOAD_PARAMETER NEXT PUSH", (-i - 1));
+						Instructions.AddInstructions("MOVE NEXT R",
+							Rule.Body.GetBasicInvokable(Rule.ActualParameterCount),
+							"STACK_INVOKE R",
+							"CLEANUP NEXT", Arguments.Count,
+							"MOVE POP F");
+					}
+
+					if (useFallThrough)
+						Instructions.AddInstructions("EQUAL NEXT R R", 0, "IF_TRUE R");
+
+					Instructions.AddInstructions("JUMP NEXT", 0);
 					JumpToEndPositions.Add(Instructions.Count - 1);
 
 					if (Rule.WhenClause != null) Instructions[whenSkipPoint] = Instructions.Count;
@@ -97,8 +136,12 @@ namespace EtcScriptLib
 				Rulebook = Scope.EnvironmentContext.Rules.FindMatchingRulebook(Arguments);
 				if (Rulebook == null)
 					return null;
+
+				ResultType = Rulebook.ResultType;
+				
 				var assembleList = Declaration.GenerateParameterListSyntaxTree(Arguments, Rulebook.DeclarationTerms);
 				Arguments = new List<Ast.Node>(assembleList.Members.Select(n => n.Transform(Scope)));
+
 
 				//Check types
 				int argumentIndex = 0;
@@ -119,13 +162,6 @@ namespace EtcScriptLib
 				return this;
 			}
 
-			public override void Debug(int depth)
-			{
-				Console.Write(new String(' ', depth * 3));
-				Console.WriteLine("Consider");
-				foreach (var arg in Arguments)
-					arg.Debug(depth + 1);
-			}
 		}
 	}
 }

@@ -26,7 +26,7 @@ StaticMember		:= "." + Identifier
 DynamicMember		:= "?" + Identifier + ":" + Term
 Expression			:= Term | BinaryOperation | New | Lambda
 Term				:= Parenthetical | Identifier | Number | BasicString | ComplexString 
-						| MemberAccess | BracketInvokation | DynamicInvokation | Cast
+						| MemberAccess | BracketInvokation | DynamicInvokation | Cast | List
 Parenthetical		:= "(" + Expression + ")"
 Cast				:= Parenthetical + : + Identifier	//Tell static type checking to go fuck itself.
 BinaryOperation		:= Term + Operator + Term
@@ -35,8 +35,8 @@ BracketInvokation	:= "[" + Invokation + "]"
 DynamicInvokation	:= ":" + BracketInvokation
 Control				:= Invokation + (Block | ;)
 Operator			:= Any of operators specified in operator table
-BasicString			:= Ordinary quote-delimited string				//This is a 'future' feature and will require lambda capture 
-ComplexString		:= @ + \" + ( Text | EmbeddedExpression )* + \"		//to implement
+BasicString			:= Ordinary quote-delimited string				 
+ComplexString		:= @ + \" + ( Text | EmbeddedExpression )* + \"		
 Text				:= Any sequence of characters except [ or ", matched greedily.
 EmbeddedExpression	:= [ + Expression + ]
 LocalDeclaration	:= "var" + Identifier + (: + Identifier)? + ("=" + Expression)? + ;
@@ -45,6 +45,7 @@ MemberDeclaration	:=  "var" + Identifier + (: + Identifier)? + ;
 New					:= "new" + Identifier + InitializerBlock?
 InitializerBlock	:= { + InitializerItem* + }
 InitializerItem		:= "let" + Identifier + "=" + Expression + ;
+List				:= { + Term* + }
 
 Delimeter symbols	:= []{}()\s\t\r\n.:;
 

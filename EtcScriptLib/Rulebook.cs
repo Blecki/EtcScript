@@ -13,6 +13,7 @@ namespace EtcScriptLib
     {
 		public List<DeclarationTerm> DeclarationTerms;
         public List<Declaration> Rules = new List<Declaration>();
-        
+		public Type ResultType;
+		public String ResultTypeName;
     }
 }

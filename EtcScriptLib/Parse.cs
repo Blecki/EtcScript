@@ -261,6 +261,16 @@ namespace EtcScriptLib
 			{
 				return ParseComplexString(Stream, Context);
 			}
+			else if (Stream.Next().Type == TokenType.OpenBrace)
+			{
+				var start = Stream.Next();
+				Stream.Advance();
+				var list = new List<Ast.Node>();
+				while (Stream.Next().Type != TokenType.CloseBrace)
+					list.Add(ParseTerm(Stream, Context));
+				Stream.Advance();
+				return new Ast.AssembleList(start, list);
+			}
 			else
 				throw new CompileError("[014] Illegal token in argument list", Stream.Next());
 
@@ -662,7 +672,7 @@ namespace EtcScriptLib
 			try
 			{
 				var r = new Declaration();
-				r.ReturnTypeName = "NUMBER";
+				r.ReturnTypeName = "RULE-RESULT";
 
 				if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("[030] Expected identifier", Stream.Next());
 
@@ -670,6 +680,14 @@ namespace EtcScriptLib
 				Stream.Advance();
 
 				r.Terms = ParseMacroDeclarationHeader(Stream, DeclarationHeaderTerminatorType.OpenBraceOrWhen);
+
+				if (Stream.Next().Type == TokenType.Colon)
+				{
+					Stream.Advance();
+					if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("[02A] Expected identifier", Stream);
+					r.ReturnTypeName = Stream.Next().Value.ToUpper();
+					Stream.Advance();
+				}
 
 				if (Stream.Next().Value.ToUpper() == "WHEN")
 				{
@@ -758,10 +776,13 @@ namespace EtcScriptLib
 						if (rulebook == null)
 						{
 							rulebook = new Rulebook { DeclarationTerms = declaration.Terms };
+							rulebook.ResultTypeName = declaration.ReturnTypeName;
 							Context.Rules.Rulebooks.Add(rulebook);
 						}
 						if (Declaration.AreTermTypesCompatible(rulebook.DeclarationTerms, declaration.Terms) == false)
 							throw new CompileError("[037] Term types are not compatible with existing rulebook", Stream);
+						if (declaration.ReturnTypeName.ToUpper() != rulebook.ResultTypeName.ToUpper())
+							throw new CompileError("Rule return type not compatible with existing rulebook", Stream);
 						rulebook.Rules.Add(declaration);
 						Context.PendingEmission.Add(declaration);
 					}

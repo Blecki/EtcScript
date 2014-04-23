@@ -136,9 +136,25 @@ namespace EtcScriptLib
 					c = source.Next();
 					while (c != '\"' && !source.AtEnd())
 					{
-						literal += (char)c;
-						advance_source();
-						c = source.Next();
+						if (c == '\\')
+						{
+							advance_source();
+							c = source.Next();
+
+							if (c == 'n')
+								literal += '\n';
+							else
+								literal += (char)c;
+
+							advance_source();
+							c = source.Next();
+						}
+						else
+						{
+							literal += (char)c;
+							advance_source();
+							c = source.Next();
+						}
 					}
 					advance_source();
 					return Token.Create(TokenType.String, literal, tokenStart);
@@ -208,9 +224,25 @@ namespace EtcScriptLib
 				var text = "";
 				while (c != '"' && c != '[' && !source.AtEnd())
 				{
-					text += (char)c;
-					advance_source();
-					if (!source.AtEnd()) c = source.Next();
+					if (c == '\\')
+					{
+						advance_source();
+						c = source.Next();
+
+						if (c == 'n')
+							text += '\n';
+						else
+							text += (char)c;
+
+						advance_source();
+						if (!source.AtEnd()) c = source.Next();
+					}
+					else
+					{
+						text += (char)c;
+						advance_source();
+						if (!source.AtEnd()) c = source.Next();
+					}
 				}
 				return Token.Create(TokenType.ComplexStringPart, text, tokenStart);
 			}

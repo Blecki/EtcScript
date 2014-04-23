@@ -110,6 +110,10 @@ namespace EtcScriptLib
 			context.ActiveScope.Types.Add(Type.CreatePrimitive("LIST"));
 			context.ActiveScope.Types.Add(Type.Generic);
 			context.ActiveScope.Types.Add(Type.Void);
+			context.ActiveScope.Types.Add(Type.RuleResult);
+
+			Environment.AddSystemVariable("stop", "RULE-RESULT", c => 0);
+			Environment.AddSystemVariable("continue", "RULE-RESULT", c => 1);
 
 			return context;
 		}

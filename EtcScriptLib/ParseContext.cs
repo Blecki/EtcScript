@@ -27,6 +27,23 @@ namespace EtcScriptLib
 				variable.ResolveType(TopScope);
 			}
 
+			foreach (var rulebook in Rules.Rulebooks)
+			{
+				rulebook.ResultType = TopScope.FindType(rulebook.ResultTypeName);
+				if (rulebook.ResultType == null) 
+					throw new CompileError("Could not find type '" + rulebook.ResultTypeName + "'.");
+
+				if (rulebook.ResultTypeName == "VOID") throw new CompileError("Rules cannot return void.");
+				if (rulebook.ResultTypeName != "RULE-RESULT")
+				{
+					var foundDefaultRule = false;
+					foreach (var rule in rulebook.Rules)
+						if (rule.WhenClause == null) foundDefaultRule = true;
+					if (!foundDefaultRule)
+						throw new CompileError("Rules that return values must have at least one rule without a when clause to supply a default value.");
+				}
+			}
+
 			foreach (var macro in TopScope.Macros)
 				macro.ResolveTypes(TopScope);
 

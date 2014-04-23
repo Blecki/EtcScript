@@ -45,6 +45,8 @@ namespace EtcScriptLib
 
 		public Declaration CompileDeclaration(String script)
 		{
+			Context.ID = 0;
+
 			var stream = new TokenStream(new Compile.StringIterator(script), Context);
 			var declaration = Parse.ParseMacroDeclaration(stream, Context);
 

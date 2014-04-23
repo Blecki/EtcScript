@@ -10,6 +10,7 @@ namespace EtcScriptLib
 		public static void StringFunctions(Environment Environment)
 		{
 			Environment.AddScriptMacro(@"MACRO CONVERT (S:COMPLEXSTRING) TO STRING : STRING { RETURN (:[S]):STRING; }");
+			Environment.AddScriptMacro(@"MACRO CONVERT (S:STRING) TO COMPLEXSTRING : COMPLEXSTRING { RETURN @""[S]""; }");
 
 			Environment.AddSystemMacro(
 				"length of (s:string) : number",

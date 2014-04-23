@@ -52,8 +52,8 @@ namespace EtcScriptLib
 				var nestedScope = Scope.Push(ScopeType.Block);
 				ListVariable = nestedScope.NewLocal("__list@" + VariableName, Scope.FindType("LIST"));
 				TotalVariable = nestedScope.NewLocal("__total@" + VariableName, Scope.FindType("NUMBER"));
-				CounterVariable = nestedScope.NewLocal("__counter@" + VariableName, Scope.FindType("number"));
-				ValueVariable = nestedScope.NewLocal(VariableName, Scope.FindType("number"));
+				CounterVariable = nestedScope.NewLocal("__counter@" + VariableName, Scope.FindType("NUMBER"));
+				ValueVariable = nestedScope.NewLocal(VariableName, Scope.FindType("GENERIC"));
 				Body = Body.Transform(nestedScope);
 				return this;
 			}
