@@ -40,7 +40,7 @@ ComplexString		:= @ + \" + ( Text | EmbeddedExpression )* + \"
 Text				:= Any sequence of characters except [ or ", matched greedily.
 EmbeddedExpression	:= [ + Expression + ]
 LocalDeclaration	:= "var" + Identifier + (: + Identifier)? + ("=" + Expression)? + ;
-TypeDeclaration		:= "type" + Identifier + { + MemberDeclaration* + }
+TypeDeclaration		:= "type" + Identifier + (: + Identifier)? + { + MemberDeclaration* + }
 MemberDeclaration	:=  "var" + Identifier + (: + Identifier)? + ;
 New					:= "new" + Identifier + InitializerBlock?
 InitializerBlock	:= { + InitializerItem* + }

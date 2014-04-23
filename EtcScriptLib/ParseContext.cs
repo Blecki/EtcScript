@@ -18,6 +18,9 @@ namespace EtcScriptLib
 			foreach (var type in TopScope.Types)
 				type.ResolveTypes(TopScope);
 
+			foreach (var type in TopScope.Types)
+				type.AssignMemberOffsets();
+
 			int variableOffset = StaticVariableOffset;
 			foreach (var variable in TopScope.Variables)
 			{

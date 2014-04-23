@@ -148,6 +148,22 @@ test _ : number {
 			Assert.AreEqual(30, result);
 		}
 
+		[Test]
+		public void inheritance()
+		{
+			var script = @"
+type foo { var a:number; }
+type bar : foo { var b:number; }
+
+test _ : number {
+	var x = new bar { let a = 4; let b = 5; };
+	return x.a * x.b;
+}";
+
+			var result = TestHelper.CallTestFunction(script);
+			Assert.AreEqual(20, result);
+		}
+
 		private class T
 		{
 			public int X;

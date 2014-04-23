@@ -648,6 +648,14 @@ namespace EtcScriptLib
 			r.Name = Stream.Next().Value.ToUpper();
 
 			Stream.Advance();
+			if (Stream.Next().Type == TokenType.Colon)
+			{
+				Stream.Advance();
+				if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("Expected identifier", Stream);
+				r.SuperTypename = Stream.Next().Value.ToUpper();
+				Stream.Advance();
+			}
+
 			if (Stream.Next().Type != TokenType.OpenBrace) throw new CompileError("[02D] Expected {", Stream);
 			Stream.Advance();
 
@@ -661,7 +669,6 @@ namespace EtcScriptLib
 
 			Stream.Advance();
 
-			r.AssignMemberOffsets();
 			return r;
 		}
 

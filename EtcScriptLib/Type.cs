@@ -32,10 +32,18 @@ namespace EtcScriptLib
 
 	public class Type
 	{
+		#region Compatibility and Conversion
 		public static TypeCompatibilityResult AreTypesCompatible(Type Source, Type Destination, ParseScope Scope)
 		{
 			if (Object.ReferenceEquals(Destination, Generic)) return TypeCompatibilityResult.NoConversionRequired;
 			if (Object.ReferenceEquals(Source, Destination)) return TypeCompatibilityResult.NoConversionRequired;
+
+			var super = Source.Super;
+			while (super != null)
+			{
+				if (Object.ReferenceEquals(super, Destination)) return TypeCompatibilityResult.NoConversionRequired;
+				super = super.Super;
+			}
 
 			var conversionArguments = new List<Ast.Node>();
 			conversionArguments.Add(new Ast.Identifier(new Token { Type = TokenType.Identifier, Value = "convert" }));
@@ -77,7 +85,9 @@ namespace EtcScriptLib
 			return Ast.StaticInvokation.CreateCorrectInvokationNode(Value.Source, Scope, ConversionMacro,
 						new List<Ast.Node>(new Ast.Node[] { Value }));
 		}
+		#endregion
 
+		#region Builtin types
 		private static Type _void = new Type { Name = "VOID", Origin = TypeOrigin.Primitive };
 		public static Type Void { get { return _void; } }
 
@@ -91,24 +101,37 @@ namespace EtcScriptLib
 		{
 			return new Type { Name = Name, Origin = TypeOrigin.Primitive };
 		}
+		#endregion
 
 		public String Name;
 		public TypeOrigin Origin;
+		public Type Super;
+		public String SuperTypename;
 
 		public List<Variable> Members = new List<Variable>();
 
 		internal void AssignMemberOffsets()
 		{
 			for (int i = 0; i < Members.Count; ++i)
-				Members[i].Offset = i;
+				Members[i].Offset = (Super == null ? i : (i + Super.Size));
 		}
 
 		internal Variable FindMember(String Name)
 		{
-			return Members.FirstOrDefault(v => v.Name == Name);
+			var r = Members.FirstOrDefault(v => v.Name == Name);
+			if (r == null && Super != null) return Super.FindMember(Name);
+			return r;
 		}
 
-		internal int Size { get { return Members.Count; } }
+		internal int Size
+		{
+			get
+			{
+				var r = Members.Count;
+				if (Super != null) r += Super.Size;
+				return r;
+			}
+		}
 
 		internal static void ThrowConversionError(Type SourceType, Type DestinationType, Token Source)
 		{
@@ -120,6 +143,21 @@ namespace EtcScriptLib
 
 		public void ResolveTypes(ParseScope ActiveScope)
 		{
+			if (String.IsNullOrEmpty(SuperTypename))
+				Super = null;
+			else
+			{
+				Super = ActiveScope.FindType(SuperTypename);
+				if (Super == null) throw new CompileError("Could not find type '" + SuperTypename + "'.");
+			}
+
+			var search = Super;
+			while (search != null)
+			{
+				if (Object.ReferenceEquals(search, this)) throw new CompileError("Inheritance loop detected.");
+				search = search.Super;
+			}
+
 			if (Origin == TypeOrigin.Script)
 				foreach (var member in Members)
 				{
