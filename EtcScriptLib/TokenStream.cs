@@ -131,31 +131,8 @@ namespace EtcScriptLib
 				if (c == '@') { advance_source(); return Token.Create(TokenType.At, "@", tokenStart); }
 				if (c == '\"')
 				{
-					var literal = "";
 					advance_source();
-					c = source.Next();
-					while (c != '\"' && !source.AtEnd())
-					{
-						if (c == '\\')
-						{
-							advance_source();
-							c = source.Next();
-
-							if (c == 'n')
-								literal += '\n';
-							else
-								literal += (char)c;
-
-							advance_source();
-							c = source.Next();
-						}
-						else
-						{
-							literal += (char)c;
-							advance_source();
-							c = source.Next();
-						}
-					}
+					var literal = TokenizeStringLiteral(false);
 					advance_source();
 					return Token.Create(TokenType.String, literal, tokenStart);
 				}
@@ -221,33 +198,51 @@ namespace EtcScriptLib
 				if (c == '[') { advance_source(); return Token.Create(TokenType.OpenBracket, "[", tokenStart); }
 				if (c == '"') { advance_source(); return Token.Create(TokenType.ComplexStringQuote, "\"", tokenStart); }
 				
-				var text = "";
-				while (c != '"' && c != '[' && !source.AtEnd())
-				{
-					if (c == '\\')
-					{
-						advance_source();
-						c = source.Next();
-
-						if (c == 'n')
-							text += '\n';
-						else
-							text += (char)c;
-
-						advance_source();
-						if (!source.AtEnd()) c = source.Next();
-					}
-					else
-					{
-						text += (char)c;
-						advance_source();
-						if (!source.AtEnd()) c = source.Next();
-					}
-				}
+				var text = TokenizeStringLiteral(true);
 				return Token.Create(TokenType.ComplexStringPart, text, tokenStart);
 			}
 			else
 				throw new InvalidProgramException();
+		}
+
+		private String TokenizeStringLiteral(bool Complex)
+		{
+			var literal = "";
+			var c = source.Next();
+			while (!source.AtEnd() && c != '"')
+			{
+				if (c == '[' && Complex) return literal;
+
+				if (c == '\\')
+				{
+					advance_source();
+					c = source.Next();
+
+					if (c == 'n')
+						literal += '\n';
+					else if (c == 'x')
+					{
+						var hex = "";
+						advance_source();
+						hex += (char)source.Next();
+						advance_source();
+						hex += (char)source.Next();
+						literal += (char)(Convert.ToInt32(hex, 16));
+					}
+					else
+						literal += (char)c;
+
+					advance_source();
+					if (!source.AtEnd()) c = source.Next();
+				}
+				else
+				{
+					literal += (char)c;
+					advance_source();
+					if (!source.AtEnd()) c = source.Next();
+				}
+			}
+			return literal;
 		}
 
 		public Token Next()
