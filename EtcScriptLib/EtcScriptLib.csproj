@@ -74,6 +74,7 @@
     <Compile Include="Construct.cs" />
     <Compile Include="Control.cs" />
     <Compile Include="StandardLibrary\ConsiderRule.cs" />
+    <Compile Include="StandardLibrary\Invoke.cs" />
     <Compile Include="StandardLibrary\MathFunctions.cs" />
     <Compile Include="StandardLibrary\ListFunctions.cs" />
     <Compile Include="StandardLibrary\StringFunctions.cs" />

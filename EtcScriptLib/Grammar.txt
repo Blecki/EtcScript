@@ -33,7 +33,7 @@ Cast				:= Parenthetical + : + Identifier	//Tell static type checking to go fuck
 BinaryOperation		:= Term + Operator + Term
 Invokation			:= Term+
 BracketInvokation	:= "[" + Invokation + "]"
-DynamicInvokation	:= ":" + BracketInvokation
+DynamicInvokation	:= ":" + BracketInvokation //To be replaced by 'invoke' control
 Control				:= Invokation + (Block | ;)
 Operator			:= Any of operators specified in operator table
 BasicString			:= Ordinary quote-delimited string				 
@@ -75,6 +75,7 @@ foreach (x) in (list)
 foreach (x) from (min) to (max)
 while (x)
 consider (x)
+invoke [x]
 
 Default Types
 VOID

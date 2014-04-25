@@ -9,7 +9,7 @@ namespace EtcScriptLib
 	{
 		public static void StringFunctions(Environment Environment)
 		{
-			Environment.AddScriptMacro(@"MACRO CONVERT (S:COMPLEXSTRING) TO STRING : STRING { RETURN (:[S]):STRING; }");
+			Environment.AddScriptMacro(@"MACRO CONVERT (S:COMPLEXSTRING) TO STRING : STRING { RETURN ([INVOKE [S]]):STRING; }");
 			Environment.AddScriptMacro(@"MACRO CONVERT (S:STRING) TO COMPLEXSTRING : COMPLEXSTRING { RETURN $""[S]""; }");
 			Environment.AddSystemMacro("CONVERT (N:NUMBER) TO STRING : STRING", (c, l) => { return l[0].ToString(); });
 

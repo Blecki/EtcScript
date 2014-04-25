@@ -15,7 +15,7 @@ namespace EtcScriptTests
 			var result = TestHelper.CallTestFunction(@"
 test _ : number {
 	var f = lambda (a:number) : number { return a * a; };
-	return (:[f 2]):number;
+	return ([INVOKE [f 2]]):number;
 }");
 
 			Assert.AreEqual(result, 4);
@@ -31,12 +31,12 @@ macro make lambda (x) : generic {
 			return a * b * x;
 		};
 	};
-	return :[f0 4];
+	return [INVOKE [f0 4]];
 }
 
 test _ : generic {
 	var f = [make lambda 2];
-	return :[f 3];
+	return [INVOKE [f 3]];
 }");
 
 			Assert.AreEqual(result, 24);

@@ -149,14 +149,6 @@ namespace EtcScriptLib
 			{
 				r = ParseLocalDeclaration(Stream, Context);
 			}
-			else if (Stream.Next().Type == TokenType.Colon)
-			{
-				Stream.Advance();
-				var parameters = ParseDynamicInvokation(Stream, Context);
-				r = new Ast.CompatibleCall(parameters[0].Source, parameters, "GENERIC");
-				if (Stream.Next().Type != TokenType.Semicolon) throw new CompileError("[00B] Expected ;", Stream);
-				Stream.Advance();
-			}
 			else
 			{
 				//If it's not any special statement, it must be a function call.
@@ -247,12 +239,6 @@ namespace EtcScriptLib
 			{
 				var parameters = ParseStaticInvokation(Stream, Context);
 				r = new Ast.StaticInvokation(parameters[0].Source, parameters);
-			}
-			else if (Stream.Next().Type == TokenType.Colon)
-			{
-				Stream.Advance();
-				var parameters = ParseDynamicInvokation(Stream, Context);
-				r = new Ast.CompatibleCall(parameters[0].Source, parameters, "GENERIC");
 			}
 			else if (Stream.Next().Type == TokenType.Identifier ||
 				Stream.Next().Type == TokenType.Number ||
@@ -365,26 +351,6 @@ namespace EtcScriptLib
 				parameters.Add(ParseTerm(Stream, Context));
 			}
 		}
-
-		private static List<Ast.Node> ParseDynamicInvokation(
-			Iterator<Token> Stream,
-			ParseContext Context)
-		{
-			if (Stream.Next().Type != TokenType.OpenBracket) throw new CompileError("[019] Expected [", Stream);
-			Stream.Advance();
-			var parameters = new List<Ast.Node>();
-			while (true)
-			{
-				if (IsEndOfStatement(Stream)) throw new CompileError("[01A] Unexpected end of statement", Stream);
-				if (Stream.Next().Type == TokenType.CloseBracket)
-				{
-					Stream.Advance();
-					return parameters;
-				}
-				else parameters.Add(ParseTerm(Stream, Context));
-			}
-		}
-
 
 		//Implements http://en.wikipedia.org/wiki/Operator-precedence_parser
 		private static Ast.Node ParseExpression(
