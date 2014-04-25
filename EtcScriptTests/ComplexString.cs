@@ -15,7 +15,7 @@ namespace EtcScriptTests
 			var result = TestHelper.CallTestFunction(@"
 macro cstr (x:number) (y:number) : generic {
 	var complex = 5;
-	return @""This [x] is [y] a [complex] string"";
+	return $""This [x] is [y] a [complex] string"";
 }
 
 test _ : string {
@@ -31,7 +31,7 @@ test _ : string {
 			var result = TestHelper.CallTestFunction(@"
 macro cstr (x:number) (y:number) : complexstring {
 	var complex = 5;
-	return @""This [x] is [y] a [complex] string"";
+	return $""This [x] is [y] a [complex] string"";
 }
 
 macro convert (s:complexstring) to string : string {

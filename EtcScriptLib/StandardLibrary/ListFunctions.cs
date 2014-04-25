@@ -29,7 +29,7 @@ namespace EtcScriptLib
 				"append (v:generic) to (l:list) : list", 
 				(c, a) =>
 			{
-				var r = new List<Object>(a[1] as List<Object>);
+				var r = a[1] == null ? new List<Object>() : new List<Object>(a[1] as List<Object>);
 				r.Add(a[0]);
 				return r;
 			});

@@ -33,6 +33,7 @@ namespace EtcScriptLib
 		QuestionMark,
 		Colon,
 		At,
+		Dollar,
 
 		String,
 		Number,

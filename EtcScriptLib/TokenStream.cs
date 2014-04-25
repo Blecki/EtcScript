@@ -19,7 +19,7 @@ namespace EtcScriptLib
 		private Stack<TokenStreamState> StateStack = new Stack<TokenStreamState>();
 
 		private ParseContext operators;
-		private String delimeters = "()[]{} \t\r\n.;:@?";
+		private String delimeters = "()[]{} \t\r\n.;:@?$";
 
 		private void advance_source()
 		{
@@ -129,6 +129,7 @@ namespace EtcScriptLib
 				if (c == '?') { advance_source(); return Token.Create(TokenType.QuestionMark, "?", tokenStart); }
 				if (c == ':') { advance_source(); return Token.Create(TokenType.Colon, ":", tokenStart); }
 				if (c == '@') { advance_source(); return Token.Create(TokenType.At, "@", tokenStart); }
+				if (c == '$') { advance_source(); return Token.Create(TokenType.Dollar, "$", tokenStart); }
 				if (c == '\"')
 				{
 					advance_source();

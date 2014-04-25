@@ -266,7 +266,7 @@ namespace EtcScriptLib
 				r = new Ast.Identifier(Stream.Next());
 				Stream.Advance();
 			}
-			else if (Stream.Next().Type == TokenType.At)
+			else if (Stream.Next().Type == TokenType.Dollar)
 			{
 				return ParseComplexString(Stream, Context);
 			}

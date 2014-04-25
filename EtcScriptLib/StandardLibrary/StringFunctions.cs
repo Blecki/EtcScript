@@ -10,21 +10,21 @@ namespace EtcScriptLib
 		public static void StringFunctions(Environment Environment)
 		{
 			Environment.AddScriptMacro(@"MACRO CONVERT (S:COMPLEXSTRING) TO STRING : STRING { RETURN (:[S]):STRING; }");
-			Environment.AddScriptMacro(@"MACRO CONVERT (S:STRING) TO COMPLEXSTRING : COMPLEXSTRING { RETURN @""[S]""; }");
+			Environment.AddScriptMacro(@"MACRO CONVERT (S:STRING) TO COMPLEXSTRING : COMPLEXSTRING { RETURN $""[S]""; }");
 			Environment.AddSystemMacro("CONVERT (N:NUMBER) TO STRING : STRING", (c, l) => { return l[0].ToString(); });
 
 			Environment.AddSystemMacro(
 				"length of (s:string) : number",
 				(context, arguments) =>
 				{
-					return (int)(arguments[0] as String).Length;
+					return (float)(arguments[0] as String).Length;
 				});
 
 			Environment.AddSystemMacro(
-				"(s:string) at (n:number) : number",
+				"GET AT (N:NUMBER) FROM (S:STRING) : NUMBER",
 				(context, arguments) =>
 				{
-					return (int)(arguments[0] as String)[(arguments[1] as int?).Value];
+					return (float)(arguments[1] as String)[Convert.ToInt32(arguments[0])];
 				});
 		}
 	}
