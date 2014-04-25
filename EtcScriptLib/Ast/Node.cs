@@ -69,5 +69,55 @@ namespace EtcScriptLib.Ast
 		{
 			throw new NotImplementedException();
 		}
+
+		public class DummyKeyword : Node
+		{
+			public String Name;
+			public DummyKeyword(String Name) : base(new Token()) { this.Name = Name; }
+		}
+
+		public class DummyTerm : Node
+		{
+			public DummyTerm(Type Type) : base(new Token()) { this.ResultType = Type; }
+		}
+
+		public class DummyTermOfAnyType : Node
+		{
+			public DummyTermOfAnyType() : base(new Token()) { }
+		}
+
+		public static DummyKeyword Keyword(String Name) { return new DummyKeyword(Name); }
+		public static DummyTerm Term(Type Type) { return new DummyTerm(Type); }
+		public static DummyTermOfAnyType TermOfAnyType() { return new DummyTermOfAnyType(); }
+		public static List<Node> DummyArguments(params Node[] Arguments) { return new List<Node>(Arguments); }
+		public static bool ExactDummyMatch(List<DeclarationTerm> Terms, List<Node> Arguments)
+		{
+			if (Terms.Count != Arguments.Count) return false;
+			for (int i = 0; i < Terms.Count; ++i)
+			{
+				if (Terms[i].Type == DeclarationTermType.Keyword)
+				{
+					var dummyKeyword = Arguments[i] as DummyKeyword;
+					if (dummyKeyword == null || (dummyKeyword.Name != Terms[i].Name)) return false;
+				}
+				else if (Terms[i].Type == DeclarationTermType.Term)
+				{
+					var dummyTerm = Arguments[i] as DummyTerm;
+					if (dummyTerm != null)
+					{
+						if (!System.Object.ReferenceEquals(dummyTerm.ResultType, Terms[i].DeclaredType))
+							return false;
+					}
+					else if (Arguments[i] is DummyTermOfAnyType)
+						return true;
+					else
+						return false;
+				}
+				else
+					throw new InvalidOperationException();
+			}
+			return true;
+		}
+
 	}
 }

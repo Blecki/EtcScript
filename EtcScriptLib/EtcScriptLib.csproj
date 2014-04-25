@@ -47,6 +47,8 @@
     <Compile Include="AST\CompatibleCall.cs" />
     <Compile Include="AST\Cast.cs" />
     <Compile Include="AST\ComplexString.cs" />
+    <Compile Include="AST\ExplicitIndexSetter.cs" />
+    <Compile Include="AST\Indexer.cs" />
     <Compile Include="AST\ExplicitSetter.cs" />
     <Compile Include="AST\GenericSetter.cs" />
     <Compile Include="AST\Initializer.cs" />

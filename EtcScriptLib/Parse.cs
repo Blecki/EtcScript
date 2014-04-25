@@ -210,6 +210,15 @@ namespace EtcScriptLib
 
 				return ParseOptionalDot(Stream, MA, Context);
 			}
+			else if (Stream.Next().Type == TokenType.At)
+			{
+				Stream.Advance();
+				var RHS = ParseTerm(Stream, Context);
+				var I = new Ast.Indexer(LHS.Source);
+				I.Object = LHS;
+				I.Index = RHS;
+				return ParseOptionalDot(Stream, I, Context);
+			}
 			else
 				return LHS;
 		}		
@@ -749,6 +758,41 @@ namespace EtcScriptLib
 			return r;
 		}
 
+		internal static Variable ParseGlobalDeclaration(Iterator<Token> Stream, ParseContext Context)
+		{
+			if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("[032] Expected identifier", Stream.Next());
+			Stream.Advance();
+
+			var r = new Variable();
+			r.StorageMethod = VariableStorageMethod.Member;
+
+			if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("[033] Expected identifier", Stream.Next());
+			var start = Stream.Next();
+			r.Name = Stream.Next().Value.ToUpper();
+
+			Stream.Advance();
+
+			if (Stream.Next().Type == TokenType.Colon)
+			{
+				Stream.Advance();
+				if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("[034] Expected identifier", Stream.Next());
+				r.DeclaredTypeName = Stream.Next().Value.ToUpper();
+				Stream.Advance();
+			}
+
+			if (Stream.Next().Type == TokenType.Operator && Stream.Next().Value == "=")
+			{
+				Stream.Advance();
+				var initialValue = ParseExpression(Stream, Context, TokenType.Semicolon);
+				var initializer = new Ast.Let(start, new Ast.Identifier(start), initialValue);
+				Context.Initialization.Add(initializer);
+			}
+
+			if (Stream.Next().Type != TokenType.Semicolon) throw new CompileError("[035] Expected ;", Stream.Next());
+			Stream.Advance();
+			return r;
+		}
+
 		public static List<Declaration> Build(
 			Iterator<Token> Stream, 
 			ParseContext Context,
@@ -801,7 +845,7 @@ namespace EtcScriptLib
 					}
 					else if (Stream.Next().Value.ToUpper() == "GLOBAL")
 					{
-						var variable = ParseMemberDeclaration(Stream, Context);
+						var variable = ParseGlobalDeclaration(Stream, Context);
 						variable.StorageMethod = VariableStorageMethod.Static;
 						Context.ActiveScope.Variables.Add(variable);
 					}
@@ -814,6 +858,13 @@ namespace EtcScriptLib
 					Stream.Advance(); //Prevent an error from causing an infinite loop
 				}
 			}
+
+			Context.InitializationFunction = Declaration.Parse("test initialize-globals : void");
+			var body = new Ast.BlockStatement(new Token());
+			body.Statements = Context.Initialization;
+			Context.InitializationFunction.Body.Body = body;
+			Context.PendingEmission.Add(Context.InitializationFunction);
+
 			return r;
 		}
     }

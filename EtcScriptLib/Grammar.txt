@@ -9,7 +9,7 @@
 EtcScript Grammar
 
 Script				:= (MacroDeclaration | RuleDeclaration | TypeDeclaration | GlobalDeclaration)*
-GlobalDeclaration	:= "global" + Identifier + (: + Identifier)? + ;
+GlobalDeclaration	:= "global" + Identifier + (: + Identifier)? + (= + Expression)? + ;
 MacroDeclaration	:= "macro" + DeclarationHeader + (: + Identifier)? + Block
 DeclarationHeader	:= (DeclarationTerm)*
 RuleDeclaration		:= "rule" + DeclarationHeader + WhenClause? + Block
@@ -19,14 +19,15 @@ DeclarationTerm		:= (Identifier + "?"?) | (String + "?"?) | ( "(" + Identifier +
 Identifier			:= [a-z, A-Z, any non-operator symbol][any non-delimeter symbol]*
 Block				:= { + Statement+ + }
 Statement			:= Let | If | Invokation + ; | DynamicInvokation + ; | BracketInvokation + ; | Control | LocalDeclaration
-Let					:= "let" + (Identifier | MemberAccess) + "=" + Expression + ;
+Let					:= "let" + (Identifier | MemberAccess | Indexer) + "=" + Expression + ;
 If					:= "if" + Expression + Block
 MemberAccess		:= Term + (StaticMember | DynamicMember)
 StaticMember		:= "." + Identifier
 DynamicMember		:= "?" + Identifier + ":" + Term
+Indexer				:= Term + @ + Term
 Expression			:= Term | BinaryOperation | New | Lambda
 Term				:= Parenthetical | Identifier | Number | BasicString | ComplexString 
-						| MemberAccess | BracketInvokation | DynamicInvokation | Cast | List
+						| MemberAccess | Indexer | BracketInvokation | DynamicInvokation | Cast | List
 Parenthetical		:= "(" + Expression + ")"
 Cast				:= Parenthetical + : + Identifier	//Tell static type checking to go fuck itself.
 BinaryOperation		:= Term + Operator + Term

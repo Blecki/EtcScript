@@ -19,7 +19,7 @@ namespace EtcScriptLib
 		private Stack<TokenStreamState> StateStack = new Stack<TokenStreamState>();
 
 		private ParseContext operators;
-		private String delimeters = "()[]{} \t\r\n.;:?";
+		private String delimeters = "()[]{} \t\r\n.;:@?";
 
 		private void advance_source()
 		{

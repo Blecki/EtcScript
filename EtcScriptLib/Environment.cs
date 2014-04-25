@@ -40,7 +40,18 @@ namespace EtcScriptLib
 			var testFunctions = Compile.Build(script, Context, StaticVariableCount, OnError, DelayEmission);
 			StaticVariableCount += Context.StaticVariableCount;
 			
+			if (!DelayEmission) RunInitializer();
 			return testFunctions;
+		}
+
+		public void RunInitializer()
+		{
+			if (Context.InitializationFunction == null) return;
+
+			var initializerContext = CreateExecutionContext(VirtualMachine.CodeContext.Empty);
+			var invokeable = Context.InitializationFunction.MakeInvokableFunction();
+			invokeable.Invoke(initializerContext, new List<Object>(new Object[] { invokeable }));
+			VirtualMachine.VirtualMachine.ExecuteUntilFinished(initializerContext);
 		}
 
 		public Declaration CompileDeclaration(String script)

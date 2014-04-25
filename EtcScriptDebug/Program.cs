@@ -21,8 +21,8 @@ namespace EtcScriptDebug
 
 			try
 			{
-				var x = new EtcScriptTests.Compilation();
-				x.comments();
+				var x = new EtcScriptTests.ErrorsReported();
+				x.errors_reported();
 			}
 			catch (Exception e)
 			{

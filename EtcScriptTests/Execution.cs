@@ -96,6 +96,17 @@ test _:number {
 		{
 			TestHelper.RunSimpleTest("global foo; test _ : generic { var foo = 2; return foo * foo; }", 4);
 		}
+
+		[Test]
+		public void global_initialization()
+		{
+			var r = TestHelper.CallTestFunction(@"
+global foo:number = 2; #The type of foo cannot be inferred from what is assigned to it as that type might involve other
+	#unresolved globals.
+test _ : number { return foo; }");
+
+			Assert.AreEqual(2, r);
+		}
     }
 
 }

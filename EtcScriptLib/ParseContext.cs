@@ -9,6 +9,8 @@ namespace EtcScriptLib
 	{
 		public RuleSet Rules = new RuleSet();
 		public List<Declaration> PendingEmission = new List<Declaration>();
+		public List<Ast.Node> Initialization = new List<Ast.Node>();
+		public Declaration InitializationFunction;
 		public int ID = 0;
 
 		public void EmitDeclarations(int StaticVariableOffset)
@@ -24,7 +26,7 @@ namespace EtcScriptLib
 			int variableOffset = StaticVariableOffset;
 			foreach (var variable in TopScope.Variables)
 			{
-				System.Diagnostics.Debug.Assert(variable.StorageMethod == VariableStorageMethod.Static);
+				//System.Diagnostics.Debug.Assert(variable.StorageMethod == VariableStorageMethod.Static);
 				variable.Offset = variableOffset;
 				++variableOffset;
 				variable.ResolveType(TopScope);
