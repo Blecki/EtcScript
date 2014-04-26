@@ -103,3 +103,13 @@ Member Access Macros
 A macro with the signature 'get (x:string) from (y:A)' will be invoked to automatically query members. Without it, 
 	the default mechanism is used. This does not serve much purpose when defined in script, but the 
 	enclosing system can use it to implement member access in a generic way.
+
+Standard Macro Patterns
+GET (M:STRING) FROM (O:?) : ?
+SET (M:STRING) ON (O:?) TO (V:?) : VOID
+GET ? FROM (O:?) : ?
+SET ? ON (O:?) TO (V:?) : VOID
+GET AT (N:?) FROM (O:?): ?
+SET AT (N:?) IN (O:?) TO (V:?) : VOID
+CONVERT (O:?) TO ? : ?
+

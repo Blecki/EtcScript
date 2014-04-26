@@ -20,7 +20,28 @@ test _ : number {
 	}
 	return y;
 }",
-				e => e.AddSystemMacro("foo", (c, l) => new List<Object>(new Object[] { 0, 1, 2, 3 }))));
+				e => e.AddSystemMacro("foo : LIST", (c, l) => new List<Object>(new Object[] { 0, 1, 2, 3 }))));
+		}
+
+		[Test]
+		public void foreach_in_type_aliasing()
+		{
+			Assert.AreEqual("-abc", TestHelper.CallTestFunction(@"
+type aliased-list {}
+macro get at (n:number) from (l:aliased-list) : string { return ((l):list@n):string; }
+macro convert (l:aliased-list) to list : list { return (l):list; }
+macro convert (l:list) to aliased-list : aliased-list { return (l):aliased-list; }
+macro add (a:string) (b:string) : string { return a + b; } #Just to check types
+
+global f:aliased-list = { ""a"" ""b"" ""c"" };
+
+test _ : string {
+	var y = ""-"";
+	foreach x in f {
+		let y = [add y x];
+	}
+	return y;
+}"));
 		}
 
 		[Test]

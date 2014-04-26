@@ -40,7 +40,8 @@ namespace EtcScriptLib.Ast
 			if (Name.Type == TokenType.Identifier)
 			{
 				if (MatchedVariable.StorageMethod == VariableStorageMethod.Local)
-					into.AddInstructions("LOAD_PARAMETER NEXT " + Node.WriteOperand(Destination), MatchedVariable.Offset);
+					into.AddInstructions("LOAD_PARAMETER NEXT " + Node.WriteOperand(Destination) + " #" + MatchedVariable.Name,
+						MatchedVariable.Offset);
 				else if (MatchedVariable.StorageMethod == VariableStorageMethod.System)
 				{
 					into.AddInstructions(

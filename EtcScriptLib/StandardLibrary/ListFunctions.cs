@@ -14,11 +14,7 @@ namespace EtcScriptLib
 				(c, a) => { return (int)(a[0] as List<Object>).Count; });
 			
 			Environment.AddSystemMacro(
-				"(l:list) at (n:number) : generic", 
-				(c, a) => { return (a[0] as List<Object>)[Convert.ToInt32(a[1])]; });
-
-			Environment.AddSystemMacro(
-				"set at (n:number) on (l:list) to (v:generic)",
+				"set at (n:number) in (l:list) to (v:generic)",
 				(c, a) => { (a[1] as List<Object>)[Convert.ToInt32(a[0])] = a[2]; return null; });
 
 			Environment.AddSystemMacro(

@@ -31,6 +31,7 @@ namespace EtcScriptLib
 			public String VariableName;
 			public Ast.Node List;
 			public Ast.Node Body;
+			public Ast.Node Indexer;
 
 			Variable TotalVariable;
 			Variable CounterVariable;
@@ -49,30 +50,51 @@ namespace EtcScriptLib
 			{
 				ResultType = Type.Void;
 				List = List.Transform(Scope);
+
+				//Try to find an access macro for this type.
+				var getterArguments = DummyArguments(Keyword("GET"), Keyword("AT"), Term(Scope.FindType("NUMBER")),
+					Keyword("FROM"), Term(List.ResultType));
+				var indexerMacro = Scope.FindAllPossibleMacroMatches(getterArguments).Where(d =>
+					ExactDummyMatch(d.Terms, getterArguments)).FirstOrDefault();
+				if (indexerMacro == null)
+					throw new CompileError("No macro of the form GET AT NUMBER FROM " +
+						List.ResultType.Name + " found.", Source);
+
 				var nestedScope = Scope.Push(ScopeType.Block);
+
 				ListVariable = nestedScope.NewLocal("__list@" + VariableName, Scope.FindType("LIST"));
 				TotalVariable = nestedScope.NewLocal("__total@" + VariableName, Scope.FindType("NUMBER"));
 				CounterVariable = nestedScope.NewLocal("__counter@" + VariableName, Scope.FindType("NUMBER"));
-				ValueVariable = nestedScope.NewLocal(VariableName, Scope.FindType("GENERIC"));
+				ValueVariable = nestedScope.NewLocal(VariableName, indexerMacro.ReturnType);
+
+				Indexer = Ast.StaticInvokation.CreateCorrectInvokationNode(Source, nestedScope, indexerMacro,
+					new List<Ast.Node>(new Ast.Node[] { 
+						new Ast.Identifier(new Token { Type = TokenType.Identifier, Value = "__counter@"+VariableName }),
+						new Ast.Identifier(new Token { Type = TokenType.Identifier, Value = "__list@"+VariableName })
+					})).Transform(nestedScope);
+
 				Body = Body.Transform(nestedScope);
 				return this;
 			}
 
 			public override void Emit(VirtualMachine.InstructionList into, Ast.OperationDestination Destination)
 			{
-				List.Emit(into, Ast.OperationDestination.Stack);
-				into.AddInstructions("LENGTH PEEK PUSH", "MOVE NEXT PUSH", 0);
+				//Prepare loop control variables
+				List.Emit(into, Ast.OperationDestination.Stack);	//__list@
+				into.AddInstructions("LENGTH PEEK PUSH");			//__total@
+				into.AddInstructions("MOVE NEXT PUSH", 0);			//__counter@
+
 				var LoopStart = into.Count;
 
 				into.AddInstructions(
-					"LOAD_PARAMETER NEXT R", TotalVariable.Offset,
+					"LOAD_PARAMETER NEXT R #" + TotalVariable.Name, TotalVariable.Offset,
 					"GREATER_EQUAL PEEK R R",
 					"IF_TRUE R",
 					"JUMP NEXT", 0);
 
 				var BreakPoint = into.Count - 1;
 
-				into.AddInstructions("LOAD_PARAMETER NEXT R", ListVariable.Offset, "INDEX PEEK R PUSH");
+				Indexer.Emit(into, Ast.OperationDestination.Stack);
 				Body.Emit(into, Ast.OperationDestination.Discard);
 
 				into.AddInstructions(

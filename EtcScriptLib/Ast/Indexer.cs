@@ -21,13 +21,13 @@ namespace EtcScriptLib.Ast
 			{
 				//Try to find an indexer macro for this type.
 				var setterArguments = DummyArguments(Keyword("SET"), Keyword("AT"), Term(Index.ResultType),
-					Keyword("ON"), Term(Object.ResultType), Keyword("TO"), TermOfAnyType());
+					Keyword("IN"), Term(Object.ResultType), Keyword("TO"), TermOfAnyType());
 				var matchingSetter = Scope.FindAllPossibleMacroMatches(setterArguments).Where(d =>
 					ExactDummyMatch(d.Terms, setterArguments)).FirstOrDefault();
 				if (matchingSetter != null)
 					return new ExplicitIndexSetter(Source, matchingSetter, Object, Index).Transform(Scope);
 				else
-					throw new CompileError("No macro of the form SET AT " + Index.ResultType.Name + " ON " +
+					throw new CompileError("No macro of the form SET AT " + Index.ResultType.Name + " IN " +
 							Object.ResultType.Name + " TO VALUE found.", Source);
 			}
 			else
