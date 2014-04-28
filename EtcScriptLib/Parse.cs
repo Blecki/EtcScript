@@ -762,7 +762,8 @@ namespace EtcScriptLib
 		public static List<Declaration> Build(
 			Iterator<Token> Stream, 
 			ParseContext Context,
-			Func<String,ErrorStrategy> OnError)
+			Func<String,ErrorStrategy> OnError,
+			bool PrepareInitializer = true)
         {
 			var r = new List<Declaration>();
 			while (!Stream.AtEnd())
@@ -825,7 +826,7 @@ namespace EtcScriptLib
 						var file = Context.FileLoader(filename, (Stream as TokenStream).FileLoaderTag);
 						var newStream = new TokenStream(new Compile.StringIterator(file.Data), Context);
 						newStream.FileLoaderTag = file.Tag;
-						r.AddRange(Build(newStream, Context, OnError));
+						r.AddRange(Build(newStream, Context, OnError, false));
 					}
 					else
 						throw new CompileError("[039] Unknown declaration type", Stream);
@@ -837,11 +838,14 @@ namespace EtcScriptLib
 				}
 			}
 
-			Context.InitializationFunction = Declaration.Parse("test initialize-globals : void");
-			var body = new Ast.BlockStatement(new Token());
-			body.Statements = Context.Initialization;
-			Context.InitializationFunction.Body.Body = body;
-			Context.PendingEmission.Add(Context.InitializationFunction);
+			if (PrepareInitializer)
+			{
+				Context.InitializationFunction = Declaration.Parse("test initialize-globals : void");
+				var body = new Ast.BlockStatement(new Token());
+				body.Statements = Context.Initialization;
+				Context.InitializationFunction.Body.Body = body;
+				Context.PendingEmission.Add(Context.InitializationFunction);
+			}
 
 			return r;
 		}

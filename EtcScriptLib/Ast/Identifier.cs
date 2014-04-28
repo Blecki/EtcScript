@@ -19,8 +19,8 @@ namespace EtcScriptLib.Ast
 		{
 			if (Name.Type == TokenType.Identifier)
 			{
-				if (Name.Value.ToUpper() == "TRUE") return new Literal(Source, true, "BOOLEAN");
-				else if (Name.Value.ToUpper() == "FALSE") return new Literal(Source, false, "BOOLEAN");
+				if (Name.Value.ToUpper() == "TRUE") return new Literal(Source, true, "BOOLEAN").Transform(Scope);
+				else if (Name.Value.ToUpper() == "FALSE") return new Literal(Source, false, "BOOLEAN").Transform(Scope);
 				else MatchedVariable = Scope.FindVariable(Name.Value.ToUpper());
 				if (MatchedVariable == null) throw new CompileError("Could not find variable named '" + Name.Value + "'.", Source);
 				ResultType = MatchedVariable.DeclaredType;

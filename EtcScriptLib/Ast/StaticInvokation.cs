@@ -56,6 +56,9 @@ namespace EtcScriptLib.Ast
 					var transformedArgument = Arguments[argumentIndex].Transform(Scope);
 
 					//Incompatible types here are not an error; they are a substitution failure.
+					if (transformedArgument.ResultType == null)
+						throw new InvalidOperationException();
+
 					var compatibilityResult = Type.AreTypesCompatible(transformedArgument.ResultType, term.DeclaredType, Scope);
 					if (!compatibilityResult.Compatible)
 						return new Tuple<bool, List<Node>>(false, null);
@@ -69,8 +72,11 @@ namespace EtcScriptLib.Ast
 				}
 				catch (CompileError ce) //SFINAE!
 				{
-					//If transformation threw an error, then this macro is not a match.
-					return new Tuple<bool, List<Node>>(false, null);
+					//If transformation failed, and the argument is an identifier, then it's not an error.
+					if (Arguments[argumentIndex] is Ast.Identifier)
+						return new Tuple<bool, List<Node>>(false, null);
+					// Okay.. it's an error.
+					throw;
 				}
 			}
 

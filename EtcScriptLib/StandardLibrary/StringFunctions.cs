@@ -21,10 +21,17 @@ namespace EtcScriptLib
 				});
 
 			Environment.AddSystemMacro(
-				"GET AT (N:NUMBER) FROM (S:STRING) : NUMBER",
+				"GET AT (N:NUMBER) FROM (S:STRING) : CHAR",
 				(context, arguments) =>
 				{
-					return (float)(arguments[1] as String)[Convert.ToInt32(arguments[0])];
+					return (arguments[1] as String)[Convert.ToInt32(arguments[0])];
+				});
+
+			Environment.AddSystemMacro(
+				"CONVERT (C:CHAR) TO STRING : STRING",
+				(context, arguments) =>
+				{
+					return new String((arguments[0] as char?).Value, 1);
 				});
 		}
 	}

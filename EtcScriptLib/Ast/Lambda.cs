@@ -20,7 +20,6 @@ namespace EtcScriptLib.Ast
 		public override Node Transform(ParseScope Scope)
 		{
 			if (HasBeenTransformed) return this;
-			HasBeenTransformed = true;
 
 			Function.ResolveTypes(Scope);
 			Function.Transform(Scope.EnvironmentContext.ID);
@@ -40,6 +39,8 @@ namespace EtcScriptLib.Ast
 				ResultType = Scope.FindType(ResultTypeName);
 				if (ResultType == null) throw new CompileError("Could not find type '" + ResultTypeName + "'.", Source);
 			}
+
+			HasBeenTransformed = true;
 
 			return this;
 		}

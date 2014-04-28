@@ -32,6 +32,7 @@ namespace EtcScriptLib
 			public Ast.Node List;
 			public Ast.Node Body;
 			public Ast.Node Indexer;
+			public Ast.Node LengthFunc;
 
 			Variable TotalVariable;
 			Variable CounterVariable;
@@ -60,6 +61,12 @@ namespace EtcScriptLib
 					throw new CompileError("No macro of the form GET AT NUMBER FROM " +
 						List.ResultType.Name + " found.", Source);
 
+				var lengthArguments = DummyArguments(Keyword("LENGTH"), Keyword("OF"), Term(List.ResultType));
+				var lengthMacro = Scope.FindAllPossibleMacroMatches(lengthArguments).Where(d =>
+					ExactDummyMatch(d.Terms, lengthArguments)).FirstOrDefault();
+				if (lengthMacro == null)
+					throw new CompileError("No macro of the form LENGTH OF " + List.ResultType.Name + " found.", Source);
+
 				var nestedScope = Scope.Push(ScopeType.Block);
 
 				ListVariable = nestedScope.NewLocal("__list@" + VariableName, Scope.FindType("LIST"));
@@ -73,6 +80,11 @@ namespace EtcScriptLib
 						new Ast.Identifier(new Token { Type = TokenType.Identifier, Value = "__list@"+VariableName })
 					})).Transform(nestedScope);
 
+				LengthFunc = Ast.StaticInvokation.CreateCorrectInvokationNode(Source, nestedScope, lengthMacro,
+					new List<Ast.Node>(new Ast.Node[] {
+						new Ast.Identifier(new Token { Type = TokenType.Identifier, Value = "__list@"+VariableName })
+					})).Transform(nestedScope);
+
 				Body = Body.Transform(nestedScope);
 				return this;
 			}
@@ -81,7 +93,8 @@ namespace EtcScriptLib
 			{
 				//Prepare loop control variables
 				List.Emit(into, Ast.OperationDestination.Stack);	//__list@
-				into.AddInstructions("LENGTH PEEK PUSH");			//__total@
+				LengthFunc.Emit(into, Ast.OperationDestination.Stack);
+				//into.AddInstructions("LENGTH PEEK PUSH");			//__total@
 				into.AddInstructions("MOVE NEXT PUSH", 0);			//__counter@
 
 				var LoopStart = into.Count;
