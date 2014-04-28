@@ -18,11 +18,18 @@ namespace EtcScriptLib
 		}
 	}
 
+	public class LoadedFile
+	{
+		public String Data;
+		public Object Tag;
+	}
+
 	public class Environment
 	{
 		public ParseContext Context;
 		private Dictionary<int, Object> StaticVariableStorage = new Dictionary<int, object>();
 		private int StaticVariableCount = 0;
+		public Func<String, Object, LoadedFile> FileLoader;
 
 		public Environment()
 		{
@@ -37,6 +44,7 @@ namespace EtcScriptLib
 
 		public List<Declaration> Build(String script, Func<String, ErrorStrategy> OnError, bool DelayEmission = false)
 		{
+			Context.FileLoader = FileLoader;
 			var testFunctions = Compile.Build(script, Context, StaticVariableCount, OnError, DelayEmission);
 			StaticVariableCount += Context.StaticVariableCount;
 			

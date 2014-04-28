@@ -108,6 +108,7 @@ namespace EtcScriptLib
 			context.ActiveScope.Types.Add(Type.CreatePrimitive("COMPLEXSTRING"));
 			context.ActiveScope.Types.Add(Type.CreatePrimitive("BOOLEAN"));
 			context.ActiveScope.Types.Add(Type.CreatePrimitive("LIST"));
+			context.ActiveScope.Types.Add(Type.CreatePrimitive("LAMBDA"));
 			context.ActiveScope.Types.Add(Type.Generic);
 			context.ActiveScope.Types.Add(Type.Void);
 			context.ActiveScope.Types.Add(Type.RuleResult);

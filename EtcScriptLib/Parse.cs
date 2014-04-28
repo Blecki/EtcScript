@@ -403,7 +403,7 @@ namespace EtcScriptLib
 			{
 				var declaration = ParseMacroDeclaration(Stream, Context);
 				declaration.Type = DeclarationType.Lambda;
-				return new Ast.Lambda(declaration.Body.Body.Source, declaration, "GENERIC");
+				return new Ast.Lambda(declaration.Body.Body.Source, declaration, "LAMBDA");
 			}
 			else if (Stream.Next().Type == TokenType.Identifier && Stream.Next().Value.ToUpper() == "NEW")
 				return ParseNew(Stream, Context);
@@ -814,6 +814,18 @@ namespace EtcScriptLib
 						var variable = ParseGlobalDeclaration(Stream, Context);
 						variable.StorageMethod = VariableStorageMethod.Static;
 						Context.ActiveScope.Variables.Add(variable);
+					}
+					else if (Stream.Next().Value.ToUpper() == "INCLUDE")
+					{
+						Stream.Advance();
+						if (Stream.Next().Type != TokenType.String) throw new CompileError("Expected string", Stream);
+						var filename = Stream.Next().Value;
+						Stream.Advance();
+						if (Context.FileLoader == null) throw new CompileError("Inclusion not enabled", Stream);
+						var file = Context.FileLoader(filename, (Stream as TokenStream).FileLoaderTag);
+						var newStream = new TokenStream(new Compile.StringIterator(file.Data), Context);
+						newStream.FileLoaderTag = file.Tag;
+						r.AddRange(Build(newStream, Context, OnError));
 					}
 					else
 						throw new CompileError("[039] Unknown declaration type", Stream);

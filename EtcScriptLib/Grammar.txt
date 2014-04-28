@@ -8,7 +8,7 @@
 
 EtcScript Grammar
 
-Script				:= (MacroDeclaration | RuleDeclaration | TypeDeclaration | GlobalDeclaration)*
+Script				:= (MacroDeclaration | RuleDeclaration | TypeDeclaration | GlobalDeclaration | Include)*
 GlobalDeclaration	:= "global" + Identifier + (: + Identifier)? + (= + Expression)? + ;
 MacroDeclaration	:= "macro" + DeclarationHeader + (: + Identifier)? + Block
 DeclarationHeader	:= (DeclarationTerm)*
@@ -47,6 +47,7 @@ New					:= "new" + Identifier + InitializerBlock?
 InitializerBlock	:= { + InitializerItem* + }
 InitializerItem		:= "let" + Identifier + "=" + Expression + ;
 List				:= { + Term* + }
+Include				:= "include" + BasicString
 
 Delimeter symbols	:= []{}()\s\t\r\n.:;
 

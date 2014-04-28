@@ -17,6 +17,7 @@ namespace EtcScriptLib
 		private CodeLocation location;
 		private Token? next_token;
 		private Stack<TokenStreamState> StateStack = new Stack<TokenStreamState>();
+		public Object FileLoaderTag = null;
 
 		private ParseContext operators;
 		private String delimeters = "()[]{} \t\r\n.;:@?$";
