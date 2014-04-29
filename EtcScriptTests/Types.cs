@@ -149,6 +149,89 @@ test _ : number {
 		}
 
 		[Test]
+		public void constructor()
+		{
+			var script = @"
+type foo
+{
+	var x:number;
+	var y:number;
+}
+
+macro construct (f:foo) {
+	let f.x = 5;
+	let f.y = 6;
+}
+
+test _ : number {
+	var a = new foo {};
+	return a.x * a.y;
+}
+";
+
+			var result = TestHelper.CallTestFunction(script);
+			Assert.AreEqual(30, result);
+		}
+
+		[Test]
+		public void initializer_after_constructor()
+		{
+			var script = @"
+type foo
+{
+	var x:number;
+	var y:number;
+}
+
+macro construct (f:foo) {
+	let f.x = 5;
+	let f.y = 6;
+}
+
+test _ : number {
+	var a = new foo {
+		let x = 6;
+	};
+	return a.x * a.y;
+}
+";
+
+			var result = TestHelper.CallTestFunction(script);
+			Assert.AreEqual(36, result);
+		}
+
+		[Test]
+		public void nested_initializers()
+		{
+			var script = @"
+type foo
+{
+	var x:number;
+	var y:number;
+	var z:foo;
+}
+
+macro construct (f:foo) {
+	let f.x = 7;
+	let f.y = 6;
+}
+
+test _ : number {
+	var a = new foo {
+		let x = 6;
+		let z = new foo {
+			let x = 5;
+		};
+	};
+	return a.z.x * a.z.y;
+}
+";
+
+			var result = TestHelper.CallTestFunction(script);
+			Assert.AreEqual(30, result);
+		}
+
+		[Test]
 		public void inheritance()
 		{
 			var script = @"

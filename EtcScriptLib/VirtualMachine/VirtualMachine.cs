@@ -225,11 +225,15 @@ namespace EtcScriptLib.VirtualMachine
                                 break;
                             }
 
-                            if (arguments.Count == 0 || arguments[0] == null)
-                            {
-                                Throw(new RuntimeError("Attempted to invoke... nothing.", ins), context);
-                                break;
-                            }
+							if (arguments.Count == 0 || arguments[0] == null)
+							{
+								Throw(new RuntimeError("Attempted to invoke... nothing." + "\nBEFORE: " +
+					context.CurrentInstruction.InstructionPointer +
+					"\nINSTRUCTION: [" + ins.ToString() + "]\nSTACK DUMP:\n" +
+					String.Join("\n", context.Stack.Select((o) => { return o == null ? "NULL" : o.ToString(); })),
+					ins), context);
+								break;
+							}
 
                             var function = arguments[0];
                             if (function is InvokeableFunction)

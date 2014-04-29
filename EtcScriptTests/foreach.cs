@@ -31,6 +31,7 @@ type aliased-list {}
 macro get at (n:number) from (l:aliased-list) : string { return ((l):list@n):string; }
 macro convert (l:aliased-list) to list : list { return (l):list; }
 macro convert (l:list) to aliased-list : aliased-list { return (l):aliased-list; }
+macro length of (l:aliased-list) : number { return [length of (l):list]; }
 macro add (a:string) (b:string) : string { return a + b; } #Just to check types
 
 global f:aliased-list = { ""a"" ""b"" ""c"" };

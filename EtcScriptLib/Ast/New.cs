@@ -9,16 +9,24 @@ namespace EtcScriptLib.Ast
 	{
 		public String Typename;
 		public List<Initializer> Initializers;
+		public Declaration Constructor;
+		public ParseScope Scope;
 
-		public New(Token Source) : base(Source) 
+		public New(Token Source)
+			: base(Source)
 		{
 		}
 
 		public override Node Transform(ParseScope Scope)
 		{
+			this.Scope = Scope;
 			ResultType = Scope.FindType(Typename);
 			if (ResultType == null) throw new CompileError("Unable to find type with name '" + Typename + "'", Source);
 
+			var constructorArguments = DummyArguments(Keyword("CONSTRUCT"), Term(ResultType));
+			Constructor = Scope.FindAllPossibleMacroMatches(constructorArguments).Where(d =>
+				ExactDummyMatch(d.Terms, constructorArguments)).FirstOrDefault();
+			
 			if (Initializers != null)
 			{
 				foreach (var initializer in Initializers)
@@ -33,17 +41,30 @@ namespace EtcScriptLib.Ast
 
 		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
 		{
+			into.AddInstructions("ALLOC_RSO NEXT PUSH", ResultType.Size);
+
+			if (Constructor != null)
+			{
+				if (Constructor.OwnerContextID == Scope.EnvironmentContext.ID && Constructor.OwnerContextID != 0)
+				{
+					into.AddInstructions("CALL NEXT #" + Constructor.DescriptiveHeader, 0);
+					Constructor.Body.CallPoints.Add(into.Count - 1);
+				}
+				else
+				{
+					into.AddInstructions("STACK_INVOKE NEXT", Constructor.MakeInvokableFunction());
+				}
+			}
+
 			if (Initializers != null)
 			{
-				into.AddInstructions("ALLOC_RSO NEXT PUSH", ResultType.Size);
 				foreach (var initializer in Initializers)
 					initializer.Emit(into, OperationDestination.Discard);
-				if (Destination != OperationDestination.Stack)
-					into.AddInstructions("MOVE POP " + WriteOperand(Destination));
-			}
-			else
-				into.AddInstructions("ALLOC_RSO NEXT " + WriteOperand(Destination), ResultType.Size);
-		}
 
+			}
+
+			if (Destination != OperationDestination.Stack)
+				into.AddInstructions("MOVE POP " + WriteOperand(Destination));
+		}
 	}
 }
