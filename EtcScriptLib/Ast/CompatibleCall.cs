@@ -7,13 +7,13 @@ namespace EtcScriptLib.Ast
 {
 	public class CompatibleCall : Statement
 	{
-		public AssembleList Parameters;
+		public List<Node> Parameters;
 		public String ResultTypename;
 
 		public CompatibleCall(Token Source, List<Node> Parameters, String ResultTypename)
 			: base(Source)
 		{
-			this.Parameters = new AssembleList(Source, Parameters);
+			this.Parameters = Parameters;
 			this.ResultTypename = ResultTypename;
 		}
 
@@ -21,14 +21,15 @@ namespace EtcScriptLib.Ast
 		{
 			ResultType = Scope.FindType(ResultTypename);
 			if (ResultType == null) throw new CompileError("Could not find type '" + ResultTypename + "'.", Source);
-			Parameters = Parameters.Transform(Scope) as AssembleList;
+			Parameters = new List<Node>(Parameters.Select(n => n.Transform(Scope)));
 			return this;
 		}
 
 		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
 		{
-			Parameters.Emit(into, OperationDestination.Top);
-			into.AddInstructions("INVOKE POP");
+			foreach (var n in Parameters)
+				n.Emit(into, OperationDestination.Stack);
+			into.AddInstructions("COMPAT_INVOKE NEXT", Parameters.Count);
 			if (Destination != OperationDestination.R && Destination != OperationDestination.Discard)
 				into.AddInstructions("MOVE R " + Node.WriteOperand(Destination));
 		}

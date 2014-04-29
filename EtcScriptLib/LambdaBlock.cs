@@ -36,7 +36,7 @@ namespace EtcScriptLib
 			if (CleanupCall >= 0) 
 				Into[CleanupCall] = CleanupPoint;
 
-			Into.AddInstructions("CLEANUP NEXT #Cleanup " + Name, DeclarationScope.Owner.ActualParameterCount, "CONTINUE POP");
+			Into.AddInstructions("CLEANUP NEXT #Cleanup " + Name, DeclarationScope.Owner.ActualParameterCount, "RETURN POP");
 
 			Instructions = Into;
 			EntryPoint = Into.Count;
@@ -47,7 +47,7 @@ namespace EtcScriptLib
 			Instructions.AddInstructions(
 				"RESTORE_STACK F",
 				"MOVE POP F",
-				"CONTINUE POP");
+				"RETURN POP");
 
 			System.Diagnostics.Debug.Assert(DeclarationScope.Type == ScopeType.Function);
 			System.Diagnostics.Debug.Assert(DeclarationScope.ReturnJumpSources != null);

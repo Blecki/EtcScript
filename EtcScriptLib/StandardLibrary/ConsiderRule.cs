@@ -105,9 +105,38 @@ namespace EtcScriptLib
 					if (Rule.WhenClause != null) Instructions[whenSkipPoint] = Instructions.Count;
 				}
 
+				if (Rulebook.DefaultValue != null)
+				{
+					bool quickCall =
+					Rulebook.DefaultValue.OwnerContextID == DeclarationScope.EnvironmentContext.ID
+					&& Rulebook.DefaultValue.OwnerContextID != 0
+					&& DeclarationScope.OwnerFunction.OwnerContextID != 0;
+
+					if (quickCall)
+					{
+						Instructions.AddInstructions("CALL NEXT", 0);
+						Rulebook.DefaultValue.Body.CallPoints.Add(Instructions.Count - 1);
+					}
+					else
+					{
+						//Duplicate arguments onto top of stack.
+						Instructions.AddInstructions("MOVE F PUSH", "MARK_STACK F");
+						for (int i = Arguments.Count; i > 0; --i)
+							Instructions.AddInstructions("LOAD_PARAMETER NEXT PUSH", (-i - 1));
+						Instructions.AddInstructions("MOVE NEXT R",
+							Rulebook.DefaultValue.Body.GetBasicInvokable(Rulebook.DefaultValue.ActualParameterCount),
+							"STACK_INVOKE R",
+							"CLEANUP NEXT", Arguments.Count,
+							"MOVE POP F");
+					}
+				}
+
 				foreach (var spot in JumpToEndPositions) Instructions[spot] = Instructions.Count;
 
 				if (Arguments.Count > 0) Instructions.AddInstructions("CLEANUP NEXT", Arguments.Count);
+
+				if (Destination != Ast.OperationDestination.R && Destination != Ast.OperationDestination.Discard)
+					Instructions.AddInstructions("MOVE R " + WriteOperand(Destination));
 			}
 
 			private static void EmitCallInstruction(

@@ -42,11 +42,8 @@ namespace EtcScriptLib
 				if (rulebook.ResultTypeName == "VOID") throw new CompileError("Rules cannot return void.");
 				if (rulebook.ResultTypeName != "RULE-RESULT")
 				{
-					var foundDefaultRule = false;
-					foreach (var rule in rulebook.Rules)
-						if (rule.WhenClause == null) foundDefaultRule = true;
-					if (!foundDefaultRule)
-						throw new CompileError("Rules that return values must have at least one rule without a when clause to supply a default value.");
+					if (rulebook.DefaultValue == null)
+						throw new CompileError("Rules that return values must have a default value specified using 'default of rule..'");
 				}
 			}
 

@@ -828,6 +828,30 @@ namespace EtcScriptLib
 						newStream.FileLoaderTag = file.Tag;
 						r.AddRange(Build(newStream, Context, OnError, false));
 					}
+					else if (Stream.Next().Value.ToUpper() == "DEFAULT")
+					{
+						Stream.Advance();
+						if (Stream.Next().Value.ToUpper() != "OF") throw new CompileError("Expected 'OF'", Stream);
+						Stream.Advance();
+						if (Stream.Next().Value.ToUpper() != "RULE") throw new CompileError("Expected 'RULE'", Stream);
+						var declaration = ParseRuleDeclaration(Stream, Context);
+						declaration.OwnerContextID = Context.ID;
+						var rulebook = Context.Rules.FindMatchingRulebook(declaration.Terms);
+						if (rulebook == null)
+						{
+							rulebook = new Rulebook { DeclarationTerms = declaration.Terms };
+							rulebook.ResultTypeName = declaration.ReturnTypeName;
+							Context.Rules.Rulebooks.Add(rulebook);
+						}
+						if (Declaration.AreTermTypesCompatible(rulebook.DeclarationTerms, declaration.Terms) == false)
+							throw new CompileError("[037] Term types are not compatible with existing rulebook", Stream);
+						if (declaration.ReturnTypeName.ToUpper() != rulebook.ResultTypeName.ToUpper())
+							throw new CompileError("Rule return type not compatible with existing rulebook", Stream);
+						if (rulebook.DefaultValue != null)
+							throw new CompileError("Rulebook already has a default value", Stream);
+						rulebook.DefaultValue = declaration;
+						Context.PendingEmission.Add(declaration);
+					}
 					else
 						throw new CompileError("[039] Unknown declaration type", Stream);
 				}

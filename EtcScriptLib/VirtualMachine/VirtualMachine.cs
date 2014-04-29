@@ -114,17 +114,6 @@ namespace EtcScriptLib.VirtualMachine
             {
                 switch (ins.Opcode)
                 {
-                    case InstructionSet.YIELD:
-                        return;
-					case InstructionSet.SWAP_TOP:
-						{
-							var A = GetOperand(Operand.POP, context);
-							var B = GetOperand(Operand.POP, context);
-							SetOperand(Operand.PUSH, A, context);
-							SetOperand(Operand.PUSH, B, context);
-						}
-						break;
-
                     #region MOVE
                     case InstructionSet.MOVE:
                         {
@@ -161,27 +150,7 @@ namespace EtcScriptLib.VirtualMachine
 
 					#region Flow Control
 
-					case InstructionSet.MARK:
-                        {
-                            var storedContext = context.CurrentInstruction;
-                            SetOperand(ins.FirstOperand, storedContext, context);
-                        }
-                        break;
-                    case InstructionSet.BREAK:
-                        {
-                            var breakContext = GetOperand(ins.FirstOperand, context);
-							if (!(breakContext is CodeContext)) 
-								throw new InvalidOperationException("Expected to find a code context on the stack. Instead found " + breakContext.ToString());
-                            context.CurrentInstruction = (breakContext as CodeContext?).Value;
-                            Skip(context); //Skip the instruction stored by BRANCH
-                        }
-                        break;
-                    
-                    case InstructionSet.BRANCH:
-                        SetOperand(ins.FirstOperand, instructionStart, context);
-                        context.CurrentInstruction = new CodeContext(GetOperand(ins.SecondOperand, context) as InstructionList, 0);
-                        break;
-                    case InstructionSet.CONTINUE:
+					case InstructionSet.RETURN:
                         context.CurrentInstruction = (GetOperand(ins.FirstOperand, context) as CodeContext?).Value;
                         break;
                     case InstructionSet.CLEANUP:
@@ -197,69 +166,35 @@ namespace EtcScriptLib.VirtualMachine
 							if (destination.HasValue) context.CurrentInstruction.InstructionPointer = destination.Value;
 						}
 						break;
-					case InstructionSet.JUMP_RELATIVE:
-						{
-								var destination = GetOperand(ins.FirstOperand, context) as int?;
-							if (destination.HasValue) context.CurrentInstruction.InstructionPointer += destination.Value;
-						}
-						break;
-					case InstructionSet.JUMP_MARK:
-						{
-							var destination = GetOperand(ins.FirstOperand, context) as int?;
-							SetOperand(ins.SecondOperand, context.CurrentInstruction, context);
-							if (destination.HasValue) context.CurrentInstruction.InstructionPointer = destination.Value;
-						}
-						break;
-
+					
                     #endregion
 
                     #region Lambdas
 
-                    case InstructionSet.INVOKE:
-                        {
-                            var arguments = GetOperand(ins.FirstOperand, context) as List<Object>;
+					case InstructionSet.COMPAT_INVOKE:
+						{
+							var argumentCount = Convert.ToInt32(GetOperand(ins.FirstOperand, context));
+							var arguments = new List<Object>();
+							for (int i = 0; i < argumentCount; ++i)
+								arguments.Insert(0, GetOperand(Operand.POP, context));
 
-                            if (arguments == null)
-                            {
-                                Throw(new RuntimeError("Argument list is null? ", ins), context);
-                                break;
-                            }
+							if (argumentCount == 0) throw new InvalidOperationException();
+							var function = arguments[0] as InvokeableFunction;
+							if (function == null) throw new InvalidOperationException();
 
-							if (arguments.Count == 0 || arguments[0] == null)
+							try
 							{
-								Throw(new RuntimeError("Attempted to invoke... nothing." + "\nBEFORE: " +
-					context.CurrentInstruction.InstructionPointer +
-					"\nINSTRUCTION: [" + ins.ToString() + "]\nSTACK DUMP:\n" +
-					String.Join("\n", context.Stack.Select((o) => { return o == null ? "NULL" : o.ToString(); })),
-					ins), context);
+								var result = function.Invoke(context, arguments);
+								if (result.InvokationSucceeded != true)
+									throw new InvalidOperationException();
+							}
+							catch (Exception e)
+							{
+								Throw(new RuntimeError(e.Message, ins), context);
 								break;
 							}
-
-                            var function = arguments[0];
-                            if (function is InvokeableFunction)
-                            {
-								//SetOperand(Operand.PUSH, instructionStart, context); //Push return point.
-                                try
-                                {
-                                    var InvokationResult = (function as InvokeableFunction).Invoke(context, arguments);
-                                    if (InvokationResult.InvokationSucceeded == false)
-                                    {
-                                        Throw(new RuntimeError(InvokationResult.ErrorMessage + " thrown by " + function.ToString(), ins), context);
-                                        break;
-                                    }
-                                }
-                                catch (Exception e)
-                                {
-                                    Throw(new RuntimeError(e.Message + " attempting to invoke " + function.ToString(), ins),
-                                        context);
-                                }
-                            }
-                            else
-                            {
-								Throw(new RuntimeError("Attempted to invoke what isn't a function", ins), context);
-                            }
-                        }
-                        break;
+						}
+						break;
 
 					case InstructionSet.STACK_INVOKE:
 						{
@@ -328,62 +263,11 @@ namespace EtcScriptLib.VirtualMachine
                             SetOperand(ins.ThirdOperand, l, context);
                         }
                         break;
-                    case InstructionSet.APPEND_RANGE:
-                        {
-                            var v = GetOperand(ins.FirstOperand, context);
-                            var l = GetOperand(ins.SecondOperand, context) as List<Object>;
-                            l.AddRange(v as List<Object>);
-                            SetOperand(ins.ThirdOperand, l, context);
-                        }
-                        break;
+                    
+					#endregion
 
-                    case InstructionSet.PREPEND:
-                        {
-                            var v = GetOperand(ins.FirstOperand, context);
-                            var l = GetOperand(ins.SecondOperand, context) as List<Object>;
-                            l.Insert(0, v);
-                            SetOperand(ins.ThirdOperand, l, context);
-                        }
-                        break;
-                    case InstructionSet.PREPEND_RANGE:
-                        {
-                            var v = GetOperand(ins.FirstOperand, context);
-                            var l = GetOperand(ins.SecondOperand, context) as List<Object>;
-                            l.InsertRange(0, v as List<Object>);
-                            SetOperand(ins.ThirdOperand, l, context);
-                        }
-                        break;
-					case InstructionSet.REPLACE_FRONT:
-						{
-							var v = GetOperand(ins.FirstOperand, context);
-							var l = GetOperand(ins.SecondOperand, context) as List<Object>;
-							if (l.Count > 0) l[0] = v;
-							else l.Insert(0, v);
-							SetOperand(ins.ThirdOperand, l, context);
-						}
-						break;
-                    case InstructionSet.LENGTH:
-                        {
-							var v = GetOperand(ins.FirstOperand, context);
-							if (v is List<Object>)
-								SetOperand(ins.SecondOperand, (v as List<Object>).Count, context);
-							else
-								SetOperand(ins.SecondOperand, 1, context);
-                        }
-                        break;
+					#region Variables
 
-                    case InstructionSet.INDEX:
-                        {
-                            var i = GetOperand(ins.FirstOperand, context) as int?;
-                            var l = GetOperand(ins.SecondOperand, context) as List<Object>;
-                            //Console.WriteLine(i.ToString() + " " + l.Count.ToString());
-                            SetOperand(ins.ThirdOperand, l[i.Value], context);
-                        }
-                        break;
-                    #endregion
-
-                    #region Variables
-					
 					case InstructionSet.LOAD_PARAMETER:
 						{
 							var offset = GetOperand(ins.FirstOperand, context) as int?;

@@ -71,6 +71,8 @@ rule foo : string {
 	return ""a"";
 }
 
+default of rule foo : string { return ""error""; }
+
 test _ : string {
 	return [consider [foo]];
 }
@@ -78,6 +80,27 @@ test _ : string {
 
 			var result = TestHelper.CallTestFunction(script);
 			Assert.IsTrue(result.ToString() == "a");
+		}
+
+		[Test]
+		public void rule_defaults()
+		{
+			var script = @"
+rule foo : string when false {
+	return ""a"";
+}
+
+default of rule foo : string {
+	return ""b"";
+}
+
+test _ : string {
+	return [consider [foo]];
+}
+";
+
+			var result = TestHelper.CallTestFunction(script);
+			Assert.IsTrue(result.ToString() == "b");
 		}
 	}
 

@@ -20,7 +20,7 @@ namespace EtcScriptLib
 				Into[CleanupCall] = CleanupPoint;
 
 			Into.AddInstructions("CLEANUP NEXT #Cleanup when clause for " + Name, 
-				DeclarationScope.Owner.ActualParameterCount, "CONTINUE POP");
+				DeclarationScope.Owner.ActualParameterCount, "RETURN POP");
 
 			Instructions = Into;
 			EntryPoint = Into.Count;
@@ -29,7 +29,7 @@ namespace EtcScriptLib
 			Instructions.AddInstructions(
 				"RESTORE_STACK F",
 				"MOVE POP F",
-				"CONTINUE POP");
+				"RETURN POP");
 		}
 		
 	}

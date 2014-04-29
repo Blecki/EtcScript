@@ -93,15 +93,14 @@ namespace EtcScriptLib
 			{
 				//Prepare loop control variables
 				List.Emit(into, Ast.OperationDestination.Stack);	//__list@
-				LengthFunc.Emit(into, Ast.OperationDestination.Stack);
-				//into.AddInstructions("LENGTH PEEK PUSH");			//__total@
-				into.AddInstructions("MOVE NEXT PUSH", 0);			//__counter@
+				LengthFunc.Emit(into, Ast.OperationDestination.Stack); //__total@
+				into.AddInstructions("MOVE NEXT PUSH # SET __COUNTER@", 0);			//__counter@
 
 				var LoopStart = into.Count;
 
 				into.AddInstructions(
 					"LOAD_PARAMETER NEXT R #" + TotalVariable.Name, TotalVariable.Offset,
-					"GREATER_EQUAL PEEK R R",
+					"GREATER_EQUAL PEEK R R #PEEK = __COUNTER@",
 					"IF_TRUE R",
 					"JUMP NEXT", 0);
 
@@ -111,13 +110,13 @@ namespace EtcScriptLib
 				Body.Emit(into, Ast.OperationDestination.Discard);
 
 				into.AddInstructions(
-					"MOVE POP",
+					"MOVE POP #REMOVE __VALUE@",
 					"INCREMENT PEEK PEEK",
 					"JUMP NEXT", LoopStart);
 
 				into[BreakPoint] = into.Count;
 
-				into.AddInstructions("CLEANUP NEXT", 3);
+				into.AddInstructions("CLEANUP NEXT #REMOVE __COUNTER@, __TOTAL@, __LIST@", 3);
 			}
 		}
 	}

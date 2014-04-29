@@ -45,9 +45,8 @@ namespace EtcScriptLib.Ast
 				else if (MatchedVariable.StorageMethod == VariableStorageMethod.System)
 				{
 					into.AddInstructions(
-						"EMPTY_LIST PUSH",
-						"APPEND NEXT PEEK PEEK", (MatchedVariable as SystemVariable).Implementation,
-						"INVOKE POP");
+						"MOVE NEXT PUSH", (MatchedVariable as SystemVariable).Implementation,
+						"COMPAT_INVOKE NEXT", 1);
 					if (Destination != OperationDestination.R)
 						into.AddInstructions("MOVE R " + Node.WriteOperand(Destination));
 				}
