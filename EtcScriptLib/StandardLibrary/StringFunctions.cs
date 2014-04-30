@@ -12,6 +12,7 @@ namespace EtcScriptLib
 			Environment.AddScriptMacro(@"MACRO CONVERT (S:COMPLEXSTRING) TO STRING : STRING { RETURN [INVOKE [S]]:STRING; }");
 			Environment.AddScriptMacro(@"MACRO CONVERT (S:STRING) TO COMPLEXSTRING : COMPLEXSTRING { RETURN $""[S]""; }");
 			Environment.AddSystemMacro("CONVERT (N:NUMBER) TO STRING : STRING", (c, l) => { return l[0].ToString(); });
+			Environment.AddScriptMacro(@"MACRO (S:STRING) + (C:COMPLEXSTRING) : STRING { RETURN S + [INVOKE [C]]:STRING; }");
 
 			Environment.AddSystemMacro(
 				"length of (s:string) : number",

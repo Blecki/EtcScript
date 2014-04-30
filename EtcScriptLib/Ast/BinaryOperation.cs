@@ -46,14 +46,19 @@ namespace EtcScriptLib.Ast
 
 			//Equality works with everything.
 			if (Operator.token == "==" || Operator.token == "!=")
-				return new RawBinaryOperator(Source, Operator.instruction, LHS, RHS, Type.Generic);
+				return new RawBinaryOperator(Source, Operator.instruction, LHS, RHS, Scope.FindType("BOOLEAN"));
 
 			if (Object.ReferenceEquals(LHS.ResultType, RHS.ResultType))
 			{
 				PopulateRawOperators();
 				if (RawOperators.ContainsKey(LHS.ResultType.Name))
 					if (RawOperators[LHS.ResultType.Name].Contains(Operator.token))
+					{
+						//Return type is always boolean for raw comparisons.
+						if (Operator.token == ">" || Operator.token == ">=" || Operator.token == "<" || Operator.token == "<=")
+							return new RawBinaryOperator(Source, Operator.instruction, LHS, RHS, Scope.FindType("BOOLEAN"));
 						return new RawBinaryOperator(Source, Operator.instruction, LHS, RHS, LHS.ResultType);
+					}
 			}
 
 			//Try to find an operator macro for these types.
