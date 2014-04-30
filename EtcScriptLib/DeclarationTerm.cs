@@ -8,7 +8,8 @@ namespace EtcScriptLib
 	public enum DeclarationTermType
 	{
 		Term,
-		Keyword
+		Keyword,
+		Operator
 	}
 
 	public enum DeclarationTermRepetitionType

@@ -483,6 +483,16 @@ namespace EtcScriptLib
 				};
 				Stream.Advance();
 			}
+			else if (Stream.Next().Type == TokenType.Operator)
+			{
+				r = new DeclarationTerm
+				{
+					Name = Stream.Next().Value.ToUpper(),
+					Type = DeclarationTermType.Operator,
+					RepetitionType = DeclarationTermRepetitionType.Once
+				};
+				Stream.Advance();
+			}
 			else if (Stream.Next().Type == TokenType.OpenParen)
 			{
 				Stream.Advance();
@@ -531,7 +541,7 @@ namespace EtcScriptLib
 					Stream.Advance();
 					if (repetitionMarker == "?")
 					{
-						if (r.Type == DeclarationTermType.Term)
+						if (r.Type != DeclarationTermType.Keyword)
 							throw new CompileError("[026] Only keywords can be optional in a declaration header", Stream);
 						r.RepetitionType = DeclarationTermRepetitionType.Optional;
 					}
@@ -587,6 +597,17 @@ namespace EtcScriptLib
 				Stream.Advance();
 
 				r.Terms = ParseMacroDeclarationHeader(Stream, DeclarationHeaderTerminatorType.OpenBrace);
+				foreach (var t in r.Terms)
+					if (t.Type == DeclarationTermType.Operator) r.DefinesOperator = true;
+
+				if (r.DefinesOperator)
+				{
+					if (r.Terms.Count != 3 ||
+						r.Terms[0].Type != DeclarationTermType.Term ||
+						r.Terms[1].Type != DeclarationTermType.Operator ||
+						r.Terms[2].Type != DeclarationTermType.Term)
+						throw new CompileError("Operator macros must be of the form 'term op term'", Stream);
+				}
 
 				if (!Stream.AtEnd() && Stream.Next().Type == TokenType.Colon)
 				{
@@ -595,6 +616,9 @@ namespace EtcScriptLib
 					r.ReturnTypeName = Stream.Next().Value.ToUpper();
 					Stream.Advance();
 				}
+
+				if (r.DefinesOperator && r.ReturnTypeName == "VOID")
+					throw new CompileError("Operator macros must return a value.", Stream);
 
 				if (!Stream.AtEnd() && Stream.Next().Type == TokenType.OpenBrace)
 				{
@@ -776,7 +800,6 @@ namespace EtcScriptLib
 					{
 						var declaration = ParseMacroDeclaration(Stream, Context);
 						declaration.OwnerContextID = Context.ID;
-						//Context.ActiveScope.Macros.Add(declaration);
 						Context.PendingEmission.Add(declaration);
 					}
 					else if (Stream.Next().Value.ToUpper() == "TEST")

@@ -25,6 +25,7 @@ namespace EtcScriptLib
 		public Type ReturnType = EtcScriptLib.Type.Void;
 		public String ReturnTypeName;
 		public Object Tag;
+		public bool DefinesOperator = false;
 
 		private List<Tuple<String, String>> HiddenArguments;
 

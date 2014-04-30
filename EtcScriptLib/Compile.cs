@@ -79,21 +79,21 @@ namespace EtcScriptLib
 			var context = Environment.Context;
 			context.ID = ++__contextID;
 
-			context.AddOperator(1, "|", VirtualMachine.InstructionSet.OR);
+			context.AddOperator(2, "|", VirtualMachine.InstructionSet.OR);
 			context.AddOperator(0, "||", VirtualMachine.InstructionSet.LOR);
 			context.AddOperator(0, "&&", VirtualMachine.InstructionSet.LAND);
-			context.AddOperator(0, "==", VirtualMachine.InstructionSet.EQUAL);
-			context.AddOperator(0, "!=", VirtualMachine.InstructionSet.NOT_EQUAL);
-			context.AddOperator(0, "<", VirtualMachine.InstructionSet.LESS);
-			context.AddOperator(0, ">", VirtualMachine.InstructionSet.GREATER);
-			context.AddOperator(0, "<=", VirtualMachine.InstructionSet.LESS_EQUAL);
-			context.AddOperator(0, ">=", VirtualMachine.InstructionSet.GREATER_EQUAL);
-			context.AddOperator(1, "+", VirtualMachine.InstructionSet.ADD);
-			context.AddOperator(1, "-", VirtualMachine.InstructionSet.SUBTRACT);
-			context.AddOperator(1, "&", VirtualMachine.InstructionSet.AND);
-			context.AddOperator(2, "*", VirtualMachine.InstructionSet.MULTIPLY);
-			context.AddOperator(2, "/", VirtualMachine.InstructionSet.DIVIDE);
-			context.AddOperator(2, "%", VirtualMachine.InstructionSet.MODULUS);
+			context.AddOperator(1, "==", VirtualMachine.InstructionSet.EQUAL);
+			context.AddOperator(1, "!=", VirtualMachine.InstructionSet.NOT_EQUAL);
+			context.AddOperator(1, "<", VirtualMachine.InstructionSet.LESS);
+			context.AddOperator(1, ">", VirtualMachine.InstructionSet.GREATER);
+			context.AddOperator(1, "<=", VirtualMachine.InstructionSet.LESS_EQUAL);
+			context.AddOperator(1, ">=", VirtualMachine.InstructionSet.GREATER_EQUAL);
+			context.AddOperator(2, "+", VirtualMachine.InstructionSet.ADD);
+			context.AddOperator(2, "-", VirtualMachine.InstructionSet.SUBTRACT);
+			context.AddOperator(2, "&", VirtualMachine.InstructionSet.AND);
+			context.AddOperator(3, "*", VirtualMachine.InstructionSet.MULTIPLY);
+			context.AddOperator(3, "/", VirtualMachine.InstructionSet.DIVIDE);
+			context.AddOperator(3, "%", VirtualMachine.InstructionSet.MODULUS);
 
 			foreach (var member in typeof(StandardLibrary).GetMethods())
 				if (member.IsStatic)
