@@ -211,6 +211,15 @@ namespace EtcScriptLib
 				I.Index = RHS;
 				return ParseOptionalDot(Stream, I, Context);
 			}
+			else if (Stream.Next().Type == TokenType.Colon)
+			{
+				Stream.Advance();
+				if (Stream.Next().Type != TokenType.Identifier)
+					throw new CompileError("[013] Expected identifier", Stream);
+				var C = new Ast.Cast(Stream.Next(), LHS, Stream.Next().Value.ToUpper());
+				Stream.Advance();
+				return ParseOptionalDot(Stream, C, Context);
+			}
 			else
 				return LHS;
 		}		
@@ -225,15 +234,7 @@ namespace EtcScriptLib
 			{
 				Stream.Advance();
 				r = ParseExpression(Stream, Context, TokenType.CloseParen);
-				Stream.Advance();
-				if (!Stream.AtEnd() && Stream.Next().Type == TokenType.Colon)
-				{
-					Stream.Advance();
-					if (Stream.Next().Type != TokenType.Identifier)
-						throw new CompileError("[013] Expected identifier", Stream);
-					r = new Ast.Cast(Stream.Next(), r, Stream.Next().Value.ToUpper());
-					Stream.Advance();
-				}
+				Stream.Advance(); //Skip close paren
 			}
 			else if (Stream.Next().Type == TokenType.OpenBracket)
 			{

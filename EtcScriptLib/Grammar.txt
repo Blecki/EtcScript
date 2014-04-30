@@ -29,7 +29,7 @@ Expression			:= Term | BinaryOperation | New | Lambda
 Term				:= Parenthetical | Identifier | Number | BasicString | ComplexString 
 						| MemberAccess | Indexer | BracketInvokation | DynamicInvokation | Cast | List
 Parenthetical		:= "(" + Expression + ")"
-Cast				:= Parenthetical + : + Identifier	//Tell static type checking to go fuck itself.
+Cast				:= Term + : + Identifier	//Tell static type checking to go fuck itself.
 BinaryOperation		:= Term + Operator + Term
 Invokation			:= Term+
 BracketInvokation	:= "[" + Invokation + "]"
