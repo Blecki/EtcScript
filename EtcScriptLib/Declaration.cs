@@ -235,7 +235,7 @@ namespace EtcScriptLib
 				CreateParameterDescriptors();
 
 				var header = DescriptiveHeader;
-				Body.Name = header;
+				if (Body != null) Body.Name = header;
 				if (WhenClause != null) WhenClause.Name = header + " : when ...";
 			}
 			catch (Exception e)

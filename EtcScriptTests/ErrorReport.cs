@@ -9,7 +9,7 @@ namespace EtcScriptTests
     [TestFixture]
     public class ErrorsReported
     {
-		private void throws_error(String script)
+		public static void throws_error(String script)
 		{
 			bool errorCaught = false;
 

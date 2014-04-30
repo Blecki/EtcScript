@@ -277,7 +277,7 @@ namespace EtcScriptLib
 
 		public static Ast.ComplexString ParseComplexString(Iterator<Token> Stream, ParseContext Context)
 		{
-			System.Diagnostics.Debug.Assert(Stream.Next().Type == TokenType.At);
+			System.Diagnostics.Debug.Assert(Stream.Next().Type == TokenType.Dollar);
 			var start = Stream.Next();
 
 			var tokenStream = Stream as TokenStream;
@@ -391,7 +391,7 @@ namespace EtcScriptLib
 						break;
 				}
 
-				lhs = new Ast.BinaryOperator(lhs.Source, operators.FindOperator(op.Value).Value.instruction, lhs, rhs);
+				lhs = new Ast.BinaryOperator(lhs.Source, operators.FindOperator(op.Value).Value, lhs, rhs);
 			}
 		}
 
@@ -519,22 +519,12 @@ namespace EtcScriptLib
 					throw new CompileError("[023] Expected )", start);
 				Stream.Advance();
 			}
-			else if (Stream.Next().Type == TokenType.String)
-			{
-				r = new DeclarationTerm
-				{
-					Name = Stream.Next().Value.ToUpper(),
-					Type = DeclarationTermType.Keyword,
-					RepetitionType = DeclarationTermRepetitionType.Once
-				};
-				Stream.Advance();
-			}
 			else
 				throw new CompileError("[025] Illegal token in declaration header", start);
 
 			if (!Stream.AtEnd())
 			{
-				if (Stream.Next().Type == TokenType.Operator || Stream.Next().Type == TokenType.QuestionMark)
+				if (Stream.Next().Type == TokenType.QuestionMark)
 				{
 					var marker = Stream.Next();
 					var repetitionMarker = Stream.Next().Value;
@@ -545,6 +535,7 @@ namespace EtcScriptLib
 							throw new CompileError("[026] Only keywords can be optional in a declaration header", Stream);
 						r.RepetitionType = DeclarationTermRepetitionType.Optional;
 					}
+						//Left over from when terms could be repeated.
 					//else if (repetitionMarker == "+")
 					//    r.RepetitionType = DeclarationTermRepetitionType.OneOrMany;
 					//else if (repetitionMarker == "*")
@@ -598,8 +589,9 @@ namespace EtcScriptLib
 
 				r.Terms = ParseMacroDeclarationHeader(Stream, DeclarationHeaderTerminatorType.OpenBrace);
 				foreach (var t in r.Terms)
-					if (t.Type == DeclarationTermType.Operator) r.DefinesOperator = true;
-
+					if (t.Type == DeclarationTermType.Operator)
+						r.DefinesOperator = true;
+	
 				if (r.DefinesOperator)
 				{
 					if (r.Terms.Count != 3 ||
@@ -607,6 +599,8 @@ namespace EtcScriptLib
 						r.Terms[1].Type != DeclarationTermType.Operator ||
 						r.Terms[2].Type != DeclarationTermType.Term)
 						throw new CompileError("Operator macros must be of the form 'term op term'", Stream);
+
+					r.Terms[1].Type = DeclarationTermType.Keyword;
 				}
 
 				if (!Stream.AtEnd() && Stream.Next().Type == TokenType.Colon)
@@ -687,6 +681,9 @@ namespace EtcScriptLib
 				Stream.Advance();
 
 				r.Terms = ParseMacroDeclarationHeader(Stream, DeclarationHeaderTerminatorType.OpenBraceOrWhen);
+				foreach (var t in r.Terms)
+					if (t.Type == DeclarationTermType.Operator) 
+						throw new CompileError("Rule headers cannot contain operators", Stream);
 
 				if (Stream.Next().Type == TokenType.Colon)
 				{

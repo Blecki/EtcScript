@@ -68,7 +68,17 @@ namespace EtcScriptLib
 			bool DelayEmission = false)
 		{
 		    var r = Parse.Build(new TokenStream(new StringIterator(script), context), context, OnError);
-			if (!DelayEmission) context.EmitDeclarations(StaticVariableOffset);
+			
+			try
+			{
+
+				if (!DelayEmission) context.EmitDeclarations(StaticVariableOffset);
+			}
+			catch (Exception e)
+			{
+				OnError(e.Message);
+			}
+
 			return r;
 		}
 
@@ -79,7 +89,6 @@ namespace EtcScriptLib
 			var context = Environment.Context;
 			context.ID = ++__contextID;
 
-			context.AddOperator(2, "|", VirtualMachine.InstructionSet.OR);
 			context.AddOperator(0, "||", VirtualMachine.InstructionSet.LOR);
 			context.AddOperator(0, "&&", VirtualMachine.InstructionSet.LAND);
 			context.AddOperator(1, "==", VirtualMachine.InstructionSet.EQUAL);
@@ -88,6 +97,7 @@ namespace EtcScriptLib
 			context.AddOperator(1, ">", VirtualMachine.InstructionSet.GREATER);
 			context.AddOperator(1, "<=", VirtualMachine.InstructionSet.LESS_EQUAL);
 			context.AddOperator(1, ">=", VirtualMachine.InstructionSet.GREATER_EQUAL);
+			context.AddOperator(2, "|", VirtualMachine.InstructionSet.OR);
 			context.AddOperator(2, "+", VirtualMachine.InstructionSet.ADD);
 			context.AddOperator(2, "-", VirtualMachine.InstructionSet.SUBTRACT);
 			context.AddOperator(2, "&", VirtualMachine.InstructionSet.AND);

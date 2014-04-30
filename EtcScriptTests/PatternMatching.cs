@@ -72,8 +72,8 @@ namespace EtcScriptTests
 		[Test]
 		public void match_operators()
 		{
-			Assert.IsTrue(MatchesDeclaration("a \"+\" b", "a + b", true));
-			Assert.IsTrue(MatchesDeclaration("(a) \"+\" (b)", "foo + bar", true));
+			Assert.IsTrue(MatchesDeclaration("a + b", "a + b", true));
+			Assert.IsTrue(MatchesDeclaration("(a) + (b)", "foo + bar", true));
 		}
     }
 

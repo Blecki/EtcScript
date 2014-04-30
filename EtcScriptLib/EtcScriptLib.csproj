@@ -47,6 +47,7 @@
     <Compile Include="AST\CompatibleCall.cs" />
     <Compile Include="AST\Cast.cs" />
     <Compile Include="AST\ComplexString.cs" />
+    <Compile Include="AST\RawBinaryOperation.cs" />
     <Compile Include="AST\ExplicitIndexSetter.cs" />
     <Compile Include="AST\Indexer.cs" />
     <Compile Include="AST\ExplicitSetter.cs" />

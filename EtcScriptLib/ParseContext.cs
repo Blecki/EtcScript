@@ -53,17 +53,8 @@ namespace EtcScriptLib
 			foreach (var declaration in PendingEmission)
 			{
 				if (declaration.Type == DeclarationType.Macro)
-				{
-					if (declaration.DefinesOperator) 
-					{
- 
-					}
-					else
-					{
-						TopScope.Macros.Add(declaration);
-					}
-				}
-
+					TopScope.Macros.Add(declaration);
+				
 				declaration.ResolveTypes(TopScope);
 			}
 

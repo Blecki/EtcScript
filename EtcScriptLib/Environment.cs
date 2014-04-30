@@ -47,8 +47,15 @@ namespace EtcScriptLib
 			Context.FileLoader = FileLoader;
 			var testFunctions = Compile.Build(script, Context, StaticVariableCount, OnError, DelayEmission);
 			StaticVariableCount += Context.StaticVariableCount;
-			
-			if (!DelayEmission) RunInitializer();
+
+			try
+			{
+				if (!DelayEmission) RunInitializer();
+			}
+			catch (Exception e)
+			{
+				OnError(e.Message);
+			}
 			return testFunctions;
 		}
 
