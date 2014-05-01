@@ -45,6 +45,18 @@ namespace EtcScriptLib
 					if (rulebook.DefaultValue == null)
 						throw new CompileError("Rules that return values must have a default value specified using 'default of rule..'");
 				}
+
+				rulebook.ConsiderFunction = new Declaration();
+				rulebook.ConsiderFunction.Terms = rulebook.DeclarationTerms;
+				rulebook.ConsiderFunction.ReturnTypeName = rulebook.ResultTypeName;
+				rulebook.ConsiderFunction.Body = new LambdaBlock(
+					new Ast.Return(new Token())
+					{
+						Value = new StandardLibrary.ConsiderRuleBookFunctionNode(new Token(), rulebook)
+					});
+				rulebook.ConsiderFunction.OwnerContextID = ID;
+				rulebook.ConsiderFunction.Type = DeclarationType.Test;
+				PendingEmission.Add(rulebook.ConsiderFunction);
 			}
 
 			foreach (var macro in TopScope.Macros)

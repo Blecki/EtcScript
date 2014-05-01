@@ -74,7 +74,7 @@ namespace EtcScriptLib
 		{
 			if (CachedLambda == null)
 			{
-				if (Instructions == null) throw new InvalidOperationException();
+				if (Instructions == null) throw new InvalidOperationException("Instructions were not emitted");
 				CachedLambda = VirtualMachine.LambdaFunction.CreateLambda(Name, GetCleanupPoint(), GetEntryPoint(), ArgumentCount);
 			}
 		
