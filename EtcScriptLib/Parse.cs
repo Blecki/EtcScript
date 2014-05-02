@@ -636,19 +636,23 @@ namespace EtcScriptLib
 		internal static Type ParseTypeDeclaration(Iterator<Token> Stream, ParseContext Context)
 		{
 			Stream.Advance();
-			var r = new Type();
-
+			
 			if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("[02C] Expected identifier", Stream);
-			r.Name = Stream.Next().Value.ToUpper();
+			var typename = Stream.Next().Value.ToUpper();
+			String superTypename;
 
 			Stream.Advance();
 			if (Stream.Next().Type == TokenType.Colon)
 			{
 				Stream.Advance();
 				if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("Expected identifier", Stream);
-				r.SuperTypename = Stream.Next().Value.ToUpper();
+				superTypename = Stream.Next().Value.ToUpper();
 				Stream.Advance();
 			}
+			else
+				superTypename = "GENERIC";
+
+			var r = new Type(superTypename) { Name = typename };
 
 			if (Stream.Next().Type != TokenType.OpenBrace) throw new CompileError("[02D] Expected {", Stream);
 			Stream.Advance();
@@ -814,12 +818,13 @@ namespace EtcScriptLib
 						var rulebook = Context.Rules.FindMatchingRulebook(declaration.Terms);
 						if (rulebook == null)
 						{
-							rulebook = new Rulebook { DeclarationTerms = declaration.Terms };
+							rulebook = new Rulebook { DeclarationTerms = new List<DeclarationTerm>(
+								declaration.Terms.Select(t => t.GenericClone())) };
 							rulebook.ResultTypeName = declaration.ReturnTypeName;
 							Context.Rules.Rulebooks.Add(rulebook);
 						}
-						if (Declaration.AreTermTypesCompatible(rulebook.DeclarationTerms, declaration.Terms) == false)
-							throw new CompileError("[037] Term types are not compatible with existing rulebook", Stream);
+						//if (Declaration.AreTermTypesCompatible(rulebook.DeclarationTerms, declaration.Terms) == false)
+						//	throw new CompileError("[037] Term types are not compatible with existing rulebook", Stream);
 						if (declaration.ReturnTypeName.ToUpper() != rulebook.ResultTypeName.ToUpper())
 							throw new CompileError("Rule return type not compatible with existing rulebook", Stream);
 						rulebook.Rules.Add(declaration);
@@ -856,6 +861,9 @@ namespace EtcScriptLib
 						Stream.Advance();
 						if (Stream.Next().Value.ToUpper() != "RULE") throw new CompileError("Expected 'RULE'", Stream);
 						var declaration = ParseRuleDeclaration(Stream, Context);
+						foreach (var term in declaration.Terms)
+							if (!String.IsNullOrEmpty(term.DeclaredTypeName) && term.DeclaredTypeName != "GENERIC") 
+								throw new CompileError("Don't declare types for default rules.");
 						declaration.OwnerContextID = Context.ID;
 						var rulebook = Context.Rules.FindMatchingRulebook(declaration.Terms);
 						if (rulebook == null)
@@ -864,8 +872,8 @@ namespace EtcScriptLib
 							rulebook.ResultTypeName = declaration.ReturnTypeName;
 							Context.Rules.Rulebooks.Add(rulebook);
 						}
-						if (Declaration.AreTermTypesCompatible(rulebook.DeclarationTerms, declaration.Terms) == false)
-							throw new CompileError("[037] Term types are not compatible with existing rulebook", Stream);
+						//if (Declaration.AreTermTypesCompatible(rulebook.DeclarationTerms, declaration.Terms) == false)
+						//	throw new CompileError("[037] Term types are not compatible with existing rulebook", Stream);
 						if (declaration.ReturnTypeName.ToUpper() != rulebook.ResultTypeName.ToUpper())
 							throw new CompileError("Rule return type not compatible with existing rulebook", Stream);
 						if (rulebook.DefaultValue != null)

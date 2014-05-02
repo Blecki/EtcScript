@@ -39,7 +39,7 @@ namespace EtcScriptLib
 
 		public VirtualMachine.ExecutionContext CreateExecutionContext(VirtualMachine.CodeContext EntryPoint)
 		{
-			return new VirtualMachine.ExecutionContext(StaticVariableStorage, EntryPoint);
+			return new VirtualMachine.ExecutionContext(StaticVariableStorage, Context.TopScope.Types, EntryPoint);
 		}
 
 		public List<Declaration> Build(String script, Func<String, ErrorStrategy> OnError, bool DelayEmission = false)
@@ -121,7 +121,7 @@ namespace EtcScriptLib
 
 		public void AddSystemType(String Name)
 		{
-			Context.ActiveScope.Types.Add(new Type { Origin = TypeOrigin.System, Name = Name.ToUpper() });
+			Context.ActiveScope.Types.Add(new Type(null) { Origin = TypeOrigin.System, Name = Name.ToUpper() });
 		}
 
 		public static Declaration PrepareSystemMacro(String Header,

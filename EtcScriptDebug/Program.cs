@@ -22,7 +22,7 @@ namespace EtcScriptDebug
 			try
 			{
 				var x = new EtcScriptTests.Rules();
-				x.rule_types();
+				x.consider_rule();
 			}
 			catch (Exception e)
 			{

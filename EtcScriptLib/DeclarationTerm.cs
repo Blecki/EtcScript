@@ -61,6 +61,17 @@ namespace EtcScriptLib
 				default: throw new InvalidProgramException();
 			}
 		}
-	
+
+
+		internal DeclarationTerm GenericClone()
+		{
+			return new DeclarationTerm
+			{
+				Type = this.Type,
+				DeclaredTypeName = "GENERIC",
+				Name = this.Name,
+				RepetitionType = this.RepetitionType
+			};
+		}
 	}
 }

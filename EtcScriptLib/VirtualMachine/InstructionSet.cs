@@ -16,6 +16,8 @@ namespace EtcScriptLib.VirtualMachine
 		LOAD_STATIC,	// OFFSET		DESTINATION
 		STORE_STATIC,	// VALUE		OFFSET
 
+		IS_ANCESTOR_OF, // DESCENDANT	ANCESTOR		DESTINATION
+
 		MARK_STACK,
 		RESTORE_STACK,
         RETURN,       // SOURCE       UNUSED          UNUSED      --Moves execution to the point in SOURCE, without advancement.

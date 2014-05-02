@@ -112,7 +112,10 @@ namespace EtcScriptLib
 						member.Invoke(null, new Object[] { Environment });
 					}
 					catch (Exception e) { }
-			
+
+			context.ActiveScope.Types.Add(Type.Generic);
+			context.ActiveScope.Types.Add(Type.CreatePrimitive("BOXED"));
+			context.ActiveScope.Types.Add(Type.CreatePrimitive("TYPE"));
 			context.ActiveScope.Types.Add(Type.CreatePrimitive("NUMBER"));
 			context.ActiveScope.Types.Add(Type.CreatePrimitive("STRING"));
 			context.ActiveScope.Types.Add(Type.CreatePrimitive("COMPLEXSTRING"));
@@ -120,7 +123,6 @@ namespace EtcScriptLib
 			context.ActiveScope.Types.Add(Type.CreatePrimitive("LIST"));
 			context.ActiveScope.Types.Add(Type.CreatePrimitive("LAMBDA"));
 			context.ActiveScope.Types.Add(Type.CreatePrimitive("CHAR"));
-			context.ActiveScope.Types.Add(Type.Generic);
 			context.ActiveScope.Types.Add(Type.Void);
 			context.ActiveScope.Types.Add(Type.RuleResult);
 

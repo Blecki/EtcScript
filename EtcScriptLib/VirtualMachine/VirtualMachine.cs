@@ -301,6 +301,33 @@ namespace EtcScriptLib.VirtualMachine
 						}
 						break;
 
+					case InstructionSet.IS_ANCESTOR_OF:
+						{
+							var descendant = Convert.ToInt32(GetOperand(ins.FirstOperand, context));
+							var ancestor = Convert.ToInt32(GetOperand(ins.SecondOperand, context));
+							if (ancestor == 0)
+							{
+								SetOperand(ins.ThirdOperand, true, context);
+								break;
+							}
+
+							bool isAncestor = false;
+							var type = context.Types[descendant];
+
+							while (type != null)
+							{
+								if (type.ID == ancestor) 
+								{
+									isAncestor = true;
+									break;
+								}
+								type = type.Super;
+							}
+
+							SetOperand(ins.ThirdOperand, isAncestor, context);
+						}
+						break;
+
                     #endregion
 
                     #region Loop control

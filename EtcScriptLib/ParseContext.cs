@@ -14,10 +14,45 @@ namespace EtcScriptLib
 		public int ID = 0;
 		public Func<String, Object, LoadedFile> FileLoader;
 
+		private bool RuleAIsMoreSpecializedThanB(Declaration A, Declaration B)
+		{
+			//Assume A and B have compatible terms. They shouldn't have made it this far if not.
+			for (var i = 0; i < A.Terms.Count; ++i)
+			{
+				if (A.Terms[i].Type != DeclarationTermType.Term) continue; 
+
+				var BType = B.Terms[i].DeclaredType;
+				var AType = A.Terms[i].DeclaredType;
+				if (AType.ID == BType.ID) continue; //They are the same type, so try the next term.
+
+				//They aren't the same type, so condition can be decided entirely by this term.
+				while (AType != null)
+				{
+					if (BType.ID == AType.ID) return true; //A is derived from B.
+					AType = AType.Super;
+				}
+
+				//A is not derived from B.
+				return false;
+			}
+
+			//All terms are equal
+
+			if (B.WhenClause == null && A.WhenClause != null) return true; //When clauses make it more specific...
+			return false;
+		}
+
 		public void EmitDeclarations(int StaticVariableOffset)
 		{
 			var into = new VirtualMachine.InstructionList();
 
+			for (int i = 0; i < TopScope.Types.Count; ++i)
+			{
+				var type = TopScope.Types[i];
+				type.ID = i;
+				type.ResolveTypes(TopScope);
+			}
+					
 			foreach (var type in TopScope.Types)
 				type.ResolveTypes(TopScope);
 
@@ -55,7 +90,7 @@ namespace EtcScriptLib
 						Value = new StandardLibrary.ConsiderRuleBookFunctionNode(new Token(), rulebook)
 					});
 				rulebook.ConsiderFunction.OwnerContextID = ID;
-				rulebook.ConsiderFunction.Type = DeclarationType.Test;
+				rulebook.ConsiderFunction.Type = DeclarationType.Test; //Just to keep it from being a callable macro.
 				PendingEmission.Add(rulebook.ConsiderFunction);
 			}
 
@@ -68,6 +103,27 @@ namespace EtcScriptLib
 					TopScope.Macros.Add(declaration);
 				
 				declaration.ResolveTypes(TopScope);
+			}
+
+			foreach (var rulebook in Rules.Rulebooks)
+			{
+				var ruleList = new List<Declaration>(rulebook.Rules);
+				rulebook.Rules.Clear();
+
+				foreach (var rule in ruleList)
+				{
+					if (rulebook.Rules.Count == 0)
+					{
+						rulebook.Rules.Add(rule);
+						continue;
+					}
+
+					var insertSpot = rulebook.Rules.Count - 1;
+					while (insertSpot != 0 && RuleAIsMoreSpecializedThanB(rule, rulebook.Rules[insertSpot]))
+						--insertSpot;
+					rulebook.Rules.Insert(insertSpot, rule);
+				}
+				
 			}
 
 			foreach (var declaration in PendingEmission)

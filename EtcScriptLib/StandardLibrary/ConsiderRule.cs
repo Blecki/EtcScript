@@ -39,8 +39,14 @@ namespace EtcScriptLib
 				if (rulebook == null)
 					return null; //Rulebook does not exist... no, this isn't an error!
 
+				var arguments = Declaration.GenerateParameterListSyntaxTree(Arguments, rulebook.DeclarationTerms).Members;
+				var boxedArguments = new List<Ast.Node>(arguments.Select(n =>
+				{
+					return new Ast.Box(n.Source, n).Transform(Scope);
+				}));
+
 				return Ast.StaticInvokation.CreateCorrectInvokationNode(Source, Scope, rulebook.ConsiderFunction, 
-					Declaration.GenerateParameterListSyntaxTree(Arguments, rulebook.DeclarationTerms).Members)
+					boxedArguments)
 					.Transform(Scope);
 			}
 		}
@@ -48,7 +54,7 @@ namespace EtcScriptLib
 		internal class ConsiderRuleBookFunctionNode : Ast.Node
 		{
 			Rulebook Rulebook;
-
+			
 			internal ConsiderRuleBookFunctionNode(
 				EtcScriptLib.Token Source,
 				Rulebook Rulebook
@@ -69,22 +75,32 @@ namespace EtcScriptLib
 
 				foreach (var Rule in Rulebook.Rules)
 				{
-					int whenSkipPoint = 0;
+					var skipPoints = new List<int>();
+
+					var sourceTerms = new List<DeclarationTerm>(Rule.Terms.Where(t => t.Type == DeclarationTermType.Term));
+					for (int i = parameterCount; i > 0; --i)
+					{
+						Instructions.AddInstructions("LOAD_PARAMETER NEXT R", (-i - 2));
+						Instructions.AddInstructions("LOAD_RSO_M R NEXT R", 0);
+
+						var argumentTypeID = sourceTerms[i - 1].DeclaredType.ID;
+						Instructions.AddInstructions("IS_ANCESTOR_OF R NEXT R", argumentTypeID);
+						Instructions.AddInstructions("IF_FALSE R", "JUMP NEXT", 0);
+						skipPoints.Add(Instructions.Count - 1);
+					}
+
 					if (Rule.WhenClause != null)
 					{
-						for (int i = parameterCount; i > 0; --i)
-							Instructions.AddInstructions("LOAD_PARAMETER NEXT PUSH", (-i - 2));
+						DuplicateArguments(Instructions, parameterCount);
 						Instructions.AddInstructions("CALL NEXT", 0);
 						Rule.WhenClause.CallPoints.Add(Instructions.Count - 1);
 						Instructions.AddInstructions("CLEANUP NEXT", parameterCount);
 
 						Instructions.AddInstructions("IF_FALSE R", "JUMP NEXT", 0);
-						whenSkipPoint = Instructions.Count - 1;
+						skipPoints.Add(Instructions.Count - 1);
 					}
 
-					//Duplicate arguments onto top of stack.
-					for (int i = parameterCount; i > 0; --i)
-						Instructions.AddInstructions("LOAD_PARAMETER NEXT PUSH", (-i - 2));
+					DuplicateArguments(Instructions, parameterCount); 
 					Instructions.AddInstructions("CALL NEXT", 0);
 					Rule.Body.CallPoints.Add(Instructions.Count - 1);
 					Instructions.AddInstructions("CLEANUP NEXT", parameterCount);
@@ -95,14 +111,12 @@ namespace EtcScriptLib
 					Instructions.AddInstructions("JUMP NEXT", 0);
 					JumpToEndPositions.Add(Instructions.Count - 1);
 
-					if (Rule.WhenClause != null) Instructions[whenSkipPoint] = Instructions.Count;
+					foreach (var i in skipPoints) Instructions[i] = Instructions.Count;
 				}
 
 				if (Rulebook.DefaultValue != null)
 				{
-					//Duplicate arguments onto top of stack.
-					for (int i = parameterCount; i > 0; --i)
-						Instructions.AddInstructions("LOAD_PARAMETER NEXT PUSH", (-i - 2));
+					DuplicateArguments(Instructions, parameterCount); 
 					Instructions.AddInstructions("CALL NEXT", 0);
 					Rulebook.DefaultValue.Body.CallPoints.Add(Instructions.Count - 1);
 					Instructions.AddInstructions("CLEANUP NEXT", parameterCount);
@@ -112,6 +126,15 @@ namespace EtcScriptLib
 
 				if (Destination != Ast.OperationDestination.R && Destination != Ast.OperationDestination.Discard)
 					Instructions.AddInstructions("MOVE R " + WriteOperand(Destination));
+			}
+
+			private static void DuplicateArguments(VirtualMachine.InstructionList Instructions, int parameterCount)
+			{
+				for (int i = parameterCount; i > 0; --i)
+				{
+					Instructions.AddInstructions("LOAD_PARAMETER NEXT PUSH", (-i - 2));
+					Ast.Box.EmitUnbox(Instructions, Ast.OperationDestination.Top, Ast.OperationDestination.Top);
+				}
 			}
 
 			public override EtcScriptLib.Ast.Node Transform(ParseScope Scope)

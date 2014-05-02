@@ -102,6 +102,36 @@ test _ : string {
 			var result = TestHelper.CallTestFunction(script);
 			Assert.IsTrue(result.ToString() == "b");
 		}
+
+		[Test]
+		public void rule_order()
+		{
+			var script = @"
+type A {}
+type B : A {}
+
+rule foo (a:A) : string {
+	return ""a"";
+}
+
+rule foo (b:B) : String {
+	return ""b"";
+}
+
+default of rule foo (a) : string {
+	return ""c"";
+}
+
+test _ : string {
+	var x = new B {};
+	var y = new A {};
+	return [consider [foo x]] + [consider [foo y]];
+}
+";
+
+			var result = TestHelper.CallTestFunction(script);
+			Assert.IsTrue(result.ToString() == "ba");
+		}
 	}
 
 }

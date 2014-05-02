@@ -88,18 +88,18 @@ namespace EtcScriptLib
 		#endregion
 
 		#region Builtin types
-		private static Type _void = new Type { Name = "VOID", Origin = TypeOrigin.Primitive };
+		private static Type _void = new Type(null) { Name = "VOID", Origin = TypeOrigin.Primitive };
 		public static Type Void { get { return _void; } }
 
-		private static Type _generic = new Type { Name = "GENERIC", Origin = TypeOrigin.System };
+		private static Type _generic = new Type(null) { Name = "GENERIC", Origin = TypeOrigin.System };
 		public static Type Generic { get { return _generic; } }
 
-		private static Type _rule_result = new Type { Name = "RULE-RESULT", Origin = TypeOrigin.Primitive };
+		private static Type _rule_result = new Type(null) { Name = "RULE-RESULT", Origin = TypeOrigin.Primitive };
 		public static Type RuleResult { get { return _rule_result; } }
 
 		public static Type CreatePrimitive(String Name)
 		{
-			return new Type { Name = Name, Origin = TypeOrigin.Primitive };
+			return new Type(null) { Name = Name, Origin = TypeOrigin.Primitive };
 		}
 		#endregion
 
@@ -107,8 +107,14 @@ namespace EtcScriptLib
 		public TypeOrigin Origin;
 		public Type Super;
 		public String SuperTypename;
+		public int ID;
 
 		public List<Variable> Members = new List<Variable>();
+
+		public Type(String Super)
+		{
+			this.SuperTypename = Super;
+		}
 
 		internal void AssignMemberOffsets()
 		{
@@ -129,6 +135,7 @@ namespace EtcScriptLib
 			{
 				var r = Members.Count;
 				if (Super != null) r += Super.Size;
+				else r += 1; //Top level types need 1 slot for their type info.
 				return r;
 			}
 		}
