@@ -18,6 +18,9 @@ namespace EtcScriptLib
 				}));
 		}
 
+		/// <summary>
+		/// The sole purpose of this node is to box it's arguments with type information.
+		/// </summary>
 		internal class ConsiderRuleBookNode : Ast.Node
 		{
 			internal List<Ast.Node> Arguments;
@@ -42,9 +45,14 @@ namespace EtcScriptLib
 				var arguments = Declaration.GenerateParameterListSyntaxTree(Arguments, rulebook.DeclarationTerms).Members;
 				var boxedArguments = new List<Ast.Node>(arguments.Select(n =>
 				{
-					return new Ast.Box(n.Source, n).Transform(Scope);
+					n = n.Transform(Scope);
+					if (n.ResultType.Origin != TypeOrigin.Script)
+						return new Ast.Box(n.Source, n).Transform(Scope);
+					else
+						return n;
 				}));
 
+				//This only works because rulebook consider functions take only generics.
 				return Ast.StaticInvokation.CreateCorrectInvokationNode(Source, Scope, rulebook.ConsiderFunction, 
 					boxedArguments)
 					.Transform(Scope);
@@ -54,6 +62,7 @@ namespace EtcScriptLib
 		internal class ConsiderRuleBookFunctionNode : Ast.Node
 		{
 			Rulebook Rulebook;
+			Type BoxType;
 			
 			internal ConsiderRuleBookFunctionNode(
 				EtcScriptLib.Token Source,
@@ -80,8 +89,14 @@ namespace EtcScriptLib
 					var sourceTerms = new List<DeclarationTerm>(Rule.Terms.Where(t => t.Type == DeclarationTermType.Term));
 					for (int i = parameterCount; i > 0; --i)
 					{
-						Instructions.AddInstructions("LOAD_PARAMETER NEXT R", (-i - 2));
-						Instructions.AddInstructions("LOAD_RSO_M R NEXT R", 0);
+						Instructions.AddInstructions("LOAD_PARAMETER NEXT PUSH", (-i - 2));
+						Instructions.AddInstructions("LOAD_RSO_M PEEK NEXT R", 0);	//Load type ID
+
+						Instructions.AddInstructions("EQUAL R NEXT PUSH", BoxType.ID);	//Is this a boxed type?
+						Instructions.AddInstructions("IF_TRUE POP");
+						Instructions.AddInstructions("LOAD_RSO_M PEEK NEXT R", 1); //Grab boxed typed instead.
+
+						Instructions.AddInstructions("MOVE POP"); //Clean off parameter.
 
 						var argumentTypeID = sourceTerms[i - 1].DeclaredType.ID;
 						Instructions.AddInstructions("IS_ANCESTOR_OF R NEXT R", argumentTypeID);
@@ -128,17 +143,22 @@ namespace EtcScriptLib
 					Instructions.AddInstructions("MOVE R " + WriteOperand(Destination));
 			}
 
-			private static void DuplicateArguments(VirtualMachine.InstructionList Instructions, int parameterCount)
+			private void DuplicateArguments(VirtualMachine.InstructionList Instructions, int parameterCount)
 			{
 				for (int i = parameterCount; i > 0; --i)
 				{
 					Instructions.AddInstructions("LOAD_PARAMETER NEXT PUSH", (-i - 2));
-					Ast.Box.EmitUnbox(Instructions, Ast.OperationDestination.Top, Ast.OperationDestination.Top);
+
+					Instructions.AddInstructions("LOAD_RSO_M PEEK NEXT R", 0);
+					Instructions.AddInstructions("EQUAL R NEXT R", BoxType.ID);	//Is this a boxed type?
+					Instructions.AddInstructions("IF_TRUE R");
+					Instructions.AddInstructions("LOAD_RSO_M PEEK NEXT PEEK", 2); //Grab boxed value instead.
 				}
 			}
 
 			public override EtcScriptLib.Ast.Node Transform(ParseScope Scope)
 			{
+				BoxType = Scope.FindType("BOXED");
 				ResultType = Rulebook.ResultType;
 				return this;
 			}

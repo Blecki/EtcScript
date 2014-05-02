@@ -24,9 +24,10 @@ namespace EtcScriptLib.Ast
 		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
 		{
 			Value.Emit(into, OperationDestination.R);
-			into.AddInstructions("ALLOC_RSO NEXT PUSH", 2,
-				"STORE_RSO_M NEXT PEEK NEXT", Value.ResultType.ID, 0,
-				"STORE_RSO_M R PEEK NEXT", 1);
+			into.AddInstructions("ALLOC_RSO NEXT PUSH", 3,
+				"STORE_RSO_M NEXT PEEK NEXT", ResultType.ID, 0,
+				"STORE_RSO_M NEXT PEEK NEXT", Value.ResultType.ID, 1,
+				"STORE_RSO_M R PEEK NEXT", 2);
 			if (Destination != OperationDestination.Stack)
 				into.AddInstructions("MOVE POP " + WriteOperand(Destination));
 		}
@@ -36,7 +37,7 @@ namespace EtcScriptLib.Ast
 			OperationDestination Source, 
 			OperationDestination Destination)
 		{
-			into.AddInstructions("LOAD_RSO_M " + ReadOperand(Source) + " NEXT " + WriteOperand(Destination), 1);
+			into.AddInstructions("LOAD_RSO_M " + ReadOperand(Source) + " NEXT " + WriteOperand(Destination), 2);
 		}
 	}
 

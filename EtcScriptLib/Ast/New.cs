@@ -22,6 +22,8 @@ namespace EtcScriptLib.Ast
 			this.Scope = Scope;
 			ResultType = Scope.FindType(Typename);
 			if (ResultType == null) throw new CompileError("Unable to find type with name '" + Typename + "'", Source);
+			if (ResultType.Origin != TypeOrigin.Script) 
+				throw new CompileError("New cannot be used with primitive or system types", Source);
 
 			var constructorArguments = DummyArguments(Keyword("CONSTRUCT"), Term(ResultType));
 			Constructor = Scope.FindAllPossibleMacroMatches(constructorArguments).Where(d =>
@@ -42,6 +44,7 @@ namespace EtcScriptLib.Ast
 		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
 		{
 			into.AddInstructions("ALLOC_RSO NEXT PUSH", ResultType.Size);
+			into.AddInstructions("STORE_RSO_M NEXT PEEK NEXT", ResultType.ID, 0); //Store type id
 
 			if (Constructor != null)
 			{

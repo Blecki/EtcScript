@@ -158,6 +158,14 @@ namespace EtcScriptLib
 				if (Super == null) throw new CompileError("Could not find type '" + SuperTypename + "'.");
 			}
 
+			if (Super == null)
+				Members.Insert(0, new Variable
+				{
+					Name = "__type",
+					DeclaredTypeName = "NUMBER",
+					StorageMethod = VariableStorageMethod.Member
+				});
+
 			var search = Super;
 			while (search != null)
 			{

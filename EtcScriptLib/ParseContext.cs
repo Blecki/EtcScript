@@ -14,6 +14,17 @@ namespace EtcScriptLib
 		public int ID = 0;
 		public Func<String, Object, LoadedFile> FileLoader;
 
+		private bool AIsDerivedFromB(Type A, Type B)
+		{
+			if (A.ID == B.ID) return false; //Same type - not derived.
+			while (A != null)
+			{
+				if (A.ID == B.ID) return true;
+				A = A.Super;
+			}
+			return false;
+		}
+
 		private bool RuleAIsMoreSpecializedThanB(Declaration A, Declaration B)
 		{
 			//Assume A and B have compatible terms. They shouldn't have made it this far if not.
@@ -24,20 +35,10 @@ namespace EtcScriptLib
 				var BType = B.Terms[i].DeclaredType;
 				var AType = A.Terms[i].DeclaredType;
 				if (AType.ID == BType.ID) continue; //They are the same type, so try the next term.
-
-				//They aren't the same type, so condition can be decided entirely by this term.
-				while (AType != null)
-				{
-					if (BType.ID == AType.ID) return true; //A is derived from B.
-					AType = AType.Super;
-				}
-
-				//A is not derived from B.
-				return false;
+				return AIsDerivedFromB(AType, BType);
 			}
 
 			//All terms are equal
-
 			if (B.WhenClause == null && A.WhenClause != null) return true; //When clauses make it more specific...
 			return false;
 		}
@@ -81,16 +82,25 @@ namespace EtcScriptLib
 						throw new CompileError("Rules that return values must have a default value specified using 'default of rule..'");
 				}
 
+				//Create consider implementation for rulebook
 				rulebook.ConsiderFunction = new Declaration();
-				rulebook.ConsiderFunction.Terms = rulebook.DeclarationTerms;
+				rulebook.ConsiderFunction.Terms = new List<DeclarationTerm>();
+				rulebook.ConsiderFunction.Terms.Add(new DeclarationTerm
+				{
+					Type = DeclarationTermType.Keyword,
+					Name = "CONSIDER-IMPLEMENTATION"
+				});
+				rulebook.ConsiderFunction.Terms.AddRange(rulebook.DeclarationTerms);
 				rulebook.ConsiderFunction.ReturnTypeName = rulebook.ResultTypeName;
+
 				rulebook.ConsiderFunction.Body = new LambdaBlock(
 					new Ast.Return(new Token())
 					{
 						Value = new StandardLibrary.ConsiderRuleBookFunctionNode(new Token(), rulebook)
 					});
+
 				rulebook.ConsiderFunction.OwnerContextID = ID;
-				rulebook.ConsiderFunction.Type = DeclarationType.Test; //Just to keep it from being a callable macro.
+				rulebook.ConsiderFunction.Type = DeclarationType.Test;
 				PendingEmission.Add(rulebook.ConsiderFunction);
 			}
 
