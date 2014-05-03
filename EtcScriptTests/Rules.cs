@@ -132,6 +132,34 @@ test _ : string {
 			var result = TestHelper.CallTestFunction(script);
 			Assert.IsTrue(result.ToString() == "ba");
 		}
+
+		[Test]
+		public void rule_order_operator()
+		{
+			var script = @"
+type A {}
+type B : A {}
+
+rule foo (a:A) : string {
+	return ""a"";
+}
+
+# This rule should be ordered before the other, order last should override it.
+rule foo (b:B) : String order last {
+	return ""b"";
+}
+
+default of rule foo (a) : string { return ""ERROR""; }
+
+test _ : string {
+	var x = new B {};
+	return [consider [foo x]];
+}
+";
+
+			var result = TestHelper.CallTestFunction(script);
+			Assert.IsTrue(result.ToString() == "a");
+		}
 	}
 
 }

@@ -14,6 +14,15 @@ namespace EtcScriptLib
 		System
 	}
 
+	public enum OrderOperator
+	{
+		NONE = 0,
+		FIRST = 1,
+		LAST = 2,
+		HIGH = 4,
+		LOW = 8
+	}
+
 	public class Declaration
 	{
 		public DeclarationType Type;
@@ -26,6 +35,7 @@ namespace EtcScriptLib
 		public String ReturnTypeName;
 		public Object Tag;
 		public bool DefinesOperator = false;
+		public OrderOperator OrderOperator = OrderOperator.NONE;
 
 		private List<Tuple<String, String>> HiddenArguments;
 
@@ -58,6 +68,14 @@ namespace EtcScriptLib
 				var r = CreateDescriptiveHeader(Terms, ReturnTypeName);
 				if (WhenClause != null)
 					r += " WHEN " + WhenClause.Body.ToString();
+				if ((OrderOperator & EtcScriptLib.OrderOperator.FIRST) == EtcScriptLib.OrderOperator.FIRST)
+					r += " ORDER FIRST";
+				if ((OrderOperator & EtcScriptLib.OrderOperator.LAST) == EtcScriptLib.OrderOperator.LAST)
+					r += " ORDER LAST";
+				if ((OrderOperator & EtcScriptLib.OrderOperator.HIGH) == EtcScriptLib.OrderOperator.HIGH)
+					r += " WITH HIGH PRIORITY";
+				if ((OrderOperator & EtcScriptLib.OrderOperator.LOW) == EtcScriptLib.OrderOperator.LOW)
+					r += " WITH LOW PRIORITY";
 				return r;
 			}
 		}

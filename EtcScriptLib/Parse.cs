@@ -712,8 +712,47 @@ namespace EtcScriptLib
 				if (Stream.Next().Value.ToUpper() == "WHEN")
 				{
 					Stream.Advance();
-					r.WhenClause = new WhenClause(ParseExpression(Stream, Context, TokenType.OpenBrace));
+					r.WhenClause = new WhenClause(ParseExpression(Stream, Context, (stream) =>
+						{
+							if (stream.Next().Type == TokenType.OpenBrace) return true;
+							if (stream.Next().Type == TokenType.Identifier &&
+								(stream.Next().Value.ToUpper() == "WITH" ||
+								stream.Next().Value.ToUpper() == "ORDER")) return true;
+							return false;
+						}));
 				}
+
+				r.OrderOperator = OrderOperator.NONE;
+
+				if (Stream.Next().Value.ToUpper() == "ORDER")
+				{
+					Stream.Advance();
+					var temp = OrderOperator.NONE;
+					if (!Enum.TryParse(Stream.Next().Value.ToUpper(), out temp))
+						throw new CompileError("Expected FIRST or LAST", Stream);
+					if (temp != OrderOperator.FIRST && temp != OrderOperator.LAST)
+						throw new CompileError("Expected FIRST or LAST", Stream);
+					Stream.Advance();
+
+					r.OrderOperator |= temp;
+				}
+
+				if (Stream.Next().Value.ToUpper() == "WITH")
+				{
+					Stream.Advance();
+					var temp = OrderOperator.NONE;
+					if (!Enum.TryParse(Stream.Next().Value.ToUpper(), out temp))
+						throw new CompileError("Expected HIGH or LOW", Stream);
+					if (temp != OrderOperator.HIGH && temp != OrderOperator.LOW)
+						throw new CompileError("Expected HIGH or LOW", Stream);
+					Stream.Advance();
+					if (Stream.Next().Value.ToUpper() != "PRIORITY")
+						throw new CompileError("Expected PRIORITY", Stream);
+					Stream.Advance();
+
+					r.OrderOperator |= temp;
+				}
+				
 
 				if (Stream.Next().Type == TokenType.OpenBrace)
 				{

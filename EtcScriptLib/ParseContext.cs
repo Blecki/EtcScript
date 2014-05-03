@@ -25,6 +25,13 @@ namespace EtcScriptLib
 			return false;
 		}
 
+		private int PriorityRank(Declaration A)
+		{
+			if ((A.OrderOperator & OrderOperator.HIGH) == OrderOperator.HIGH) return 2;
+			if ((A.OrderOperator & OrderOperator.LOW) == OrderOperator.LOW) return 0;
+			return 1;
+		}
+
 		private bool RuleAIsMoreSpecializedThanB(Declaration A, Declaration B)
 		{
 			//Assume A and B have compatible terms. They shouldn't have made it this far if not.
@@ -40,7 +47,21 @@ namespace EtcScriptLib
 
 			//All terms are equal
 			if (B.WhenClause == null && A.WhenClause != null) return true; //When clauses make it more specific...
+			if (PriorityRank(A) > PriorityRank(B)) return true;
 			return false;
+		}
+
+		private void AddToRulelist(Declaration Rule, List<Declaration> List)
+		{
+			if (List.Count == 0)
+				List.Add(Rule);
+			else
+			{
+				var insertSpot = List.Count - 1;
+				while (insertSpot != 0 && RuleAIsMoreSpecializedThanB(Rule, List[insertSpot]))
+					--insertSpot;
+				List.Insert(insertSpot, Rule);
+			}
 		}
 
 		public void EmitDeclarations(int StaticVariableOffset)
@@ -118,22 +139,25 @@ namespace EtcScriptLib
 			foreach (var rulebook in Rules.Rulebooks)
 			{
 				var ruleList = new List<Declaration>(rulebook.Rules);
+				var firstList = new List<Declaration>();
+				var neutralList = new List<Declaration>();
+				var lastList = new List<Declaration>();
+
 				rulebook.Rules.Clear();
 
 				foreach (var rule in ruleList)
 				{
-					if (rulebook.Rules.Count == 0)
-					{
-						rulebook.Rules.Add(rule);
-						continue;
-					}
-
-					var insertSpot = rulebook.Rules.Count - 1;
-					while (insertSpot != 0 && RuleAIsMoreSpecializedThanB(rule, rulebook.Rules[insertSpot]))
-						--insertSpot;
-					rulebook.Rules.Insert(insertSpot, rule);
+					if ((rule.OrderOperator & OrderOperator.FIRST) == OrderOperator.FIRST)
+						AddToRulelist(rule, firstList);
+					else if ((rule.OrderOperator & OrderOperator.LAST) == OrderOperator.LAST)
+						AddToRulelist(rule, lastList);
+					else
+						AddToRulelist(rule, neutralList);
 				}
-				
+
+				rulebook.Rules.AddRange(firstList);
+				rulebook.Rules.AddRange(neutralList);
+				rulebook.Rules.AddRange(lastList);
 			}
 
 			foreach (var declaration in PendingEmission)
