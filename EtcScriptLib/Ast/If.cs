@@ -38,18 +38,11 @@ namespace EtcScriptLib.Ast
 			into[jumpFrom] = into.Count;
 		}
 
-		public override void Debug(int depth)
+		public override string ToString()
 		{
-			Console.Write(new String(' ', depth * 3));
-			Console.WriteLine("If");
-			Header.Debug(depth + 1);
-			Console.WriteLine(new String(' ', depth * 3) + "Then:");
-			ThenBlock.Debug(depth + 1);
-			if (ElseBlock != null)
-			{
-				Console.WriteLine(new String(' ', depth * 3) + "Else:");
-				ElseBlock.Debug(depth + 1);
-			}
+			return "if " + Header.ToString() + ThenBlock.ToString() +
+				(ElseBlock == null ? "" : (
+				" else " + ElseBlock.ToString()));
 		}
 	}
 }

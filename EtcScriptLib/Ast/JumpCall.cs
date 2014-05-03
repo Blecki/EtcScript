@@ -51,12 +51,10 @@ namespace EtcScriptLib.Ast
 				into.AddInstructions("MOVE R " + Node.WriteOperand(Destination));
 		}
 
-		public override void Debug(int depth)
+		public override string ToString()
 		{
-			Console.Write(new String(' ', depth * 3));
-			Console.WriteLine("Static Call");
-			foreach (var arg in Arguments)
-				arg.Debug(depth + 1);
+			return "[<<" + Function.DescriptiveHeader + ">> " + String.Join(" ", Arguments.Select(a => a.ToString())) + "]";
 		}
+
 	}
 }

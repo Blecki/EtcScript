@@ -33,5 +33,10 @@ namespace EtcScriptLib.Ast
 			if (Destination != OperationDestination.R && Destination != OperationDestination.Discard)
 				into.AddInstructions("MOVE R " + Node.WriteOperand(Destination));
 		}
+
+		public override string ToString()
+		{
+			return "[" + Parameters.ToString() + "]";
+		}
 	}
 }

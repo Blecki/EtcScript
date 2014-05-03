@@ -69,5 +69,11 @@ namespace EtcScriptLib.Ast
 			if (Destination != OperationDestination.Stack)
 				into.AddInstructions("MOVE POP " + WriteOperand(Destination));
 		}
+
+		public override string ToString()
+		{
+			return "new " + Typename + (Initializers == null ? "" : (
+				" { " + String.Join("\n", Initializers.Select(i => i.ToString())) + " }"));
+		}
 	}
 }

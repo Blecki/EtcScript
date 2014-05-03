@@ -164,6 +164,18 @@ namespace EtcScriptLib
 					Compile.DebugWrite(" " + i.ToString() + ": " + into.StringTable.PartTable[i] + "\n");
 				Compile.DebugWrite(" STRING DATA:\n");
 				Compile.DebugWrite("  " + into.StringTable.StringData + "\n");
+				Compile.DebugWrite("\n RULE ORDER:\n");
+
+				foreach (var rulebook in Rules.Rulebooks)
+				{
+					Compile.DebugWrite("\nRULE " + Declaration.CreateDescriptiveHeader(rulebook.DeclarationTerms,
+						rulebook.ResultTypeName) + ":\n");
+					foreach (var rule in rulebook.Rules)
+						Compile.DebugWrite(rule.DescriptiveHeader + "\n");
+					if (rulebook.DefaultValue != null)
+						Compile.DebugWrite("DEFAULT " + rulebook.DefaultValue.DescriptiveHeader + "\n");
+				}
+
 			}
 
 			PendingEmission.Clear();

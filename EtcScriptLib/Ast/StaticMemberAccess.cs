@@ -42,5 +42,10 @@ namespace EtcScriptLib.Ast
 		{
 			get { return MemberVariable.DeclaredType; }
 		}
+
+		public override string ToString()
+		{
+			return Object.ToString() + "." + MemberVariable.Name;
+		}
 	}
 }

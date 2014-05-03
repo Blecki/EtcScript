@@ -25,5 +25,10 @@ namespace EtcScriptLib.Ast
 		{
 			into.AddInstructions("MOVE STRING " + Node.WriteOperand(Destination), into.AddString(Value));
 		}
+
+		public override string ToString()
+		{
+			return "\"" + Value + "\"";
+		}
 	}
 }

@@ -42,5 +42,10 @@ namespace EtcScriptLib.Ast
 			Value.Emit(into, OperationDestination.R);
 			into.AddInstructions("STORE_RSO_M R PEEK NEXT", Member.Offset);
 		}
+
+		public override string ToString()
+		{
+			return "let " + Member.Name + " = " + Value.ToString() + ";\n";
+		}
 	}
 }

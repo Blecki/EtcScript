@@ -149,7 +149,7 @@ namespace EtcScriptLib
 						advance_source();
 						if (!source.AtEnd()) c = source.Next();
 					}
-					return Token.Create(TokenType.Identifier, identifier, tokenStart);
+					return Token.Create(TokenType.Identifier, identifier.ToUpper(), tokenStart);
 				}
 
 				var parsedMinus = false;

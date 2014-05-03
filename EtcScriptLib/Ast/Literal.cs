@@ -32,9 +32,9 @@ namespace EtcScriptLib.Ast
 			into.AddInstructions("MOVE NEXT " + Node.WriteOperand(Destination), Value);
 		}
 
-		public override void Debug(int depth)
+		public override string ToString()
 		{
-			Console.WriteLine(new String(' ', depth * 3) + "Literal " + Value);
+			return "LIT<<" + (Value == null ? "NULL" : Value.ToString()) + ">>";
 		}
 	}
 }

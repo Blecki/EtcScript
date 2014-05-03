@@ -359,14 +359,11 @@ namespace EtcScriptLib
 			Iterator<Token> state, 
 			ParseContext operators,
 			int minimum_precedence,
-			TokenType terminal)
+			Predicate<Iterator<Token>> IsTerminal)
 		{
 			while (true)
 			{
-				if (state.AtEnd() && terminal != TokenType.NewLine)
-					throw new CompileError("[01B] Unexpected end of line in expression", lhs.Source);
-				if (state.AtEnd() && terminal == TokenType.NewLine) return lhs;
-				if (state.Next().Type == terminal) return lhs;
+				if (IsTerminal(state)) return lhs;
 				if (state.Next().Type != TokenType.Operator) throw new CompileError("[01C] Expected operator", state.Next());
 
 				var precedence = operators.FindPrecedence(state.Next().Value);
@@ -383,7 +380,7 @@ namespace EtcScriptLib
 					{
 						var next_precedence = operators.FindPrecedence(state.Next().Value);
 						if (next_precedence > precedence)
-							rhs = ParseExpression(rhs, state, operators, next_precedence, terminal);
+							rhs = ParseExpression(rhs, state, operators, next_precedence, IsTerminal);
 						else
 							break;
 					}
@@ -398,7 +395,21 @@ namespace EtcScriptLib
 		private static Ast.Node ParseExpression(
 			Iterator<Token> Stream,
 			ParseContext Context,
-			TokenType terminal)
+			TokenType Terminal)
+		{
+			if (Terminal == TokenType.NewLine)
+				return ParseExpression(Stream, Context, (stream) =>
+					{
+						return stream.AtEnd() || stream.Next().Type == TokenType.NewLine;
+					});
+			else
+				return ParseExpression(Stream, Context, (stream) => { return stream.Next().Type == Terminal; });
+		}
+
+		private static Ast.Node ParseExpression(
+			Iterator<Token> Stream,
+			ParseContext Context,
+			Predicate<Iterator<Token>> IsTerminal)
 		{
 			if (Stream.Next().Type == TokenType.Identifier && Stream.Next().Value.ToUpper() == "LAMBDA")
 			{
@@ -409,7 +420,7 @@ namespace EtcScriptLib
 			else if (Stream.Next().Type == TokenType.Identifier && Stream.Next().Value.ToUpper() == "NEW")
 				return ParseNew(Stream, Context);
 			else
-				return ParseExpression(ParseTerm(Stream, Context), Stream, Context, 0, terminal);
+				return ParseExpression(ParseTerm(Stream, Context), Stream, Context, 0, IsTerminal);
 		}
 
 		private static Ast.New ParseNew(
@@ -672,7 +683,8 @@ namespace EtcScriptLib
 
 		internal static Declaration ParseRuleDeclaration(Iterator<Token> Stream, ParseContext Context)
 		{
-			if (Stream.AtEnd()) throw new CompileError("[02F] Impossible error: ParseRuleDeclaration entered at end of stream.", Stream);
+			if (Stream.AtEnd()) 
+				throw new CompileError("[02F] Impossible error: ParseRuleDeclaration entered at end of stream.", Stream);
 
 			try
 			{

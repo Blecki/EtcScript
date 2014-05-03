@@ -39,6 +39,11 @@ namespace EtcScriptLib.Ast
 		{
 			into.AddInstructions("LOAD_RSO_M " + ReadOperand(Source) + " NEXT " + WriteOperand(Destination), 2);
 		}
+
+		public override string ToString()
+		{
+			return "BOX [ " + Value.ToString() + " ]";
+		}
 	}
 
 }

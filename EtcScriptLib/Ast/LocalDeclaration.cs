@@ -66,5 +66,12 @@ namespace EtcScriptLib.Ast
 			}
 		}
 
+		public override string ToString()
+		{
+			return "var " + Variable.Name + ":" + Variable.DeclaredType.Name +
+				(Value == null ? "" : (
+					" = " + Value.ToString()));
+		}
+
 	}
 }

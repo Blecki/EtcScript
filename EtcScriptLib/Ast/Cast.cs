@@ -29,5 +29,10 @@ namespace EtcScriptLib.Ast
 			Value.Emit(into, Destination);
 		}
 
+		public override string ToString()
+		{
+			return Value.ToString() + ":" + Typename;
+		}
+
 	}
 }

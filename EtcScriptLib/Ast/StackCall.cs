@@ -33,5 +33,10 @@ namespace EtcScriptLib.Ast
 				into.AddInstructions("MOVE R " + Node.WriteOperand(Destination));
 		}
 
+		public override string ToString()
+		{
+			return "[<<" + Function.DescriptiveHeader + ">> " + String.Join(" ", Arguments.Select(a => a.ToString())) + "]";
+		}
+
 	}
 }

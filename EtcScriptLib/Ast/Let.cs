@@ -40,5 +40,10 @@ namespace EtcScriptLib.Ast
 			Value.Emit(into, OperationDestination.Stack);
 			(LHS as IAssignable).EmitAssignment(into);
 		}
+
+		public override string ToString()
+		{
+			return "let " + LHS.ToString() + " = " + Value.ToString();
+		}
 	}
 }

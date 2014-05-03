@@ -5,6 +5,7 @@
 	IDE or line-by-line debugger?
 	Namespaces?
 	String Library + Documentation
+	RTTI implementation may enable implementation of an 'is-a' operator or a checked cast.
 
 EtcScript Grammar
 

@@ -50,5 +50,10 @@ namespace EtcScriptLib.Ast
 		{
 			get { return Function.Terms.Last().DeclaredType; }
 		}
+
+		public override string ToString()
+		{
+			return Object.ToString() + "@" + Index.ToString();
+		}
 	}
 }

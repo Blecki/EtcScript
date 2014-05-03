@@ -46,11 +46,19 @@ namespace EtcScriptLib
 			}
 		}
 
+		public static String CreateDescriptiveHeader(List<DeclarationTerm> Terms, String ReturnTypeName)
+		{
+			return String.Join(" ", Terms.Select(term => term.ToString())) + " : " + ReturnTypeName;
+		}
+
 		public String DescriptiveHeader
 		{
 			get
 			{
-				return String.Join(" ", Terms.Select(term => term.ToString())) + " : " + ReturnTypeName;
+				var r = CreateDescriptiveHeader(Terms, ReturnTypeName);
+				if (WhenClause != null)
+					r += " WHEN " + WhenClause.Body.ToString();
+				return r;
 			}
 		}
 

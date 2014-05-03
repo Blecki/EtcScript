@@ -37,12 +37,9 @@ namespace EtcScriptLib.Ast
 				Instructions.AddInstructions("MOVE POP " + WriteOperand(Destination));			
 		}
 
-		public override void Debug(int depth)
+		public override string ToString()
 		{
-			Console.Write(new String(' ', depth * 3));
-			Console.WriteLine("Assemble List");
-			foreach (var member in Members)
-				member.Debug(depth + 1);
+			return "{ " + String.Join(" ", Members.Select(m => m.ToString())) + " }";
 		}
 	}
 }

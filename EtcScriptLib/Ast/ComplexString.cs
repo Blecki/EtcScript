@@ -95,5 +95,10 @@ namespace EtcScriptLib.Ast
 				Function.DeclarationScope.CapturedVariables.Count + 2);
 			into.AddInstructions("LAMBDA POP " + WriteOperand(Destination));
 		}
+
+		public override string ToString()
+		{
+			return "$\"" + String.Join("", Pieces.Select(p => p.ToString())) + "\"";
+		}
 	}
 }

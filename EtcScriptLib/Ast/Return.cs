@@ -46,10 +46,9 @@ namespace EtcScriptLib.Ast
 			DeclarationScope.RecordReturnJumpSource(into.Count - 1);
 		}
 
-		public override void Debug(int depth)
+		public override string ToString()
 		{
-			Console.WriteLine(new String(' ', depth * 3) + "Return");
-			if (Value != null) Value.Debug(depth + 1);
+			return "return " + (Value == null ? "" : Value.ToString());
 		}
 	}
 }

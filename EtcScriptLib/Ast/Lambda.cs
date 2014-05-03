@@ -70,5 +70,9 @@ namespace EtcScriptLib.Ast
 			into.AddInstructions("LAMBDA POP " + WriteOperand(Destination));
 		}
 
+		public override string ToString()
+		{
+			return "lambda " + Function.DescriptiveHeader + " " + Function.Body.Body.ToString();
+		}
 	}
 }

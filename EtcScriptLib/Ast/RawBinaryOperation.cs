@@ -32,5 +32,10 @@ namespace EtcScriptLib.Ast
 		{
 			return this;
 		}
+
+		public override string ToString()
+		{
+			return LHS.ToString() + " " + Instruction.ToString() + " " + RHS.ToString();
+		}
 	}
 }

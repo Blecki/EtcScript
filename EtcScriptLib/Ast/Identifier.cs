@@ -89,5 +89,10 @@ namespace EtcScriptLib.Ast
 		{
 			get { return MatchedVariable.DeclaredType; }
 		}
+
+		public override string ToString()
+		{
+			return Name.Value;
+		}
 	}
 }

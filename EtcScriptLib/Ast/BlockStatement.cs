@@ -19,10 +19,10 @@ namespace EtcScriptLib.Ast
 			if (LocalScope.Variables.Count > 0) into.AddInstructions("CLEANUP NEXT", LocalScope.Variables.Count);
 		}
 
-		public override void Debug(int depth)
+		public override string ToString()
 		{
-			foreach (var statement in Statements)
-				statement.Debug(depth + 1);
+			return "{ \n" +
+				String.Join(";\n", Statements.Select(s => s.ToString())) + " }";
 		}
 
 		public override Node Transform(ParseScope Scope)
@@ -32,5 +32,7 @@ namespace EtcScriptLib.Ast
 			Statements = new List<Node>(Statements.Select(s => s.Transform(LocalScope)).Where(n => n != null));
 			return this;
 		}
+
+
 	}
 }
