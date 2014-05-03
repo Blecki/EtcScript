@@ -87,9 +87,9 @@ namespace EtcScriptLib
 					var skipPoints = new List<int>();
 
 					var sourceTerms = new List<DeclarationTerm>(Rule.Terms.Where(t => t.Type == DeclarationTermType.Term));
-					for (int i = parameterCount; i > 0; --i)
+					for (int i = 0; i < parameterCount; ++i)
 					{
-						Instructions.AddInstructions("LOAD_PARAMETER NEXT PUSH", (-i - 2));
+						Instructions.AddInstructions("LOAD_PARAMETER NEXT PUSH", (-parameterCount - 2) + i);
 						Instructions.AddInstructions("LOAD_RSO_M PEEK NEXT R", 0);	//Load type ID
 
 						Instructions.AddInstructions("EQUAL R NEXT PUSH", BoxType.ID);	//Is this a boxed type?
@@ -98,7 +98,7 @@ namespace EtcScriptLib
 
 						Instructions.AddInstructions("MOVE POP"); //Clean off parameter.
 
-						var argumentTypeID = sourceTerms[i - 1].DeclaredType.ID;
+						var argumentTypeID = sourceTerms[i].DeclaredType.ID;
 						Instructions.AddInstructions("IS_ANCESTOR_OF R NEXT R", argumentTypeID);
 						Instructions.AddInstructions("IF_FALSE R", "JUMP NEXT", 0);
 						skipPoints.Add(Instructions.Count - 1);
