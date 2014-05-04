@@ -102,6 +102,7 @@
       <DependentUpon>Debugger.cs</DependentUpon>
     </Compile>
     <Compile Include="StandardLibrary\ConsiderRule.cs" />
+    <Compile Include="StandardLibrary\EachXInListWhere.cs" />
     <Compile Include="StandardLibrary\Invoke.cs" />
     <Compile Include="StandardLibrary\MathFunctions.cs" />
     <Compile Include="StandardLibrary\ListFunctions.cs" />

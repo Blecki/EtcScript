@@ -21,8 +21,8 @@ namespace EtcScriptDebug
 
 			try
 			{
-				var x = new EtcScriptTests.Rules();
-				x.consider_rule();
+				var x = new EtcScriptTests.EachInWhere();
+				x.each_x_in_where();
 			}
 			catch (Exception e)
 			{
