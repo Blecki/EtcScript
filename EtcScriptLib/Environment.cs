@@ -37,6 +37,13 @@ namespace EtcScriptLib
 			Compile.GetDefaultParseContext(this);
 		}
 
+		public Debugger.Debugger OpenDebuggerWindow(VirtualMachine.ExecutionContext Context)
+		{
+			var window = new Debugger.Debugger(Context);
+			window.Show();
+			return window;
+		}
+
 		public VirtualMachine.ExecutionContext CreateExecutionContext(VirtualMachine.CodeContext EntryPoint)
 		{
 			return new VirtualMachine.ExecutionContext(StaticVariableStorage, Context.TopScope.Types, EntryPoint);

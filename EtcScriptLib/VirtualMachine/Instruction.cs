@@ -73,16 +73,16 @@ namespace EtcScriptLib.VirtualMachine
 
 		private String fittab(String s, int l)
 		{
-			if (s.Length > l) return s.Substring(0, l);
-			else if (s.Length == l) return s;
+			//if (s.Length > l) return s.Substring(0, l);
+			if (s.Length == l) return s;
 			else return s + new String(' ', l - s.Length);
 		}
 
         public override string ToString()
         {
-			return fittab(Opcode.ToString(), 24) + "\t"
-				+ fittab(FirstOperand.ToString(), 5) + "\t"
-				+ fittab(SecondOperand.ToString(), 5) + "\t"
+			return fittab(Opcode.ToString(), 24) + " "
+				+ FirstOperand.ToString() + " "
+				+ SecondOperand.ToString() + " "
 				+ fittab(ThirdOperand.ToString(), 5) +
 				(String.IsNullOrEmpty(Annotation) ? "" : (" #" + Annotation));
         }

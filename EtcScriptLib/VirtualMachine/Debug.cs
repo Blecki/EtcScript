@@ -7,6 +7,25 @@ namespace EtcScriptLib.VirtualMachine
 {
     public class Debug
     {
+		internal static String GetOpcodeString(ListIterator<Object> iterator)
+		{
+			if (iterator.AtEnd()) return "";
+				
+			var instruction = iterator.Next();
+			if (instruction == null) return "null";
+			else if (instruction is Instruction)
+			{
+				var ins = (instruction as Instruction?).Value;
+				var r = ins.Opcode.ToString() + "  ";
+				r += GetOperandString(ins.FirstOperand, iterator) + "  ";
+				r += GetOperandString(ins.SecondOperand, iterator) + "  ";
+				r += GetOperandString(ins.ThirdOperand, iterator) + "  ";
+				if (!String.IsNullOrEmpty(ins.Annotation)) r += "#" + ins.Annotation;
+				return r;
+			}
+			else return instruction.ToString();
+		}
+
         internal static void DumpOpcode(List<Object> opcode, Action<String> Write, int indent)
         {
 			var iterator = opcode.GetIterator();

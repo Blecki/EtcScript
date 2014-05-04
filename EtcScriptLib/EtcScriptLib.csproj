@@ -33,6 +33,8 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -75,6 +77,30 @@
     <Compile Include="CompileError.cs" />
     <Compile Include="Construct.cs" />
     <Compile Include="Control.cs" />
+    <Compile Include="Debugger\AssemblyView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Debugger\AssemblyView.Designer.cs">
+      <DependentUpon>AssemblyView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Debugger\RegisterView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Debugger\RegisterView.Designer.cs">
+      <DependentUpon>RegisterView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Debugger\StackView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Debugger\StackView.Designer.cs">
+      <DependentUpon>StackView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Debugger\Debugger.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Debugger\Debugger.Designer.cs">
+      <DependentUpon>Debugger.cs</DependentUpon>
+    </Compile>
     <Compile Include="StandardLibrary\ConsiderRule.cs" />
     <Compile Include="StandardLibrary\Invoke.cs" />
     <Compile Include="StandardLibrary\MathFunctions.cs" />
@@ -119,6 +145,20 @@
   <ItemGroup>
     <Content Include="Grammar.txt" />
     <Content Include="VirtualMachine\VMDesign.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Debugger\AssemblyView.resx">
+      <DependentUpon>AssemblyView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Debugger\RegisterView.resx">
+      <DependentUpon>RegisterView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Debugger\StackView.resx">
+      <DependentUpon>StackView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Debugger\Debugger.resx">
+      <DependentUpon>Debugger.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
