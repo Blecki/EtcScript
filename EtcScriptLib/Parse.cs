@@ -586,14 +586,16 @@ namespace EtcScriptLib
 
 		internal static Declaration ParseMacroDeclaration(Iterator<Token> Stream, ParseContext Context)
 		{
-			if (Stream.AtEnd()) throw new CompileError("[028] Impossible error: ParseDeclaration entered at end of stream.", Stream);
+			if (Stream.AtEnd()) 
+				throw new CompileError("[028] Impossible error: ParseDeclaration entered at end of stream.", Stream);
 
 			try
 			{
 				var r = new Declaration();
 				r.ReturnTypeName = "VOID";
 
-				if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("[029] Expected identifier", Stream.Next());
+				if (Stream.Next().Type != TokenType.Identifier) 
+					throw new CompileError("[029] Expected identifier", Stream.Next());
 
 				r.Type = DeclarationType.Macro;
 				Stream.Advance();
@@ -848,7 +850,7 @@ namespace EtcScriptLib
 				try
 				{
 					if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("[036] Expected identifier", Stream);
-					if (Stream.Next().Value.ToUpper() == "MACRO")
+					if (Stream.Next().Value.ToUpper() == "MACRO" || Stream.Next().Value.ToUpper() == "FUNCTION")
 					{
 						var declaration = ParseMacroDeclaration(Stream, Context);
 						declaration.OwnerContextID = Context.ID;
