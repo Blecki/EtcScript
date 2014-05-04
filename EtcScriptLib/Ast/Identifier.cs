@@ -59,6 +59,10 @@ namespace EtcScriptLib.Ast
 				{
 					into.AddInstructions("LOAD_STATIC NEXT " + Node.WriteOperand(Destination), MatchedVariable.Offset);
 				}
+				else if (MatchedVariable.StorageMethod == VariableStorageMethod.Constant)
+				{
+					into.AddInstructions("MOVE NEXT " + WriteOperand(Destination), (MatchedVariable as CompileTimeConstant).Value);
+				}
 				else
 					throw new NotImplementedException();
 			}

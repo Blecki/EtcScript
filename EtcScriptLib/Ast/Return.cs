@@ -95,9 +95,9 @@ namespace EtcScriptLib.Ast
 			}
 			else
 			{
+				Value.Emit(Instructions, OperationDestination.Stack);
 				Instructions.AddInstructions("ALLOC_RSO NEXT R # Return an actual value", 2);
 				Instructions.AddInstructions("STORE_RSO_M NEXT R NEXT", 1, 0);
-				Value.Emit(Instructions, OperationDestination.Stack);
 				Instructions.AddInstructions("STORE_RSO_M POP R NEXT", 1);
 			}			
 		}

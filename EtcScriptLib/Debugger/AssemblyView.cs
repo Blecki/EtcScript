@@ -54,7 +54,7 @@ namespace EtcScriptLib.Debugger
 				address += ": ";
 
 				var addressFontSize = TextRenderer.MeasureText(address, font);
-				Brush foreground = Brushes.Black;
+				Brush foreground = Brushes.Gray;
 
 				if (dark)
 					e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(255, 230, 230, 230)), new Rectangle(0, y, this.Width, addressFontSize.Height + 2));
@@ -69,10 +69,15 @@ namespace EtcScriptLib.Debugger
 				e.Graphics.DrawString(address, font, Brushes.Gray, 2, y);
 
 				var disassembly = VirtualMachine.Debug.GetOpcodeString(iterator);
-				e.Graphics.DrawString(disassembly, font, foreground, 2 + addressFontSize.Width + 3, y);
+				e.Graphics.DrawString(disassembly, font, foreground, 2 + addressFontSize.Width + 1, y);
 
 				iterator.Advance();
 			}
+		}
+
+		private void AssemblyView_Resize(object sender, EventArgs e)
+		{
+			this.Invalidate();
 		}
 	}
 }

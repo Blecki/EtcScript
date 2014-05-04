@@ -18,6 +18,19 @@ namespace EtcScriptLib
 		}
 	}
 
+	public class CompileTimeConstant : Variable
+	{
+		public Object Value;
+
+		public CompileTimeConstant(String Name, Object Value, String Typename)
+		{
+			this.Value = Value;
+			this.StorageMethod = VariableStorageMethod.Constant;
+			this.DeclaredTypeName = Typename;
+			this.Name = Name;
+		}
+	}
+
 	public class LoadedFile
 	{
 		public String Data;
@@ -145,6 +158,12 @@ namespace EtcScriptLib
 		{
 			var variable = new SystemVariable(Name.ToUpper(), Implementation, ResultTypeName.ToUpper());
 			Context.ActiveScope.Variables.Add(variable);
+		}
+
+		public void AddCompileTimeConstant(String Name, String ResultTypeName, Object Value)
+		{
+			var variable = new CompileTimeConstant(Name.ToUpper(), Value, ResultTypeName.ToUpper());
+			Context.TopScope.Variables.Add(variable);
 		}
 
 		public void AddControl(Control Control)

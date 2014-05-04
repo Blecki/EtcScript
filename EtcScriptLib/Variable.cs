@@ -11,7 +11,8 @@ namespace EtcScriptLib
 		Member,
 		Static,
 		System,
-		LambdaCapture
+		LambdaCapture,
+		Constant
 	}
 
 	public class Variable

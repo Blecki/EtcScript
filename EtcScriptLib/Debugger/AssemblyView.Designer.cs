@@ -36,6 +36,7 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.Name = "AssemblyView";
 			this.Paint += new System.Windows.Forms.PaintEventHandler(this.AssemblyView_Paint);
+			this.Resize += new System.EventHandler(this.AssemblyView_Resize);
 			this.ResumeLayout(false);
 
 		}
