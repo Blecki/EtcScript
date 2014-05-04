@@ -104,6 +104,27 @@ test _ : string {
 		}
 
 		[Test]
+		public void rule_nevermind()
+		{
+			var script = @"
+rule foo : string {
+	return nevermind;
+}
+
+default of rule foo : string {
+	return ""b"";
+}
+
+test _ : string {
+	return [consider [foo]];
+}
+";
+
+			var result = TestHelper.CallTestFunction(script);
+			Assert.IsTrue(result.ToString() == "b");
+		}
+
+		[Test]
 		public void rule_order()
 		{
 			var script = @"

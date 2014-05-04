@@ -36,6 +36,7 @@ namespace EtcScriptLib
 		public Object Tag;
 		public bool DefinesOperator = false;
 		public OrderOperator OrderOperator = OrderOperator.NONE;
+		public bool TransformingWhenClause = false;
 
 		private List<Tuple<String, String>> HiddenArguments;
 
@@ -324,7 +325,12 @@ namespace EtcScriptLib
 		{
 			//this.OwnerContextID = OwnerContextID;
 			Body.Transform(DeclarationScope);
-			if (WhenClause != null) WhenClause.Transform(DeclarationScope);
+			if (WhenClause != null)
+			{
+				this.TransformingWhenClause = true;
+				WhenClause.Transform(DeclarationScope);
+				this.TransformingWhenClause = false;
+			}
 		}
 
 		public void Emit(VirtualMachine.InstructionList Into)

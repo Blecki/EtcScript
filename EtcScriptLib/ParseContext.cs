@@ -115,13 +115,10 @@ namespace EtcScriptLib
 				rulebook.ConsiderFunction.ReturnTypeName = rulebook.ResultTypeName;
 
 				rulebook.ConsiderFunction.Body = new LambdaBlock(
-					new Ast.Return(new Token())
-					{
-						Value = new StandardLibrary.ConsiderRuleBookFunctionNode(new Token(), rulebook)
-					});
+					new StandardLibrary.ConsiderRuleBookFunctionNode(new Token(), rulebook));
 
 				rulebook.ConsiderFunction.OwnerContextID = ID;
-				rulebook.ConsiderFunction.Type = DeclarationType.Test;
+				rulebook.ConsiderFunction.Type = DeclarationType.Rule;
 				PendingEmission.Add(rulebook.ConsiderFunction);
 			}
 

@@ -125,9 +125,11 @@ namespace EtcScriptLib
 			context.ActiveScope.Types.Add(Type.CreatePrimitive("CHAR"));
 			context.ActiveScope.Types.Add(Type.Void);
 			context.ActiveScope.Types.Add(Type.RuleResult);
+			context.ActiveScope.Types.Add(Type.CreatePrimitive("RULE-NEVERMIND"));
 
 			Environment.AddSystemVariable("stop", "RULE-RESULT", c => 0);
 			Environment.AddSystemVariable("continue", "RULE-RESULT", c => 1);
+			Environment.AddSystemVariable("nevermind", "RULE-NEVERMIND", c => 0);
 
 			return context;
 		}

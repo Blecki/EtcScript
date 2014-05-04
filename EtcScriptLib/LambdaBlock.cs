@@ -42,7 +42,7 @@ namespace EtcScriptLib
 			EntryPoint = Into.Count;
 			Instructions.AddInstructions("MOVE F PUSH #Enter " + Name, "MARK_STACK F");
 			Body.Emit(Instructions, Ast.OperationDestination.Discard);
-			Instructions.AddInstructions("MOVE NEXT R", 0); //If a function has no return statement, it returns 0.
+			//Instructions.AddInstructions("MOVE NEXT R", 0); //If a function has no return statement, it returns 0.
 			var returnJumpPoint = Instructions.Count;
 			Instructions.AddInstructions(
 				"RESTORE_STACK F",

@@ -121,7 +121,15 @@ namespace EtcScriptLib
 					Instructions.AddInstructions("CLEANUP NEXT", parameterCount);
 
 					if (useFallThrough)
+					{
 						Instructions.AddInstructions("EQUAL NEXT R R", 0, "IF_TRUE R");
+					}
+					else
+					{
+						Instructions.AddInstructions("LOAD_RSO_M R NEXT PUSH #Check if NEVERMIND was returned", 0,
+							"EQUAL POP NEXT PUSH", 1,
+							"IF_TRUE POP");
+					}
 
 					Instructions.AddInstructions("JUMP NEXT", 0);
 					JumpToEndPositions.Add(Instructions.Count - 1);
@@ -138,6 +146,8 @@ namespace EtcScriptLib
 				}
 
 				foreach (var spot in JumpToEndPositions) Instructions[spot] = Instructions.Count;
+
+				if (!useFallThrough) Instructions.AddInstructions("LOAD_RSO_M R NEXT R", 1);
 
 				if (Destination != Ast.OperationDestination.R && Destination != Ast.OperationDestination.Discard)
 					Instructions.AddInstructions("MOVE R " + WriteOperand(Destination));
