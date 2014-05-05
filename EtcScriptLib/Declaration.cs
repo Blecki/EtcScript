@@ -93,7 +93,7 @@ namespace EtcScriptLib
 
 		public static Declaration Parse(String Header)
 		{
-			var tokenIterator = new TokenStream(new Compile.StringIterator(Header), new ParseContext());
+			var tokenIterator = new TokenStream(new StringIterator(Header), new ParseContext());
 			var headerTerms = EtcScriptLib.Parse.ParseMacroDeclarationHeader(tokenIterator,
 				EtcScriptLib.Parse.DeclarationHeaderTerminatorType.StreamEnd);
 

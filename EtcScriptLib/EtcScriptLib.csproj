@@ -75,8 +75,9 @@
     <Compile Include="AST\Node.cs" />
     <Compile Include="Compile.cs" />
     <Compile Include="CompileError.cs" />
-    <Compile Include="Construct.cs" />
+    <Compile Include="ListIterator.cs" />
     <Compile Include="Control.cs" />
+    <Compile Include="StringIterator.cs" />
     <Compile Include="Debugger\AssemblyView.cs">
       <SubType>UserControl</SubType>
     </Compile>

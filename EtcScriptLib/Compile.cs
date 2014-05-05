@@ -15,32 +15,6 @@ namespace EtcScriptLib
 			if (_DebugWrite != null) _DebugWrite(s);
 		}
 
-        public class StringIterator : Iterator<int>
-		{
-			private String data;
-			private int place = 0;
-
-			public int Next()
-			{
-				return data[place];
-			}
-
-			public void Advance()
-			{
-				++place;
-			}
-
-			public bool AtEnd()
-			{
-				return place >= data.Length;
-			}
-
-			public StringIterator(String data)
-			{
-				this.data = data;
-			}
-		}
-
 		public static void EmitDebugDump(Declaration declaration)
 		{
 			DebugWrite(declaration.Type.ToString() + ":\n");

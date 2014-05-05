@@ -93,7 +93,7 @@ namespace EtcScriptLib
 		{
 			Context.ID = 0;
 
-			var stream = new TokenStream(new Compile.StringIterator(script), Context);
+			var stream = new TokenStream(new StringIterator(script), Context);
 			var declaration = Parse.ParseMacroDeclaration(stream, Context);
 
 			declaration.ResolveTypes(Context.ActiveScope);
@@ -133,7 +133,7 @@ namespace EtcScriptLib
 
 		public void AddScriptMacro(String Script)
 		{
-			var stream = new TokenStream(new Compile.StringIterator(Script), Context);
+			var stream = new TokenStream(new StringIterator(Script), Context);
 			var declaration = Parse.ParseMacroDeclaration(stream, Context);
 			declaration.OwnerContextID = Context.ID;
 			Context.PendingEmission.Add(declaration);

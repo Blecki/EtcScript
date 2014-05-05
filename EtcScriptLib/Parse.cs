@@ -7,14 +7,14 @@ namespace EtcScriptLib
 {
     public class Parse
     {
-		private static bool IsEndOfStatement(Iterator<Token> Stream)
+		private static bool IsEndOfStatement(TokenStream Stream)
 		{
 			if (Stream.AtEnd()) return true;
 			return Stream.Next().Type == TokenType.Semicolon;
 		}
 
 		private static Ast.Let ParseLetStatement(
-			Iterator<Token> Stream,
+			TokenStream Stream,
 			ParseContext Context)
 		{
 			var start = Stream.Next();
@@ -38,7 +38,7 @@ namespace EtcScriptLib
 		}
 
 		private static Ast.LocalDeclaration ParseLocalDeclaration(
-			Iterator<Token> Stream,
+			TokenStream Stream,
 			ParseContext Context)
 		{
 			var start = Stream.Next();
@@ -79,7 +79,7 @@ namespace EtcScriptLib
 		}
 
 		private static Ast.Return ParseReturnStatement(
-			Iterator<Token> Stream,
+			TokenStream Stream,
 			ParseContext Context)
 		{
 			var start = Stream.Next();
@@ -99,7 +99,7 @@ namespace EtcScriptLib
 		}
 
 		private static Ast.If ParseIfStatement(
-			Iterator<Token> Stream,
+			TokenStream Stream,
 			ParseContext Context)
 		{
 			if (Stream.AtEnd() || Stream.Next().Type != TokenType.Identifier || Stream.Next().Value.ToUpper() != "IF")
@@ -126,7 +126,7 @@ namespace EtcScriptLib
 		}
 
 		private static Ast.Statement ParseStatement(
-			Iterator<Token> Stream,
+			TokenStream Stream,
 			ParseContext Context)
 		{
 			Ast.Statement r = null;
@@ -183,7 +183,7 @@ namespace EtcScriptLib
 		}
 
 		private static Ast.Node ParseOptionalDot(
-			Iterator<Token> Stream,
+			TokenStream Stream,
 			Ast.Node LHS,
 			ParseContext Context)
 		{
@@ -225,7 +225,7 @@ namespace EtcScriptLib
 		}		
 
 		private static Ast.Node ParseTerm(
-			Iterator<Token> Stream,
+			TokenStream Stream,
 			ParseContext Context)
 		{
 			if (IsEndOfStatement(Stream)) throw new CompileError("[012] Expected argument", Stream);
@@ -275,13 +275,12 @@ namespace EtcScriptLib
 			return r;
 		}
 
-		public static Ast.ComplexString ParseComplexString(Iterator<Token> Stream, ParseContext Context)
+		public static Ast.ComplexString ParseComplexString(TokenStream Stream, ParseContext Context)
 		{
 			System.Diagnostics.Debug.Assert(Stream.Next().Type == TokenType.Dollar);
 			var start = Stream.Next();
 
-			var tokenStream = Stream as TokenStream;
-			tokenStream.PushState(TokenStreamState.ComplexString); //Enter complex string parsing mode
+			Stream.PushState(TokenStreamState.ComplexString); //Enter complex string parsing mode
 
 			Stream.Advance();
 			if (Stream.Next().Type != TokenType.ComplexStringQuote)
@@ -299,26 +298,26 @@ namespace EtcScriptLib
 				}
 				else if (Stream.Next().Type == TokenType.OpenBracket)
 				{
-					tokenStream.PushState(TokenStreamState.Normal); //Make sure we are parsing normally for the
+					Stream.PushState(TokenStreamState.Normal); //Make sure we are parsing normally for the
 					Stream.Advance(); //Skip the [						//embedded expression
 					stringPieces.Add(ParseExpression(Stream, Context, TokenType.CloseBracket));
 					if (Stream.Next().Type != TokenType.CloseBracket)	//Shouldn't be possible
 						throw new CompileError("[016] Expected ]", Stream);
-					tokenStream.PopState();	//Return to complex string parsing mode
+					Stream.PopState();	//Return to complex string parsing mode
 					Stream.Advance();
 				}
 				else
 					throw new InvalidProgramException();
 			}
 
-			tokenStream.PopState(); //Return to normal parsing mode
+			Stream.PopState(); //Return to normal parsing mode
 			Stream.Advance();
 
 			return new Ast.ComplexString(start, stringPieces);
 		}
 
 		public static List<Ast.Node> ParseStaticInvokation(
-			Iterator<Token> Stream,
+			TokenStream Stream,
 			ParseContext Context)
 		{
 			if (Stream.Next().Type != TokenType.OpenBracket) throw new CompileError("[017] Expected [", Stream);
@@ -338,7 +337,7 @@ namespace EtcScriptLib
 		}
 
 		public static List<Ast.Node> ParseStaticInvokationStatement(
-			Iterator<Token> Stream,
+			TokenStream Stream,
 			ParseContext Context)
 		{
 			var parameters = new List<Ast.Node>();
@@ -356,10 +355,10 @@ namespace EtcScriptLib
 		//Implements http://en.wikipedia.org/wiki/Operator-precedence_parser
 		private static Ast.Node ParseExpression(
 			Ast.Node lhs,
-			Iterator<Token> state, 
+			TokenStream state, 
 			ParseContext operators,
 			int minimum_precedence,
-			Predicate<Iterator<Token>> IsTerminal)
+			Predicate<TokenStream> IsTerminal)
 		{
 			while (true)
 			{
@@ -393,7 +392,7 @@ namespace EtcScriptLib
 		}
 
 		private static Ast.Node ParseExpression(
-			Iterator<Token> Stream,
+			TokenStream Stream,
 			ParseContext Context,
 			TokenType Terminal)
 		{
@@ -407,9 +406,9 @@ namespace EtcScriptLib
 		}
 
 		private static Ast.Node ParseExpression(
-			Iterator<Token> Stream,
+			TokenStream Stream,
 			ParseContext Context,
-			Predicate<Iterator<Token>> IsTerminal)
+			Predicate<TokenStream> IsTerminal)
 		{
 			if (Stream.Next().Type == TokenType.Identifier && Stream.Next().Value.ToUpper() == "LAMBDA")
 			{
@@ -424,7 +423,7 @@ namespace EtcScriptLib
 		}
 
 		private static Ast.New ParseNew(
-			Iterator<Token> Stream,
+			TokenStream Stream,
 			ParseContext Context)
 		{
 			Stream.Advance();
@@ -439,7 +438,7 @@ namespace EtcScriptLib
 		}
 
 		private static List<Ast.Initializer> ParseInitializers(
-			Iterator<Token> Stream,
+			TokenStream Stream,
 			ParseContext Context)
 		{
 			Stream.Advance();
@@ -466,7 +465,7 @@ namespace EtcScriptLib
 		}
 
 		private static Ast.BlockStatement ParseBlock(
-			Iterator<Token> Stream,
+			TokenStream Stream,
 			ParseContext Context)
 		{
 			var r = new Ast.BlockStatement(Stream.Next());
@@ -479,7 +478,7 @@ namespace EtcScriptLib
 			return r;
 		}
 		
-		internal static DeclarationTerm ParseDeclarationTerm(Iterator<Token> Stream)
+		internal static DeclarationTerm ParseDeclarationTerm(TokenStream Stream)
 		{
 			DeclarationTerm r = null;
 			var start = Stream.Next();
@@ -565,7 +564,7 @@ namespace EtcScriptLib
 			OpenBraceOrWhen
 		}
 
-		internal static List<DeclarationTerm> ParseMacroDeclarationHeader(Iterator<Token> Stream, 
+		internal static List<DeclarationTerm> ParseMacroDeclarationHeader(TokenStream Stream, 
 			DeclarationHeaderTerminatorType TerminatorType)
 		{
 			var r = new List<DeclarationTerm>();
@@ -583,7 +582,7 @@ namespace EtcScriptLib
 			}
 		}
 
-		internal static Declaration ParseMacroDeclaration(Iterator<Token> Stream, ParseContext Context)
+		internal static Declaration ParseMacroDeclaration(TokenStream Stream, ParseContext Context)
 		{
 			if (Stream.AtEnd()) 
 				throw new CompileError("[028] Impossible error: ParseDeclaration entered at end of stream.", Stream);
@@ -645,7 +644,7 @@ namespace EtcScriptLib
 			}
 		}
 
-		internal static Type ParseTypeDeclaration(Iterator<Token> Stream, ParseContext Context)
+		internal static Type ParseTypeDeclaration(TokenStream Stream, ParseContext Context)
 		{
 			Stream.Advance();
 			
@@ -682,7 +681,7 @@ namespace EtcScriptLib
 			return r;
 		}
 
-		internal static Declaration ParseRuleDeclaration(Iterator<Token> Stream, ParseContext Context)
+		internal static Declaration ParseRuleDeclaration(TokenStream Stream, ParseContext Context)
 		{
 			if (Stream.AtEnd()) 
 				throw new CompileError("[02F] Impossible error: ParseRuleDeclaration entered at end of stream.", Stream);
@@ -776,7 +775,7 @@ namespace EtcScriptLib
 			}
 		}
 
-		internal static Variable ParseMemberDeclaration(Iterator<Token> Stream, ParseContext Context)
+		internal static Variable ParseMemberDeclaration(TokenStream Stream, ParseContext Context)
 		{
 			if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("[032] Expected identifier", Stream.Next());
 			Stream.Advance();
@@ -802,7 +801,7 @@ namespace EtcScriptLib
 			return r;
 		}
 
-		internal static Variable ParseGlobalDeclaration(Iterator<Token> Stream, ParseContext Context)
+		internal static Variable ParseGlobalDeclaration(TokenStream Stream, ParseContext Context)
 		{
 			if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("[032] Expected identifier", Stream.Next());
 			Stream.Advance();
@@ -838,7 +837,7 @@ namespace EtcScriptLib
 		}
 
 		public static List<Declaration> Build(
-			Iterator<Token> Stream, 
+			TokenStream Stream, 
 			ParseContext Context,
 			Func<String,ErrorStrategy> OnError,
 			bool PrepareInitializer = true)
@@ -901,8 +900,8 @@ namespace EtcScriptLib
 						var filename = Stream.Next().Value;
 						Stream.Advance();
 						if (Context.FileLoader == null) throw new CompileError("Inclusion not enabled", Stream);
-						var file = Context.FileLoader(filename, (Stream as TokenStream).FileLoaderTag);
-						var newStream = new TokenStream(new Compile.StringIterator(file.Data), Context);
+						var file = Context.FileLoader(filename, Stream.FileLoaderTag);
+						var newStream = new TokenStream(new StringIterator(file.Data), Context);
 						newStream.FileLoaderTag = file.Tag;
 						r.AddRange(Build(newStream, Context, OnError, false));
 					}

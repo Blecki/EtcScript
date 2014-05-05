@@ -12,7 +12,7 @@ namespace EtcScriptTests
 		private static List<EtcScriptLib.Ast.Node> ParseInvokation(String script)
 		{
 			var environment = new EtcScriptLib.Environment();
-			var tokenIterator = new EtcScriptLib.TokenStream(new EtcScriptLib.Compile.StringIterator(script), environment.Context);
+			var tokenIterator = new EtcScriptLib.TokenStream(new EtcScriptLib.StringIterator(script), environment.Context);
 			return EtcScriptLib.Parse.ParseStaticInvokationStatement(tokenIterator, environment.Context);
 		}
 
