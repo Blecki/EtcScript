@@ -27,6 +27,7 @@ namespace EtcScriptLib
 		public DeclarationTermRepetitionType RepetitionType;
 		public String DeclaredTypeName;
 		public Type DeclaredType;
+		public bool IsGlobalReference = false;
 
 		public static bool Matches(DeclarationTerm term, Ast.Node node)
 		{

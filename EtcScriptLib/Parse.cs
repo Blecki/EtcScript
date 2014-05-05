@@ -513,8 +513,7 @@ namespace EtcScriptLib
 				{
 					Name = Stream.Next().Value.ToUpper(),
 					Type = DeclarationTermType.Term,
-					RepetitionType = DeclarationTermRepetitionType.Once,
-					DeclaredTypeName = "GENERIC"
+					RepetitionType = DeclarationTermRepetitionType.Once
 				};
 				Stream.Advance();
 				if (Stream.Next().Type == TokenType.Colon)

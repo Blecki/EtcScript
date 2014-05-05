@@ -39,6 +39,7 @@ namespace EtcScriptLib
 			{
 				if (A.Terms[i].Type != DeclarationTermType.Term) continue; 
 
+				if (A.Terms[i].IsGlobalReference && !B.Terms[i].IsGlobalReference) return true;
 				var BType = B.Terms[i].DeclaredType;
 				var AType = A.Terms[i].DeclaredType;
 				if (AType.ID == BType.ID) continue; //They are the same type, so try the next term.
@@ -120,6 +121,24 @@ namespace EtcScriptLib
 				rulebook.ConsiderFunction.OwnerContextID = ID;
 				rulebook.ConsiderFunction.Type = DeclarationType.Rule;
 				PendingEmission.Add(rulebook.ConsiderFunction);
+
+				foreach (var rule in rulebook.Rules)
+				{
+					foreach (var term in rule.Terms)
+					{
+						if (term.Type == DeclarationTermType.Term && 
+							String.IsNullOrEmpty(term.DeclaredTypeName))
+						{
+							var global = TopScope.FindVariable(term.Name);
+							if (global != null && global.StorageMethod == VariableStorageMethod.Static)
+							{
+								term.DeclaredTypeName = global.DeclaredType.Name;
+								term.DeclaredType = global.DeclaredType;
+								term.IsGlobalReference = true;
+							}
+						}
+					}
+				}
 			}
 
 			foreach (var macro in TopScope.Macros)

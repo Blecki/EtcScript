@@ -104,6 +104,35 @@ test _ : string {
 		}
 
 		[Test]
+		public void rule_override_on_static()
+		{
+			var script = @"
+
+type bar {}
+global x:bar = new bar{};
+
+rule foo (y:bar) : string {
+	return ""a"";
+}
+
+rule foo (x) : string {
+	return ""b"";
+}
+
+default of rule foo (y) : string {
+	return ""c"";
+}
+
+test _ : string {
+	return [consider [foo x]] + [consider [foo 2]];
+}
+";
+
+			var result = TestHelper.CallTestFunction(script);
+			Assert.IsTrue(result.ToString() == "bc");
+		}
+
+		[Test]
 		public void rule_nevermind()
 		{
 			var script = @"

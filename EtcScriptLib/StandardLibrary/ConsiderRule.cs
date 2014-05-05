@@ -63,6 +63,7 @@ namespace EtcScriptLib
 		{
 			Rulebook Rulebook;
 			Type BoxType;
+			internal ParseScope DeclarationScope;
 			
 			internal ConsiderRuleBookFunctionNode(
 				EtcScriptLib.Token Source,
@@ -89,17 +90,32 @@ namespace EtcScriptLib
 					var sourceTerms = new List<DeclarationTerm>(Rule.Terms.Where(t => t.Type == DeclarationTermType.Term));
 					for (int i = 0; i < parameterCount; ++i)
 					{
-						Instructions.AddInstructions("LOAD_PARAMETER NEXT PUSH", (-parameterCount - 2) + i);
-						Instructions.AddInstructions("LOAD_RSO_M PEEK NEXT R", 0);	//Load type ID
+						if (sourceTerms[i].IsGlobalReference)
+						{
+							Instructions.AddInstructions("LOAD_PARAMETER NEXT PUSH", (-parameterCount - 2) + i);
+							Instructions.AddInstructions("LOAD_RSO_M PEEK NEXT R", 0);
+							Instructions.AddInstructions("EQUAL R NEXT R", BoxType.ID);	//Is this a boxed type?
+							Instructions.AddInstructions("IF_TRUE R");
+							Instructions.AddInstructions("LOAD_RSO_M PEEK NEXT PEEK", 2); //Grab boxed value instead.
+							var global = DeclarationScope.FindVariable(sourceTerms[i].Name);
+							Instructions.AddInstructions("LOAD_STATIC NEXT R", global.Offset);
+							Instructions.AddInstructions("EQUAL R POP R");
+						}
+						else
+						{
+							Instructions.AddInstructions("LOAD_PARAMETER NEXT PUSH", (-parameterCount - 2) + i);
+							Instructions.AddInstructions("LOAD_RSO_M PEEK NEXT R", 0);	//Load type ID
 
-						Instructions.AddInstructions("EQUAL R NEXT PUSH", BoxType.ID);	//Is this a boxed type?
-						Instructions.AddInstructions("IF_TRUE POP");
-						Instructions.AddInstructions("LOAD_RSO_M PEEK NEXT R", 1); //Grab boxed typed instead.
+							Instructions.AddInstructions("EQUAL R NEXT PUSH", BoxType.ID);	//Is this a boxed type?
+							Instructions.AddInstructions("IF_TRUE POP");
+							Instructions.AddInstructions("LOAD_RSO_M PEEK NEXT R", 1); //Grab boxed typed instead.
 
-						Instructions.AddInstructions("MOVE POP"); //Clean off parameter.
+							Instructions.AddInstructions("MOVE POP"); //Clean off parameter.
 
-						var argumentTypeID = sourceTerms[i].DeclaredType.ID;
-						Instructions.AddInstructions("IS_ANCESTOR_OF R NEXT R", argumentTypeID);
+							var argumentTypeID = sourceTerms[i].DeclaredType.ID;
+							Instructions.AddInstructions("IS_ANCESTOR_OF R NEXT R", argumentTypeID);
+						}
+
 						Instructions.AddInstructions("IF_FALSE R", "JUMP NEXT", 0);
 						skipPoints.Add(Instructions.Count - 1);
 					}
@@ -168,6 +184,7 @@ namespace EtcScriptLib
 
 			public override EtcScriptLib.Ast.Node Transform(ParseScope Scope)
 			{
+				DeclarationScope = Scope;
 				BoxType = Scope.FindType("BOXED");
 				ResultType = Rulebook.ResultType;
 				return this;
