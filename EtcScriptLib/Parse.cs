@@ -577,6 +577,8 @@ namespace EtcScriptLib
 				{
 					if (Stream.Next().Type == TokenType.OpenBrace) return r;
 					else if (Stream.Next().Value.ToUpper() == "WHEN") return r;
+					else if (Stream.Next().Value.ToUpper() == "WITH") return r;
+					else if (Stream.Next().Value.ToUpper() == "ORDER") return r;
 				}
 				r.Add(ParseDeclarationTerm(Stream));
 			}
