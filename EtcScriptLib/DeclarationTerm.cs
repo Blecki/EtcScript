@@ -31,7 +31,7 @@ namespace EtcScriptLib
 
 		public static bool Matches(DeclarationTerm term, Ast.Node node)
 		{
-			if (term.Type == DeclarationTermType.Keyword)
+			if (term.Type == DeclarationTermType.Keyword || term.Type == DeclarationTermType.Operator)
 			{
 				if (node is Ast.Identifier)
 					return term.Name == (node as Ast.Identifier).Name.Value.ToUpper();

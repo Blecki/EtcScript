@@ -95,7 +95,7 @@ namespace EtcScriptLib.Ast
 			if (Terms.Count != Arguments.Count) return false;
 			for (int i = 0; i < Terms.Count; ++i)
 			{
-				if (Terms[i].Type == DeclarationTermType.Keyword)
+				if (Terms[i].Type == DeclarationTermType.Keyword || Terms[i].Type == DeclarationTermType.Operator)
 				{
 					var dummyKeyword = Arguments[i] as DummyKeyword;
 					if (dummyKeyword == null || (dummyKeyword.Name != Terms[i].Name)) return false;
