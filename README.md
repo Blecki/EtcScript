@@ -90,7 +90,7 @@ lambda _ : string {
 Complex strings are automatically evaluated when they are assigned to a variable of type 'string'.
 
 
-## Indexing Via Special Macros
+### Indexing Via Special Macros
 
 Any type can be turned into an indexable type simply by declaring the appropriate macros. For example, this is the implementation of these macros fro the list type, in C#.
 ```
@@ -110,34 +110,84 @@ Environment.AddSystemMacro(
 
 Any type can be indexed using the @ operator if these macros are defined. 
 
-## List of overloadable macros
+### List of overloadable macros
 Indexing is only an example of what can be done by defining specific macros. Here is a list of everything overloadable.
 
 Script-defined types intrinsictly support member access, but types bound by the host application do not. You can bind these macros to implement it.
-GET X FROM (O:OBJECT-TYPE) : MEMBER-TYPE {...} - Implement member access, as in 'O.X'.
-SET X ON (O:OBJECT-TYPE) TO (M:MEMBER-TYPE) {...} - Implement member access for assignment, as in 'let O.X = foo;'.
-GET (N:STRING) FROM (O:OBJECT-TYPE) : MEMBER-TYPE {...} - Generic member access; N is the name of the member.
-SET (N:STRING) ON (O:OBJECT-TYPE) TO (M:MEMBER-TYPE) {...} - Generic member access for assignment.
+- GET X FROM (O:OBJECT-TYPE) : MEMBER-TYPE {...} - Implement member access, as in 'O.X'.
+- SET X ON (O:OBJECT-TYPE) TO (M:MEMBER-TYPE) {...} - Implement member access for assignment, as in 'let O.X = foo;'.
+- GET (N:STRING) FROM (O:OBJECT-TYPE) : MEMBER-TYPE {...} - Generic member access; N is the name of the member.
+- SET (N:STRING) ON (O:OBJECT-TYPE) TO (M:MEMBER-TYPE) {...} - Generic member access for assignment.
 
-CONVERT (A:TYPE-A) TO TYPE-B : TYPE-B {...} - Define an implicit conversion from A to B. Conversions are considered when matching macros, but not when considering rules. 
+
+- CONVERT (A:TYPE-A) TO TYPE-B : TYPE-B {...} - Define an implicit conversion from A to B. Conversions are considered when matching macros, but not when considering rules. 
+
 As an example, conversion from complex-string to string is defined in the standard library by this macro
 ```
-MACRO CONVERT (C:COMPLEX-STRING) TO STRING : STRING { RETURN [INVOKE [C]]; }
+MACRO CONVERT (C:COMPLEX-STRING) TO STRING : STRING { RETURN [INVOKE [C]]:STRING; }
 ```
 
+- LENGTH OF (X:TYPE) : NUMBER {...} - Actually, the return type can be any type, but it doesn't make much sense to use anything but number here.
 
-Syntax
-===
+- (A:TYPE-A) [operator] (B:TYPE-B) : TYPE-C {...} - Overload an operator, where [operator] is the operator and the types are anything at all. 
+
+As an example, this operator appears in the standard library.
+```
+MACRO (S:STRING) + (C:COMPLEXSTRING) : STRING { RETURN S + [INVOKE [C]]:STRING; }
+```
+
+## Syntax
+
+This psuedo-BNF is a semi-formal specification of the language's grammar.
+
+- Script				:= (MacroDeclaration | RuleDeclaration | TypeDeclaration | GlobalDeclaration | Include)*
+- GlobalDeclaration	:= "global" + Identifier + (: + Identifier)? + (= + Expression)? + ;
+- MacroDeclaration	:= "macro" + DeclarationHeader + (: + Identifier)? + Block
+- DeclarationHeader	:= (DeclarationTerm)*
+- RuleDeclaration		:= "rule" + DeclarationHeader + WhenClause? + OrderClause? + PriorityClause? + Block
+- WhenClause			:= "when" + Expression
+- Lambda				:= "lambda" + DeclarationHeader + (: + Identifier)? + Block
+- DeclarationTerm		:= (Identifier + "?"?) | (String + "?"?) | ( "(" + Identifier + (: + Identifier)? + ")" )
+- Identifier			:= [a-z, A-Z, any non-operator symbol][any non-delimeter symbol]*
+- Block				:= { + Statement+ + }
+- Statement			:= Let | If | Invokation + ; | DynamicInvokation + ; | BracketInvokation + ; | Control | LocalDeclaration
+- Let					:= "let" + (Identifier | MemberAccess | Indexer) + "=" + Expression + ;
+- If					:= "if" + Expression + Block
+- MemberAccess		:= Term + (StaticMember | DynamicMember)
+- StaticMember		:= "." + Identifier
+- DynamicMember		:= "?" + Identifier + ":" + Term
+- Indexer				:= Term + @ + Term
+- Expression			:= Term | BinaryOperation | New | Lambda
+- Term				:= Parenthetical | Identifier | Number | BasicString | ComplexString | MemberAccess | Indexer | BracketInvokation | DynamicInvokation | Cast | List
+- Parenthetical		:= "(" + Expression + ")"
+- Cast				:= Term + : + Identifier
+- BinaryOperation		:= Term + Operator + Term
+- Invokation			:= Term+
+- BracketInvokation	:= "[" + Invokation + "]"
+- Control				:= Invokation + (Block | ;)
+- Operator			:= Any of operators specified in operator table
+- BasicString			:= Ordinary quote-delimited string				 
+- ComplexString		:= @ + \" + ( Text | EmbeddedExpression )* + \"		
+- Text				:= Any sequence of characters except [ or ", matched greedily.
+- EmbeddedExpression	:= [ + Expression + ]
+- LocalDeclaration	:= "var" + Identifier + (: + Identifier)? + ("=" + Expression)? + ;
+- TypeDeclaration		:= "type" + Identifier + (: + Identifier)? + { + MemberDeclaration* + }
+- MemberDeclaration	:=  "var" + Identifier + (: + Identifier)? + ;
+- New					:= "new" + Identifier + InitializerBlock?
+- InitializerBlock	:= { + InitializerItem* + }
+- InitializerItem		:= "let" + Identifier + "=" + Expression + ;
+- List				:= { + Term* + }
+- Include				:= "include" + BasicString
 
 
 
 
 
-More complex examples
-===
 
-Foreach In 
-==
+# More complex examples
+
+## Foreach In 
+
 
 Foreach In is a simple control macro that implements a foreach loop. The syntax is 'foreach x in y', where x is the name of the local variable created and y is a term resulting in a list. The type of x is taken from the return type of y's get at macro. Foreach In won't work with types that don't have a defined get at macro. 
 
