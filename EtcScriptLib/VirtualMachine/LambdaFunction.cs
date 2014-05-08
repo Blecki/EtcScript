@@ -53,7 +53,8 @@ namespace EtcScriptLib.VirtualMachine
 		{
 			return new TrueLambdaFunction
 			{
-				CapturedVariables = CapturedVariables
+				CapturedVariables = CapturedVariables,
+				Source = Source
 			};
 		}
 
@@ -66,6 +67,7 @@ namespace EtcScriptLib.VirtualMachine
 	public class TrueLambdaFunction : InvokeableFunction
 	{
 		public RuntimeScriptObject CapturedVariables;
+		public CodeContext Source;
 
 		public override bool IsStackInvokable { get { return false; } }
 
@@ -86,10 +88,10 @@ namespace EtcScriptLib.VirtualMachine
 			for (int i = 0; i < expectedParameterCount - 1; ++i)
 				VirtualMachine.SetOperand(Operand.PUSH, arguments[i + 1], context);
 			VirtualMachine.SetOperand(Operand.PUSH, CapturedVariables, context);
-			VirtualMachine.SetOperand(Operand.PUSH, new CodeContext(context.CurrentInstruction.Code,
+			VirtualMachine.SetOperand(Operand.PUSH, new CodeContext(Source.Code,
 				(CapturedVariables.Data[CapturedVariables.Data.Count - 3] as int?).Value), context);
 
-			context.CurrentInstruction = new CodeContext(context.CurrentInstruction.Code,
+			context.CurrentInstruction = new CodeContext(Source.Code,
 				(CapturedVariables.Data[CapturedVariables.Data.Count - 2] as int?).Value);
 
 			return InvokationResult.Success;

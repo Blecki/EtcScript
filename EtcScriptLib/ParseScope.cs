@@ -114,7 +114,7 @@ namespace EtcScriptLib
 		{
 			var r = new ParseScope(Type);
 			r.Parent = this;
-			r.VariableIndex = this.VariableIndex;
+			r.VariableIndex = (Type == ScopeType.Function ? 0 : this.VariableIndex);
 			r.EnvironmentContext = this.EnvironmentContext;
 			return r;
 		}

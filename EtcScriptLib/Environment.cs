@@ -170,13 +170,5 @@ namespace EtcScriptLib
 		{
 			Context.AddControl(Control);
 		}
-
-		public static Environment CreateStandardEnvironment()
-		{
-			var environment = new EtcScriptLib.Environment();
-			return environment;
-		}
-
-		
 	}
 }
