@@ -178,7 +178,7 @@ namespace EtcScriptLib
 					Stream.Advance();
 				}
 			}
-			
+
 			return r;
 		}
 

@@ -37,6 +37,8 @@ namespace EtcScriptLib.Ast
 
 		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
 		{
+			into.SetPendingAnnotation(this.ToString());
+
 			Value.Emit(into, OperationDestination.Stack);
 			(LHS as IAssignable).EmitAssignment(into);
 		}

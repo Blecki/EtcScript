@@ -9,6 +9,8 @@ namespace EtcScriptLib
     {
         public int Line;
         public int Character;
+		public int Index;
+		public int EndIndex;
 
 		public override string ToString()
 		{

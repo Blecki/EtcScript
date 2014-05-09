@@ -27,6 +27,8 @@ namespace EtcScriptLib.Ast
 
 		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
 		{
+			into.SetPendingAnnotation(this.ToString());
+
 			foreach (var n in Parameters)
 				n.Emit(into, OperationDestination.Stack);
 			into.AddInstructions("COMPAT_INVOKE NEXT", Parameters.Count);

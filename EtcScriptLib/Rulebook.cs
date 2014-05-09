@@ -17,5 +17,10 @@ namespace EtcScriptLib
 		public Declaration ConsiderFunction;
 		public Type ResultType;
 		public String ResultTypeName;
+
+		public override string ToString()
+		{
+			return Declaration.CreateDescriptiveHeader(DeclarationTerms, ResultTypeName);
+		}
     }
 }

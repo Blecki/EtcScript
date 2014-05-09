@@ -38,6 +38,8 @@ namespace EtcScriptLib.Ast
 
 		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
 		{
+			into.SetPendingAnnotation(this.ToString());
+
 			//Assumes the RSO is on the top of the stack.
 			Value.Emit(into, OperationDestination.R);
 			into.AddInstructions("STORE_RSO_M R PEEK NEXT", Member.Offset);

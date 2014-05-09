@@ -25,6 +25,8 @@ namespace EtcScriptLib.Ast
 
 		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
 		{
+			into.SetPendingAnnotation(this.ToString());
+
 			foreach (var arg in Arguments)
 				arg.Emit(into, OperationDestination.Stack);
 			into.AddInstructions("STACK_INVOKE NEXT", Function.MakeInvokableFunction());

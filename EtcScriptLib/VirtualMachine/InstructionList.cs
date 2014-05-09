@@ -9,6 +9,12 @@ namespace EtcScriptLib.VirtualMachine
     {
 		public List<Object> Data = new List<Object>();
 		public StringTable StringTable = new StringTable();
+		private String PendingAnnotation;
+
+		public void SetPendingAnnotation(String Annotation)
+		{
+			PendingAnnotation = Annotation;
+		}
 
 		public int Count { get { return Data.Count; } }
 		public Object this[int key]
@@ -34,15 +40,15 @@ namespace EtcScriptLib.VirtualMachine
                     continue;
                 }
 
-				if (instruction is Instruction)
-				{
-					var parsedInstruction = (instruction as Instruction?).Value;
-					Data.Add(parsedInstruction);
-					literalsExpected += CountLiteralOperands(parsedInstruction);
-				}
-                else if (instruction is String)
+				if (instruction is String)
                 {
                     var parsedInstruction = Instruction.Parse(instruction.ToString());
+					if (!String.IsNullOrEmpty(PendingAnnotation))
+					{
+						parsedInstruction.Annotation = PendingAnnotation;
+						PendingAnnotation = null;
+					}
+
 					Data.Add(parsedInstruction);
 					literalsExpected += CountLiteralOperands(parsedInstruction);
 				}

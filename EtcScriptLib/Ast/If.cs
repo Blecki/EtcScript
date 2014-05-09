@@ -24,6 +24,8 @@ namespace EtcScriptLib.Ast
 
 		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
 		{
+			into.SetPendingAnnotation(this.ToString());
+
 			Header.Emit(into, OperationDestination.R);
 			into.AddInstructions("IF_FALSE R", "JUMP NEXT", 0);
 			var jumpFrom = into.Count - 1;

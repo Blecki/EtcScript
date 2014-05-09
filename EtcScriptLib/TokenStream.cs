@@ -13,7 +13,7 @@ namespace EtcScriptLib
 
 	public class TokenStream : Iterator<Token>
 	{
-		private Iterator<int> source;
+		private StringIterator source;
 		private CodeLocation location;
 		private Token? next_token;
 		private Stack<TokenStreamState> StateStack = new Stack<TokenStreamState>();
@@ -35,6 +35,8 @@ namespace EtcScriptLib
 				location.Line += 1;
 				location.Character = 0;
 			}
+
+			location.Index = source.place;
 		}
 
 		private bool isDelimeter(int c)
@@ -57,7 +59,7 @@ namespace EtcScriptLib
 			return c == '_' || isAlpha(c);
 		}
 
-		public TokenStream(Iterator<int> Source, ParseContext operators)
+		public TokenStream(StringIterator Source, ParseContext operators)
 		{
 			this.source = Source;
 			this.operators = operators;
@@ -116,6 +118,7 @@ namespace EtcScriptLib
 				else c = source.Next();
 
 				var tokenStart = location;
+				tokenStart.EndIndex = source.place;
 
 				//if (c == '\n') { advance_source(); return Token.Create(TokenType.NewLine, "\\n", tokenStart); }
 				//if (c == '\t') { advance_source(); return Token.Create(TokenType.Tab, "\\t", tokenStart); }
@@ -136,6 +139,7 @@ namespace EtcScriptLib
 					advance_source();
 					var literal = TokenizeStringLiteral(false);
 					advance_source();
+					tokenStart.EndIndex = source.place;
 					return Token.Create(TokenType.String, literal, tokenStart);
 				}
 
@@ -149,6 +153,7 @@ namespace EtcScriptLib
 						advance_source();
 						if (!source.AtEnd()) c = source.Next();
 					}
+					tokenStart.EndIndex = source.place;
 					return Token.Create(TokenType.Identifier, identifier.ToUpper(), tokenStart);
 				}
 
@@ -158,10 +163,15 @@ namespace EtcScriptLib
 					parsedMinus = true;
 					advance_source();
 					var number = ParseNumber();
+					tokenStart.EndIndex = source.place;
 					if (number.Length != 0) return Token.Create(TokenType.Number, "-" + number, tokenStart);
 				}
 				else if (isDigit(c))
-					return Token.Create(TokenType.Number, ParseNumber(), tokenStart);
+				{
+					var number = ParseNumber();
+					tokenStart.EndIndex = source.place;
+					return Token.Create(TokenType.Number, number, tokenStart);
+				}
 
 				var opSoFar = new String((char)c, 1);
 				while (true)
@@ -183,6 +193,7 @@ namespace EtcScriptLib
 						if (exactMatches == 1)
 						{
 							advance_source();
+							tokenStart.EndIndex = source.place;
 							return Token.Create(TokenType.Operator, tempOp, tokenStart);
 						}
 					}
@@ -197,10 +208,11 @@ namespace EtcScriptLib
 				//	" or (.
 				var tokenStart = location;
 
-				if (c == '[') { advance_source(); return Token.Create(TokenType.OpenBracket, "[", tokenStart); }
-				if (c == '"') { advance_source(); return Token.Create(TokenType.ComplexStringQuote, "\"", tokenStart); }
+				if (c == '[') { advance_source(); tokenStart.EndIndex = source.place;  return Token.Create(TokenType.OpenBracket, "[", tokenStart); }
+				if (c == '"') { advance_source(); tokenStart.EndIndex = source.place;  return Token.Create(TokenType.ComplexStringQuote, "\"", tokenStart); }
 				
 				var text = TokenizeStringLiteral(true);
+				tokenStart.EndIndex = source.place;
 				return Token.Create(TokenType.ComplexStringPart, text, tokenStart);
 			}
 			else

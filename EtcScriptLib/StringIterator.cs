@@ -8,8 +8,8 @@ namespace EtcScriptLib
 
 	public class StringIterator : Iterator<int>
 	{
-		private String data;
-		private int place = 0;
+		internal String data;
+		internal int place = 0;
 
 		public int Next()
 		{
@@ -29,6 +29,12 @@ namespace EtcScriptLib
 		public StringIterator(String data)
 		{
 			this.data = data;
+		}
+
+		public StringIterator(String data, int place)
+		{
+			this.data = data;
+			this.place = place;
 		}
 	}
 

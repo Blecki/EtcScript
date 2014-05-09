@@ -43,6 +43,8 @@ namespace EtcScriptLib.Ast
 
 		public override void Emit(VirtualMachine.InstructionList into, OperationDestination Destination)
 		{
+			into.SetPendingAnnotation(this.ToString());
+
 			into.AddInstructions("ALLOC_RSO NEXT PUSH", ResultType.Size);
 			into.AddInstructions("STORE_RSO_M NEXT PEEK NEXT", ResultType.ID, 0); //Store type id
 
