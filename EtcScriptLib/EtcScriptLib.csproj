@@ -75,6 +75,7 @@
     <Compile Include="AST\Node.cs" />
     <Compile Include="Compile.cs" />
     <Compile Include="CompileError.cs" />
+    <Compile Include="Include.cs" />
     <Compile Include="SyntaxLex.cs" />
     <Compile Include="ListIterator.cs" />
     <Compile Include="Control.cs" />

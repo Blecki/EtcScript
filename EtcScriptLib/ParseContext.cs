@@ -12,7 +12,7 @@ namespace EtcScriptLib
 		public List<Ast.Node> Initialization = new List<Ast.Node>();
 		public Declaration InitializationFunction;
 		public int ID = 0;
-		public Func<String, Object, LoadedFile> FileLoader;
+		public Include FileLoader;
 
 		private bool AIsDerivedFromB(Type A, Type B)
 		{

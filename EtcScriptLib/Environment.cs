@@ -34,7 +34,7 @@ namespace EtcScriptLib
 	public class LoadedFile
 	{
 		public String Data;
-		public Object Tag;
+		public String Directory;
 	}
 
 	public class Environment
@@ -42,12 +42,13 @@ namespace EtcScriptLib
 		public ParseContext Context;
 		private Dictionary<int, Object> StaticVariableStorage = new Dictionary<int, object>();
 		private int StaticVariableCount = 0;
-		public Func<String, Object, LoadedFile> FileLoader;
+		public Include FileLoader;
 
 		public Environment()
 		{
 			Context = new ParseContext();
 			Compile.GetDefaultParseContext(this);
+			FileLoader = new Include();
 		}
 
 		public Debugger.Debugger OpenDebuggerWindow(VirtualMachine.ExecutionContext Context)

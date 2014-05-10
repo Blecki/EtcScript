@@ -902,9 +902,9 @@ namespace EtcScriptLib
 						var filename = Stream.Next().Value;
 						Stream.Advance();
 						if (Context.FileLoader == null) throw new CompileError("Inclusion not enabled", Stream);
-						var file = Context.FileLoader(filename, Stream.FileLoaderTag);
+						var file = Context.FileLoader.LoadFile(filename, Stream.CurrentFile);
 						var newStream = new TokenStream(new StringIterator(file.Data), Context);
-						newStream.FileLoaderTag = file.Tag;
+						newStream.CurrentFile = file;
 						r.AddRange(Build(newStream, Context, OnError, false));
 					}
 					else if (Stream.Next().Value.ToUpper() == "DEFAULT")
