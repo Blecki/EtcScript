@@ -1,0 +1,11 @@
+﻿{
+	"DefaultHost" : "Classic Stream",
+	"OpenFiles" : [ "default-settings.txt" ],
+	"Hosts" :
+	[
+		{
+			"Path" : "StreamingInterface.exe",
+			"DisplayName" : "Classic Stream"
+		}
+	]
+}

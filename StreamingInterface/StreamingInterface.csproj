@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{BBC05068-F275-4014-904C-1795353D31FF}</ProjectGuid>
+    <ProjectGuid>{544FB865-6A78-431A-ACEE-8FADE12FF24A}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>EtcScriptEmu</RootNamespace>
-    <AssemblyName>EtcScriptEmu</AssemblyName>
+    <RootNamespace>StreamingInterface</RootNamespace>
+    <AssemblyName>StreamingInterface</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -35,12 +35,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>.\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="ScintillaNET">
-      <HintPath>..\..\..\..\..\ScintillaNET\ScintillaNET.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -53,19 +47,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FileTab.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="FileTab.Designer.cs">
-      <DependentUpon>FileTab.cs</DependentUpon>
-    </Compile>
-    <Compile Include="HostContainer.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="HostContainer.Designer.cs">
-      <DependentUpon>HostContainer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Settings.cs" />
+    <Compile Include="Driver.cs" />
+    <Compile Include="ExternalHost.cs" />
     <Compile Include="Main.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -74,9 +57,12 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="FileTab.resx">
-      <DependentUpon>FileTab.cs</DependentUpon>
-    </EmbeddedResource>
+    <Compile Include="Streaming.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Streaming.Designer.cs">
+      <DependentUpon>Streaming.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="Main.resx">
       <DependentUpon>Main.cs</DependentUpon>
     </EmbeddedResource>
@@ -90,6 +76,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="Streaming.resx">
+      <DependentUpon>Streaming.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="app.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -100,17 +89,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="default-settings.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="SciLexer.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="SciLexer64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EtcScriptLib\EtcScriptLib.csproj">

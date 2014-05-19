@@ -7,9 +7,9 @@ namespace EtcScriptLib.VirtualMachine
 {
     public struct ErrorHandler
     {
-        public CodeContext HandlerCode;
+        public ExecutionLocation HandlerCode;
 
-		public ErrorHandler(CodeContext HandlerCode)
+		public ErrorHandler(ExecutionLocation HandlerCode)
 		{
 			this.HandlerCode = HandlerCode;
 		}

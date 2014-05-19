@@ -151,7 +151,7 @@ namespace EtcScriptLib.VirtualMachine
 					#region Flow Control
 
 					case InstructionSet.RETURN:
-                        context.CurrentInstruction = (GetOperand(ins.FirstOperand, context) as CodeContext?).Value;
+                        context.CurrentInstruction = (GetOperand(ins.FirstOperand, context) as ExecutionLocation?).Value;
                         break;
                     case InstructionSet.CLEANUP:
                         {
@@ -428,9 +428,9 @@ namespace EtcScriptLib.VirtualMachine
                             var handler = GetOperand(ins.FirstOperand, context) as InstructionList;
                             var code = GetOperand(ins.SecondOperand, context) as InstructionList;
                             SetOperand(Operand.PUSH, returnPoint, context); //Push the return point
-							var catchContext = new ErrorHandler(new CodeContext(handler, 0));
+							var catchContext = new ErrorHandler(new ExecutionLocation(handler, 0));
                             SetOperand(Operand.PUSH, catchContext, context);
-                            context.CurrentInstruction = new CodeContext(code, 0);
+                            context.CurrentInstruction = new ExecutionLocation(code, 0);
                         }
                         break;
                     case InstructionSet.THROW:

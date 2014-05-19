@@ -58,7 +58,7 @@ namespace EtcScriptLib
 			return window;
 		}
 
-		public VirtualMachine.ExecutionContext CreateExecutionContext(VirtualMachine.CodeContext EntryPoint)
+		public VirtualMachine.ExecutionContext CreateExecutionContext(VirtualMachine.ExecutionLocation EntryPoint)
 		{
 			return new VirtualMachine.ExecutionContext(StaticVariableStorage, Context.TopScope.Types, EntryPoint);
 		}
@@ -84,7 +84,7 @@ namespace EtcScriptLib
 		{
 			if (Context.InitializationFunction == null) return;
 
-			var initializerContext = CreateExecutionContext(VirtualMachine.CodeContext.Empty);
+			var initializerContext = CreateExecutionContext(VirtualMachine.ExecutionLocation.Empty);
 			var invokeable = Context.InitializationFunction.MakeInvokableFunction();
 			invokeable.Invoke(initializerContext, new List<Object>(new Object[] { invokeable }));
 			VirtualMachine.VirtualMachine.ExecuteUntilFinished(initializerContext);

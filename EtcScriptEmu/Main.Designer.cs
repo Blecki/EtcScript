@@ -28,18 +28,28 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
 			this.scintilla1 = new ScintillaNET.Scintilla();
-			this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-			this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.oPENToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-			this.cOMPILEToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+			this.menuBar = new System.Windows.Forms.ToolStrip();
+			this.fileButton = new System.Windows.Forms.ToolStripDropDownButton();
+			this.openButton = new System.Windows.Forms.ToolStripMenuItem();
+			this.sAVEToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.sAVEASToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+			this.setHostButton = new System.Windows.Forms.ToolStripButton();
+			this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+			this.hostLabel = new System.Windows.Forms.ToolStripLabel();
+			this.compileButton = new System.Windows.Forms.ToolStripButton();
+			this.runButton = new System.Windows.Forms.ToolStripButton();
 			this.treeView1 = new System.Windows.Forms.TreeView();
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
 			this.textBox1 = new System.Windows.Forms.TextBox();
 			this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+			this.openFilesBar = new System.Windows.Forms.ToolStrip();
+			this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
+			this.nEWToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			((System.ComponentModel.ISupportInitialize)(this.scintilla1)).BeginInit();
-			this.menuStrip1.SuspendLayout();
+			this.menuBar.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.Panel2.SuspendLayout();
@@ -48,6 +58,9 @@
 			this.splitContainer2.Panel1.SuspendLayout();
 			this.splitContainer2.Panel2.SuspendLayout();
 			this.splitContainer2.SuspendLayout();
+			this.toolStripContainer1.ContentPanel.SuspendLayout();
+			this.toolStripContainer1.TopToolStripPanel.SuspendLayout();
+			this.toolStripContainer1.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// scintilla1
@@ -64,7 +77,7 @@
 			this.scintilla1.Margins.Margin0.Width = 48;
 			this.scintilla1.Margins.Margin2.Width = 16;
 			this.scintilla1.Name = "scintilla1";
-			this.scintilla1.Size = new System.Drawing.Size(560, 331);
+			this.scintilla1.Size = new System.Drawing.Size(560, 328);
 			this.scintilla1.Styles.BraceBad.CharacterSet = ScintillaNET.CharacterSet.Ansi;
 			this.scintilla1.Styles.BraceBad.FontName = "Envy Code R";
 			this.scintilla1.Styles.BraceBad.Size = 9.75F;
@@ -88,55 +101,116 @@
 			this.scintilla1.Styles.Max.Size = 9F;
 			this.scintilla1.TabIndex = 0;
 			this.scintilla1.StyleNeeded += new System.EventHandler<ScintillaNET.StyleNeededEventArgs>(this.scintilla1_StyleNeeded);
+			this.scintilla1.TextDeleted += new System.EventHandler<ScintillaNET.TextModifiedEventArgs>(this.scintilla1_TextDeleted);
+			this.scintilla1.TextInserted += new System.EventHandler<ScintillaNET.TextModifiedEventArgs>(this.scintilla1_TextInserted);
 			// 
-			// menuStrip1
+			// menuBar
 			// 
-			this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.openToolStripMenuItem,
-            this.cOMPILEToolStripMenuItem});
-			this.menuStrip1.Location = new System.Drawing.Point(0, 0);
-			this.menuStrip1.Name = "menuStrip1";
-			this.menuStrip1.Size = new System.Drawing.Size(681, 24);
-			this.menuStrip1.TabIndex = 1;
-			this.menuStrip1.Text = "menuStrip1";
+			this.menuBar.Dock = System.Windows.Forms.DockStyle.None;
+			this.menuBar.Font = new System.Drawing.Font("Envy Code R", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.menuBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fileButton,
+            this.toolStripSeparator1,
+            this.setHostButton,
+            this.toolStripSeparator2,
+            this.hostLabel,
+            this.compileButton,
+            this.runButton});
+			this.menuBar.Location = new System.Drawing.Point(3, 25);
+			this.menuBar.Name = "menuBar";
+			this.menuBar.Size = new System.Drawing.Size(301, 25);
+			this.menuBar.TabIndex = 2;
+			this.menuBar.Text = "toolStrip1";
 			// 
-			// openToolStripMenuItem
+			// fileButton
 			// 
-			this.openToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.oPENToolStripMenuItem1});
-			this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-			this.openToolStripMenuItem.Size = new System.Drawing.Size(40, 20);
-			this.openToolStripMenuItem.Text = "FILE";
+			this.fileButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+			this.fileButton.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.openButton,
+            this.sAVEToolStripMenuItem,
+            this.sAVEASToolStripMenuItem,
+            this.nEWToolStripMenuItem});
+			this.fileButton.Image = ((System.Drawing.Image)(resources.GetObject("fileButton.Image")));
+			this.fileButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.fileButton.Name = "fileButton";
+			this.fileButton.Size = new System.Drawing.Size(44, 22);
+			this.fileButton.Text = "FILE";
 			// 
-			// oPENToolStripMenuItem1
+			// openButton
 			// 
-			this.oPENToolStripMenuItem1.Name = "oPENToolStripMenuItem1";
-			this.oPENToolStripMenuItem1.Size = new System.Drawing.Size(105, 22);
-			this.oPENToolStripMenuItem1.Text = "OPEN";
-			this.oPENToolStripMenuItem1.Click += new System.EventHandler(this.oPENToolStripMenuItem1_Click);
+			this.openButton.Name = "openButton";
+			this.openButton.Size = new System.Drawing.Size(152, 22);
+			this.openButton.Text = "OPEN";
+			this.openButton.Click += new System.EventHandler(this.oPENToolStripMenuItem1_Click);
 			// 
-			// cOMPILEToolStripMenuItem
+			// sAVEToolStripMenuItem
 			// 
-			this.cOMPILEToolStripMenuItem.Name = "cOMPILEToolStripMenuItem";
-			this.cOMPILEToolStripMenuItem.Size = new System.Drawing.Size(69, 20);
-			this.cOMPILEToolStripMenuItem.Text = "COMPILE";
-			this.cOMPILEToolStripMenuItem.Click += new System.EventHandler(this.cOMPILEToolStripMenuItem_Click);
+			this.sAVEToolStripMenuItem.Name = "sAVEToolStripMenuItem";
+			this.sAVEToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.sAVEToolStripMenuItem.Text = "SAVE";
+			this.sAVEToolStripMenuItem.Click += new System.EventHandler(this.sAVEToolStripMenuItem_Click);
 			// 
-			// toolStrip1
+			// sAVEASToolStripMenuItem
 			// 
-			this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-			this.toolStrip1.Location = new System.Drawing.Point(0, 24);
-			this.toolStrip1.Name = "toolStrip1";
-			this.toolStrip1.Size = new System.Drawing.Size(681, 25);
-			this.toolStrip1.TabIndex = 2;
-			this.toolStrip1.Text = "toolStrip1";
+			this.sAVEASToolStripMenuItem.Name = "sAVEASToolStripMenuItem";
+			this.sAVEASToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.sAVEASToolStripMenuItem.Text = "SAVE AS";
+			this.sAVEASToolStripMenuItem.Click += new System.EventHandler(this.sAVEASToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator1
+			// 
+			this.toolStripSeparator1.Name = "toolStripSeparator1";
+			this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
+			// 
+			// setHostButton
+			// 
+			this.setHostButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+			this.setHostButton.Image = ((System.Drawing.Image)(resources.GetObject("setHostButton.Image")));
+			this.setHostButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.setHostButton.Name = "setHostButton";
+			this.setHostButton.Size = new System.Drawing.Size(59, 22);
+			this.setHostButton.Text = "SET HOST";
+			this.setHostButton.Click += new System.EventHandler(this.sETHOSTToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator2
+			// 
+			this.toolStripSeparator2.Name = "toolStripSeparator2";
+			this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+			// 
+			// hostLabel
+			// 
+			this.hostLabel.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+			this.hostLabel.Name = "hostLabel";
+			this.hostLabel.Size = new System.Drawing.Size(61, 22);
+			this.hostLabel.Text = "[no host]";
+			// 
+			// compileButton
+			// 
+			this.compileButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+			this.compileButton.Image = ((System.Drawing.Image)(resources.GetObject("compileButton.Image")));
+			this.compileButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.compileButton.Name = "compileButton";
+			this.compileButton.Size = new System.Drawing.Size(53, 22);
+			this.compileButton.Text = "COMPILE";
+			this.compileButton.Click += new System.EventHandler(this.cOMPILEToolStripMenuItem_Click);
+			// 
+			// runButton
+			// 
+			this.runButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+			this.runButton.Image = ((System.Drawing.Image)(resources.GetObject("runButton.Image")));
+			this.runButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.runButton.Name = "runButton";
+			this.runButton.Size = new System.Drawing.Size(29, 22);
+			this.runButton.Text = "RUN";
+			this.runButton.Click += new System.EventHandler(this.hOSTToolStripMenuItem_Click);
 			// 
 			// treeView1
 			// 
 			this.treeView1.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.treeView1.Font = new System.Drawing.Font("Envy Code R", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.treeView1.Location = new System.Drawing.Point(0, 0);
 			this.treeView1.Name = "treeView1";
-			this.treeView1.Size = new System.Drawing.Size(117, 386);
+			this.treeView1.Size = new System.Drawing.Size(117, 385);
 			this.treeView1.TabIndex = 3;
 			// 
 			// splitContainer1
@@ -153,24 +227,25 @@
 			// splitContainer1.Panel2
 			// 
 			this.splitContainer1.Panel2.Controls.Add(this.textBox1);
-			this.splitContainer1.Size = new System.Drawing.Size(560, 386);
-			this.splitContainer1.SplitterDistance = 331;
+			this.splitContainer1.Size = new System.Drawing.Size(560, 385);
+			this.splitContainer1.SplitterDistance = 328;
 			this.splitContainer1.TabIndex = 4;
 			// 
 			// textBox1
 			// 
 			this.textBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.textBox1.Font = new System.Drawing.Font("Envy Code R", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.textBox1.Location = new System.Drawing.Point(0, 0);
 			this.textBox1.Multiline = true;
 			this.textBox1.Name = "textBox1";
 			this.textBox1.ReadOnly = true;
-			this.textBox1.Size = new System.Drawing.Size(560, 51);
+			this.textBox1.Size = new System.Drawing.Size(560, 53);
 			this.textBox1.TabIndex = 0;
 			// 
 			// splitContainer2
 			// 
 			this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.splitContainer2.Location = new System.Drawing.Point(0, 49);
+			this.splitContainer2.Location = new System.Drawing.Point(0, 0);
 			this.splitContainer2.Name = "splitContainer2";
 			// 
 			// splitContainer2.Panel1
@@ -180,24 +255,59 @@
 			// splitContainer2.Panel2
 			// 
 			this.splitContainer2.Panel2.Controls.Add(this.treeView1);
-			this.splitContainer2.Size = new System.Drawing.Size(681, 386);
+			this.splitContainer2.Size = new System.Drawing.Size(681, 385);
 			this.splitContainer2.SplitterDistance = 560;
 			this.splitContainer2.TabIndex = 5;
+			// 
+			// openFilesBar
+			// 
+			this.openFilesBar.Dock = System.Windows.Forms.DockStyle.None;
+			this.openFilesBar.Font = new System.Drawing.Font("Envy Code R", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.openFilesBar.Location = new System.Drawing.Point(39, 0);
+			this.openFilesBar.Name = "openFilesBar";
+			this.openFilesBar.Size = new System.Drawing.Size(111, 25);
+			this.openFilesBar.TabIndex = 6;
+			this.openFilesBar.Text = "toolStrip2";
+			this.openFilesBar.MouseMove += new System.Windows.Forms.MouseEventHandler(this.openFilesBar_MouseMove);
+			// 
+			// toolStripContainer1
+			// 
+			// 
+			// toolStripContainer1.ContentPanel
+			// 
+			this.toolStripContainer1.ContentPanel.Controls.Add(this.splitContainer2);
+			this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(681, 385);
+			this.toolStripContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.toolStripContainer1.Location = new System.Drawing.Point(0, 0);
+			this.toolStripContainer1.Name = "toolStripContainer1";
+			this.toolStripContainer1.Size = new System.Drawing.Size(681, 435);
+			this.toolStripContainer1.TabIndex = 7;
+			this.toolStripContainer1.Text = "toolStripContainer1";
+			// 
+			// toolStripContainer1.TopToolStripPanel
+			// 
+			this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.openFilesBar);
+			this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.menuBar);
+			// 
+			// nEWToolStripMenuItem
+			// 
+			this.nEWToolStripMenuItem.Name = "nEWToolStripMenuItem";
+			this.nEWToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.nEWToolStripMenuItem.Text = "NEW";
+			this.nEWToolStripMenuItem.Click += new System.EventHandler(this.nEWToolStripMenuItem_Click);
 			// 
 			// Main
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(681, 435);
-			this.Controls.Add(this.splitContainer2);
-			this.Controls.Add(this.toolStrip1);
-			this.Controls.Add(this.menuStrip1);
-			this.MainMenuStrip = this.menuStrip1;
+			this.Controls.Add(this.toolStripContainer1);
 			this.Name = "Main";
 			this.Text = "Form1";
+			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Main_FormClosing);
 			((System.ComponentModel.ISupportInitialize)(this.scintilla1)).EndInit();
-			this.menuStrip1.ResumeLayout(false);
-			this.menuStrip1.PerformLayout();
+			this.menuBar.ResumeLayout(false);
+			this.menuBar.PerformLayout();
 			this.splitContainer1.Panel1.ResumeLayout(false);
 			this.splitContainer1.Panel2.ResumeLayout(false);
 			this.splitContainer1.Panel2.PerformLayout();
@@ -207,23 +317,36 @@
 			this.splitContainer2.Panel2.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
 			this.splitContainer2.ResumeLayout(false);
+			this.toolStripContainer1.ContentPanel.ResumeLayout(false);
+			this.toolStripContainer1.TopToolStripPanel.ResumeLayout(false);
+			this.toolStripContainer1.TopToolStripPanel.PerformLayout();
+			this.toolStripContainer1.ResumeLayout(false);
+			this.toolStripContainer1.PerformLayout();
 			this.ResumeLayout(false);
-			this.PerformLayout();
 
 		}
 
 		#endregion
 
 		private ScintillaNET.Scintilla scintilla1;
-		private System.Windows.Forms.MenuStrip menuStrip1;
-		private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem oPENToolStripMenuItem1;
-		private System.Windows.Forms.ToolStrip toolStrip1;
+		private System.Windows.Forms.ToolStrip menuBar;
 		private System.Windows.Forms.TreeView treeView1;
-		private System.Windows.Forms.ToolStripMenuItem cOMPILEToolStripMenuItem;
 		private System.Windows.Forms.SplitContainer splitContainer1;
 		private System.Windows.Forms.TextBox textBox1;
 		private System.Windows.Forms.SplitContainer splitContainer2;
+		private System.Windows.Forms.ToolStripDropDownButton fileButton;
+		private System.Windows.Forms.ToolStripMenuItem openButton;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+		private System.Windows.Forms.ToolStripButton setHostButton;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+		private System.Windows.Forms.ToolStripLabel hostLabel;
+		private System.Windows.Forms.ToolStripButton compileButton;
+		private System.Windows.Forms.ToolStripButton runButton;
+		private System.Windows.Forms.ToolStrip openFilesBar;
+		private System.Windows.Forms.ToolStripContainer toolStripContainer1;
+		private System.Windows.Forms.ToolStripMenuItem sAVEToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem sAVEASToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem nEWToolStripMenuItem;
 	}
 }
 

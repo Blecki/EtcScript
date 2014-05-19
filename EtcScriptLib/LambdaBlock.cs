@@ -81,14 +81,14 @@ namespace EtcScriptLib
 			return CachedLambda;
 		}
 
-		public VirtualMachine.CodeContext GetEntryPoint()
+		public VirtualMachine.ExecutionLocation GetEntryPoint()
 		{
-			return new VirtualMachine.CodeContext(Instructions, EntryPoint);
+			return new VirtualMachine.ExecutionLocation(Instructions, EntryPoint);
 		}
 
-		public VirtualMachine.CodeContext GetCleanupPoint()
+		public VirtualMachine.ExecutionLocation GetCleanupPoint()
 		{
-			return new VirtualMachine.CodeContext(Instructions, CleanupPoint);
+			return new VirtualMachine.ExecutionLocation(Instructions, CleanupPoint);
 		}
 	}
 }

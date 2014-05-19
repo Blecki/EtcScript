@@ -75,6 +75,8 @@
     <Compile Include="AST\Node.cs" />
     <Compile Include="Compile.cs" />
     <Compile Include="CompileError.cs" />
+    <Compile Include="ExternalHost.cs" />
+    <Compile Include="ExternalLibrary.cs" />
     <Compile Include="Include.cs" />
     <Compile Include="SyntaxLex.cs" />
     <Compile Include="ListIterator.cs" />
@@ -115,6 +117,7 @@
     <Compile Include="StandardLibrary\ForeachXInList.cs" />
     <Compile Include="Variable.cs" />
     <Compile Include="Type.cs" />
+    <Compile Include="VirtualMachine\ExecutionLocation.cs" />
     <Compile Include="VirtualMachine\StringTable.cs" />
     <Compile Include="VirtualMachine\RuntimeScriptObject.cs" />
     <Compile Include="WhenClause.cs" />

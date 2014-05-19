@@ -62,7 +62,7 @@ namespace EtcScriptTests
 			if (AdditionalSetup != null) AdditionalSetup(environment);
 			var testFunctions = environment.Build(script, s => { Console.WriteLine(s); return EtcScriptLib.ErrorStrategy.Abort; });
 			Assert.IsTrue(testFunctions.Count > 0);
-			var context = environment.CreateExecutionContext(EtcScriptLib.VirtualMachine.CodeContext.Empty);
+			var context = environment.CreateExecutionContext(EtcScriptLib.VirtualMachine.ExecutionLocation.Empty);
 			var func = testFunctions[0].MakeInvokableFunction();
 			var argList = new List<Object>();
 			argList.Add(func);

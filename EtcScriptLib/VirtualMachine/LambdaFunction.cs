@@ -8,8 +8,8 @@ namespace EtcScriptLib.VirtualMachine
     public class LambdaFunction : InvokeableFunction
     {
 		public String Name;
-		public CodeContext CleanupPoint;
-		public CodeContext EntryPoint;
+		public ExecutionLocation CleanupPoint;
+		public ExecutionLocation EntryPoint;
 		public int ArgumentCount;
 
 		public override bool IsStackInvokable { get { return true; } }
@@ -39,7 +39,7 @@ namespace EtcScriptLib.VirtualMachine
 			return InvokationResult.Success;
         }
 
-		public static LambdaFunction CreateLambda(String Name, CodeContext CleanupPoint, CodeContext EntryPoint, int ArgumentCount)
+		public static LambdaFunction CreateLambda(String Name, ExecutionLocation CleanupPoint, ExecutionLocation EntryPoint, int ArgumentCount)
 		{
 			var r = new LambdaFunction();
 			r.CleanupPoint = CleanupPoint;
@@ -49,7 +49,7 @@ namespace EtcScriptLib.VirtualMachine
 			return r;
 		}
 
-		public static TrueLambdaFunction CreateTrueLambda(CodeContext Source, RuntimeScriptObject CapturedVariables)
+		public static TrueLambdaFunction CreateTrueLambda(ExecutionLocation Source, RuntimeScriptObject CapturedVariables)
 		{
 			return new TrueLambdaFunction
 			{
@@ -67,7 +67,7 @@ namespace EtcScriptLib.VirtualMachine
 	public class TrueLambdaFunction : InvokeableFunction
 	{
 		public RuntimeScriptObject CapturedVariables;
-		public CodeContext Source;
+		public ExecutionLocation Source;
 
 		public override bool IsStackInvokable { get { return false; } }
 
@@ -88,10 +88,10 @@ namespace EtcScriptLib.VirtualMachine
 			for (int i = 0; i < expectedParameterCount - 1; ++i)
 				VirtualMachine.SetOperand(Operand.PUSH, arguments[i + 1], context);
 			VirtualMachine.SetOperand(Operand.PUSH, CapturedVariables, context);
-			VirtualMachine.SetOperand(Operand.PUSH, new CodeContext(Source.Code,
+			VirtualMachine.SetOperand(Operand.PUSH, new ExecutionLocation(Source.Code,
 				(CapturedVariables.Data[CapturedVariables.Data.Count - 3] as int?).Value), context);
 
-			context.CurrentInstruction = new CodeContext(Source.Code,
+			context.CurrentInstruction = new ExecutionLocation(Source.Code,
 				(CapturedVariables.Data[CapturedVariables.Data.Count - 2] as int?).Value);
 
 			return InvokationResult.Success;
