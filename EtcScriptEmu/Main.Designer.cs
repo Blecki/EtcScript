@@ -35,6 +35,7 @@
 			this.openButton = new System.Windows.Forms.ToolStripMenuItem();
 			this.sAVEToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.sAVEASToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.nEWToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
 			this.setHostButton = new System.Windows.Forms.ToolStripButton();
 			this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -47,7 +48,7 @@
 			this.splitContainer2 = new System.Windows.Forms.SplitContainer();
 			this.openFilesBar = new System.Windows.Forms.ToolStrip();
 			this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
-			this.nEWToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.defaultHosts = new System.Windows.Forms.ToolStripDropDownButton();
 			((System.ComponentModel.ISupportInitialize)(this.scintilla1)).BeginInit();
 			this.menuBar.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -77,7 +78,7 @@
 			this.scintilla1.Margins.Margin0.Width = 48;
 			this.scintilla1.Margins.Margin2.Width = 16;
 			this.scintilla1.Name = "scintilla1";
-			this.scintilla1.Size = new System.Drawing.Size(560, 328);
+			this.scintilla1.Size = new System.Drawing.Size(560, 327);
 			this.scintilla1.Styles.BraceBad.CharacterSet = ScintillaNET.CharacterSet.Ansi;
 			this.scintilla1.Styles.BraceBad.FontName = "Envy Code R";
 			this.scintilla1.Styles.BraceBad.Size = 9.75F;
@@ -112,13 +113,14 @@
             this.fileButton,
             this.toolStripSeparator1,
             this.setHostButton,
+            this.defaultHosts,
             this.toolStripSeparator2,
             this.hostLabel,
             this.compileButton,
             this.runButton});
 			this.menuBar.Location = new System.Drawing.Point(3, 25);
 			this.menuBar.Name = "menuBar";
-			this.menuBar.Size = new System.Drawing.Size(301, 25);
+			this.menuBar.Size = new System.Drawing.Size(302, 25);
 			this.menuBar.TabIndex = 2;
 			this.menuBar.Text = "toolStrip1";
 			// 
@@ -139,23 +141,35 @@
 			// openButton
 			// 
 			this.openButton.Name = "openButton";
-			this.openButton.Size = new System.Drawing.Size(152, 22);
+			this.openButton.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
+			this.openButton.Size = new System.Drawing.Size(195, 22);
 			this.openButton.Text = "OPEN";
 			this.openButton.Click += new System.EventHandler(this.oPENToolStripMenuItem1_Click);
 			// 
 			// sAVEToolStripMenuItem
 			// 
 			this.sAVEToolStripMenuItem.Name = "sAVEToolStripMenuItem";
-			this.sAVEToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.sAVEToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
+			this.sAVEToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
 			this.sAVEToolStripMenuItem.Text = "SAVE";
 			this.sAVEToolStripMenuItem.Click += new System.EventHandler(this.sAVEToolStripMenuItem_Click);
 			// 
 			// sAVEASToolStripMenuItem
 			// 
 			this.sAVEASToolStripMenuItem.Name = "sAVEASToolStripMenuItem";
-			this.sAVEASToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.sAVEASToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
+            | System.Windows.Forms.Keys.S)));
+			this.sAVEASToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
 			this.sAVEASToolStripMenuItem.Text = "SAVE AS";
 			this.sAVEASToolStripMenuItem.Click += new System.EventHandler(this.sAVEASToolStripMenuItem_Click);
+			// 
+			// nEWToolStripMenuItem
+			// 
+			this.nEWToolStripMenuItem.Name = "nEWToolStripMenuItem";
+			this.nEWToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N)));
+			this.nEWToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+			this.nEWToolStripMenuItem.Text = "NEW";
+			this.nEWToolStripMenuItem.Click += new System.EventHandler(this.nEWToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator1
 			// 
@@ -168,8 +182,9 @@
 			this.setHostButton.Image = ((System.Drawing.Image)(resources.GetObject("setHostButton.Image")));
 			this.setHostButton.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.setHostButton.Name = "setHostButton";
-			this.setHostButton.Size = new System.Drawing.Size(59, 22);
-			this.setHostButton.Text = "SET HOST";
+			this.setHostButton.Size = new System.Drawing.Size(35, 22);
+			this.setHostButton.Text = "HOST";
+			this.setHostButton.ToolTipText = "Select host assembly to use for compiling";
 			this.setHostButton.Click += new System.EventHandler(this.sETHOSTToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator2
@@ -192,6 +207,7 @@
 			this.compileButton.Name = "compileButton";
 			this.compileButton.Size = new System.Drawing.Size(53, 22);
 			this.compileButton.Text = "COMPILE";
+			this.compileButton.ToolTipText = "Compile the current file";
 			this.compileButton.Click += new System.EventHandler(this.cOMPILEToolStripMenuItem_Click);
 			// 
 			// runButton
@@ -202,6 +218,7 @@
 			this.runButton.Name = "runButton";
 			this.runButton.Size = new System.Drawing.Size(29, 22);
 			this.runButton.Text = "RUN";
+			this.runButton.ToolTipText = "Run the current file";
 			this.runButton.Click += new System.EventHandler(this.hOSTToolStripMenuItem_Click);
 			// 
 			// treeView1
@@ -228,7 +245,7 @@
 			// 
 			this.splitContainer1.Panel2.Controls.Add(this.textBox1);
 			this.splitContainer1.Size = new System.Drawing.Size(560, 385);
-			this.splitContainer1.SplitterDistance = 328;
+			this.splitContainer1.SplitterDistance = 327;
 			this.splitContainer1.TabIndex = 4;
 			// 
 			// textBox1
@@ -239,7 +256,7 @@
 			this.textBox1.Multiline = true;
 			this.textBox1.Name = "textBox1";
 			this.textBox1.ReadOnly = true;
-			this.textBox1.Size = new System.Drawing.Size(560, 53);
+			this.textBox1.Size = new System.Drawing.Size(560, 54);
 			this.textBox1.TabIndex = 0;
 			// 
 			// splitContainer2
@@ -286,15 +303,17 @@
 			// 
 			// toolStripContainer1.TopToolStripPanel
 			// 
-			this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.openFilesBar);
 			this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.menuBar);
+			this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.openFilesBar);
 			// 
-			// nEWToolStripMenuItem
+			// defaultHosts
 			// 
-			this.nEWToolStripMenuItem.Name = "nEWToolStripMenuItem";
-			this.nEWToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-			this.nEWToolStripMenuItem.Text = "NEW";
-			this.nEWToolStripMenuItem.Click += new System.EventHandler(this.nEWToolStripMenuItem_Click);
+			this.defaultHosts.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+			this.defaultHosts.Image = ((System.Drawing.Image)(resources.GetObject("defaultHosts.Image")));
+			this.defaultHosts.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.defaultHosts.Name = "defaultHosts";
+			this.defaultHosts.Size = new System.Drawing.Size(56, 22);
+			this.defaultHosts.Text = "PRESET";
 			// 
 			// Main
 			// 
@@ -347,6 +366,7 @@
 		private System.Windows.Forms.ToolStripMenuItem sAVEToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem sAVEASToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem nEWToolStripMenuItem;
+		private System.Windows.Forms.ToolStripDropDownButton defaultHosts;
 	}
 }
 

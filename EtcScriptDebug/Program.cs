@@ -21,8 +21,8 @@ namespace EtcScriptDebug
 
 			try
 			{
-				var x = new EtcScriptTests.Rules();
-				x.rule_override_on_static();
+				var x = new EtcScriptTests.Compilation();
+				x.case_irrelevent();
 			}
 			catch (Exception e)
 			{

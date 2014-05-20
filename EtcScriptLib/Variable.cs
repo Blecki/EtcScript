@@ -22,6 +22,7 @@ namespace EtcScriptLib
 		public Type DeclaredType;
 		public String DeclaredTypeName;
 		public VariableStorageMethod StorageMethod = VariableStorageMethod.Local;
+		public String Documentation;
 
 		public void ResolveType(ParseScope ActiveScope)
 		{
@@ -33,5 +34,7 @@ namespace EtcScriptLib
 				if (DeclaredType == null) throw new CompileError("Could not find type '" + DeclaredTypeName + "'.");
 			}
 		}
+
+		public String Description { get { return Name + " : " + (DeclaredType == null ? "GENERIC" : DeclaredType.Name); } }
 	}
 }

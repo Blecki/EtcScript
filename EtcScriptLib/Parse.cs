@@ -61,21 +61,17 @@ namespace EtcScriptLib
 				r.Typename = Stream.Next().Value.ToUpper();
 				Stream.Advance();
 			}
-
-			if (Stream.Next().Type == TokenType.Semicolon)
-			{
-				Stream.Advance();
-				return r;
-			}
-			else if (Stream.Next().Type == TokenType.Operator && Stream.Next().Value == "=")
+						
+			if (Stream.Next().Type == TokenType.Operator && Stream.Next().Value == "=")
 			{
 				Stream.Advance();
 				r.Value = ParseExpression(Stream, Context, TokenType.Semicolon);
-				if (!IsEndOfStatement(Stream)) throw new CompileError("[005] Expected ;", Stream);
-				Stream.Advance();
-				return r;
 			}
-			throw new CompileError("[006] Expected ; or =", Stream);
+
+			if (!IsEndOfStatement(Stream)) throw new CompileError("[005] Expected ;", Stream);
+			Stream.Advance();
+
+			return r;
 		}
 
 		private static Ast.Return ParseReturnStatement(
@@ -399,10 +395,13 @@ namespace EtcScriptLib
 			if (Terminal == TokenType.NewLine)
 				return ParseExpression(Stream, Context, (stream) =>
 					{
-						return stream.AtEnd() || stream.Next().Type == TokenType.NewLine;
+						return stream.AtEnd() 
+							|| stream.Next().Type == TokenType.NewLine 
+							|| stream.Next().Type == TokenType.QuestionMark;
 					});
 			else
-				return ParseExpression(Stream, Context, (stream) => { return stream.Next().Type == Terminal; });
+				return ParseExpression(Stream, Context, 
+					(stream) => { return stream.Next().Type == Terminal || stream.Next().Type == TokenType.QuestionMark; });
 		}
 
 		private static Ast.Node ParseExpression(
@@ -633,6 +632,14 @@ namespace EtcScriptLib
 				}
 				else
 					throw new CompileError("[02B] Expected block", Stream);
+
+				if (!Stream.AtEnd() && Stream.Next().Type == TokenType.QuestionMark)
+				{
+					Stream.Advance();
+					if (Stream.Next().Type != TokenType.String) throw new CompileError("Expected documentation", Stream);
+					r.Documentation = Stream.Next().Value;
+					Stream.Advance();
+				}
 				
 				return r;
 			}
@@ -679,6 +686,14 @@ namespace EtcScriptLib
 			}
 
 			Stream.Advance();
+
+			if (!Stream.AtEnd() && Stream.Next().Type == TokenType.QuestionMark)
+			{
+				Stream.Advance();
+				if (Stream.Next().Type != TokenType.String) throw new CompileError("Expected documentation", Stream);
+				r.Documentation = Stream.Next().Value;
+				Stream.Advance();
+			}
 
 			return r;
 		}
@@ -765,6 +780,14 @@ namespace EtcScriptLib
 				{	throw new CompileError("[031] Expected block", Stream);
 				}
 
+				if (!Stream.AtEnd() && Stream.Next().Type == TokenType.QuestionMark)
+				{
+					Stream.Advance();
+					if (Stream.Next().Type != TokenType.String) throw new CompileError("Expected documentation", Stream);
+					r.Documentation = Stream.Next().Value;
+					Stream.Advance();
+				}
+
 				return r;
 			}
 			catch (CompileError ce)
@@ -795,6 +818,14 @@ namespace EtcScriptLib
 				Stream.Advance();
 				if (Stream.Next().Type != TokenType.Identifier) throw new CompileError("[034] Expected identifier", Stream.Next());
 				r.DeclaredTypeName = Stream.Next().Value.ToUpper();
+				Stream.Advance();
+			}
+
+			if (!Stream.AtEnd() && Stream.Next().Type == TokenType.QuestionMark)
+			{
+				Stream.Advance();
+				if (Stream.Next().Type != TokenType.String) throw new CompileError("Expected documentation", Stream);
+				r.Documentation = Stream.Next().Value;
 				Stream.Advance();
 			}
 			
@@ -831,6 +862,14 @@ namespace EtcScriptLib
 				var initialValue = ParseExpression(Stream, Context, TokenType.Semicolon);
 				var initializer = new Ast.Let(start, new Ast.Identifier(start), initialValue);
 				Context.Initialization.Add(initializer);
+			}
+
+			if (!Stream.AtEnd() && Stream.Next().Type == TokenType.QuestionMark)
+			{
+				Stream.Advance();
+				if (Stream.Next().Type != TokenType.String) throw new CompileError("Expected documentation", Stream);
+				r.Documentation = Stream.Next().Value;
+				Stream.Advance();
 			}
 
 			if (Stream.Next().Type != TokenType.Semicolon) throw new CompileError("[035] Expected ;", Stream.Next());

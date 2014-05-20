@@ -89,6 +89,13 @@ namespace EtcScriptEmu
 			if (Settings.OpenFiles.Count == 0) OpenNewFile();
 			else foreach (var filename in Settings.OpenFiles)
 				Open(filename);
+
+			foreach (var host in Settings.Hosts)
+			{
+				var lCopy = host;
+				var button = defaultHosts.DropDownItems.Add(host.DisplayName);
+				button.Click += (sender, args) => { PrepareHost(System.IO.Path.GetFullPath(lCopy.Path)); };
+			}
 		}
 
 		private void OpenNewFile()
@@ -215,15 +222,45 @@ namespace EtcScriptEmu
 		private void BuildCompileTree()
 		{
 			treeView1.Nodes.Clear();
+
+			var typesNode = treeView1.Nodes.Add("TYPES");
+			foreach (var type in ScriptEnvironment.Context.TopScope.Types)
+			{
+				var typeNode = typesNode.Nodes.Add(type.Description);
+				foreach (var member in type.Members)
+				{
+					var leafNode = typeNode.Nodes.Add(member.Description);
+					if (!String.IsNullOrEmpty(member.Documentation))
+						leafNode.Nodes.Add(member.Documentation);
+				}
+			}
+
+			var globalsNode = treeView1.Nodes.Add("GLOBALS");
+			foreach (var variable in ScriptEnvironment.Context.TopScope.Variables)
+			{
+				var leafNode = globalsNode.Nodes.Add(variable.Description);
+				if (!String.IsNullOrEmpty(variable.Documentation))
+					leafNode.Nodes.Add(variable.Documentation);
+			}		
+
 			var macroNode = treeView1.Nodes.Add("MACROS");
 			foreach (var macro in ScriptEnvironment.Context.TopScope.Macros)
-				macroNode.Nodes.Add(macro.DescriptiveHeader);
+			{
+				var leafNode = macroNode.Nodes.Add(macro.DescriptiveHeader);
+				if (!String.IsNullOrEmpty(macro.Documentation))
+					leafNode.Nodes.Add(macro.Documentation);
+			}			
+
 			var ruleNode = treeView1.Nodes.Add("RULEBOOKS");
 			foreach (var rulebook in ScriptEnvironment.Context.Rules.Rulebooks)
 			{
 				var rulebookNode = ruleNode.Nodes.Add(rulebook.ToString());
 				foreach (var rule in rulebook.Rules)
-					rulebookNode.Nodes.Add(rule.DescriptiveHeader);
+				{
+					var leafNode = rulebookNode.Nodes.Add(rule.DescriptiveHeader);
+					if (!String.IsNullOrEmpty(rule.Documentation))
+						leafNode.Nodes.Add(rule.Documentation);
+				}
 			}
 		}
 		private void hOSTToolStripMenuItem_Click(object sender, EventArgs e)

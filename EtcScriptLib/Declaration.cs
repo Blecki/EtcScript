@@ -37,6 +37,7 @@ namespace EtcScriptLib
 		public bool DefinesOperator = false;
 		public OrderOperator OrderOperator = OrderOperator.NONE;
 		public bool TransformingWhenClause = false;
+		public String Documentation;
 
 		private List<Tuple<String, String>> HiddenArguments;
 

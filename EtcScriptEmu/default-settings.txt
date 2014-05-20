@@ -1,11 +1,1 @@
-﻿{
-	"DefaultHost" : "Classic Stream",
-	"OpenFiles" : [ "default-settings.txt" ],
-	"Hosts" :
-	[
-		{
-			"Path" : "StreamingInterface.exe",
-			"DisplayName" : "Classic Stream"
-		}
-	]
-}
+﻿{"DefaultHost":"Classic Stream","OpenFiles":[],"Hosts":[{"Path":"StreamingInterface.exe","DisplayName":"Classic Stream"},{"Path":"SpaceConsole.exe","DisplayName":"Space"}]}

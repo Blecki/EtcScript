@@ -108,6 +108,9 @@ namespace EtcScriptLib
 		public Type Super;
 		public String SuperTypename;
 		public int ID;
+		public String Documentation;
+
+		public String Description { get { return Name + " : " + (Super == null ? "GENERIC" : Super.Name) + " - " + Origin; } }
 
 		public List<Variable> Members = new List<Variable>();
 
